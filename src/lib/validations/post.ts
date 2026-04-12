@@ -7,7 +7,7 @@ import { validatePhoneNumber } from "@/lib/utils/phone";
 export const createPostSchema = z.object({
   patient_name: z.string().min(2).max(100).trim(),
   blood_type_needed: z.enum(BLOOD_TYPES),
-  units_needed: z.coerce.number().min(0.1).max(10),
+  units_needed: z.coerce.number().int().min(1).max(10),
   hospital_name: z.string().min(3).max(200).trim(),
   hospital_address: z.string().min(5).max(500).trim(),
   city: z.string().min(2).max(100).trim(),

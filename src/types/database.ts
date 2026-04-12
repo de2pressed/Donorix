@@ -27,6 +27,12 @@ export type Database = {
           has_chronic_disease: boolean;
           is_smoker: boolean;
           is_on_medication: boolean;
+          allow_sms_alerts: boolean;
+          allow_email_alerts: boolean;
+          is_discoverable: boolean;
+          allow_emergency_direct_contact: boolean;
+          hide_from_leaderboard: boolean;
+          notification_radius_km: number;
           preferred_language: string;
           consent_terms: boolean;
           consent_privacy: boolean;
@@ -52,6 +58,12 @@ export type Database = {
           weight_kg: number;
           consent_terms: boolean;
           consent_privacy: boolean;
+          allow_sms_alerts?: boolean;
+          allow_email_alerts?: boolean;
+          is_discoverable?: boolean;
+          allow_emergency_direct_contact?: boolean;
+          hide_from_leaderboard?: boolean;
+          notification_radius_km?: number;
           consent_notifications?: boolean;
         };
         Update: Partial<Database["public"]["Tables"]["profiles"]["Row"]>;

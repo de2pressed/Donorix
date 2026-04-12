@@ -17,6 +17,12 @@ export const profileSchema = z.object({
   pincode: z.string().regex(/^\d{6}$/, "Invalid Indian pincode"),
   preferred_language: z.string().min(2).max(10),
   is_available: z.boolean(),
+  allow_sms_alerts: z.boolean(),
+  allow_email_alerts: z.boolean(),
+  is_discoverable: z.boolean(),
+  allow_emergency_direct_contact: z.boolean(),
+  hide_from_leaderboard: z.boolean(),
+  notification_radius_km: z.number().int().min(5).max(50),
   consent_notifications: z.boolean(),
 });
 

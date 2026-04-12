@@ -31,6 +31,12 @@ export function EditProfileForm({ profile }: { profile: Profile }) {
       pincode: profile.pincode,
       preferred_language: profile.preferred_language,
       is_available: profile.is_available,
+      allow_sms_alerts: profile.allow_sms_alerts,
+      allow_email_alerts: profile.allow_email_alerts,
+      is_discoverable: profile.is_discoverable,
+      allow_emergency_direct_contact: profile.allow_emergency_direct_contact,
+      hide_from_leaderboard: profile.hide_from_leaderboard,
+      notification_radius_km: profile.notification_radius_km,
       consent_notifications: profile.consent_notifications,
     },
   });

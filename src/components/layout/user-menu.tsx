@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { LogOut, Settings, User2 } from "lucide-react";
+import { LogOut, MessageCircleMore, Settings, User2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { useUser } from "@/lib/hooks/use-user";
+import { ASSISTANT_OPEN_EVENT } from "@/components/layout/floating-assistant";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -39,8 +40,13 @@ function getInitials(name?: string | null) {
 export function UserMenu() {
   const router = useRouter();
   const tNav = useTranslations("nav");
+  const assistantLabel = "Ask Assistant";
   const [mobileOpen, setMobileOpen] = useState(false);
   const { data: user, isLoading } = useUser();
+
+  function openAssistant() {
+    window.dispatchEvent(new Event(ASSISTANT_OPEN_EVENT));
+  }
 
   async function handleLogout() {
     const supabase = getSupabaseBrowserClient();
@@ -110,11 +116,15 @@ export function UserMenu() {
                 {tNav("viewProfile")}
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/profile#edit-profile" className="flex w-full items-center gap-2">
-                <User2 className="size-4" />
-                {tNav("editProfile")}
-              </Link>
+            <DropdownMenuItem
+              className="flex items-center gap-2"
+              onSelect={(event) => {
+                event.preventDefault();
+                openAssistant();
+              }}
+            >
+              <MessageCircleMore className="size-4" />
+              {assistantLabel}
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href="/settings" className="flex w-full items-center gap-2">
@@ -163,14 +173,18 @@ export function UserMenu() {
                 <User2 className="size-4" />
                 {tNav("viewProfile")}
               </Link>
-              <Link
-                className="flex items-center gap-3 rounded-2xl border border-border px-4 py-3 text-sm font-medium text-foreground transition hover:bg-brand-soft"
-                href="/profile#edit-profile"
-                onClick={() => setMobileOpen(false)}
+              <Button
+                className="w-full justify-start rounded-2xl border border-border px-4 py-3 text-sm font-medium"
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  setMobileOpen(false);
+                  openAssistant();
+                }}
               >
-                <User2 className="size-4" />
-                {tNav("editProfile")}
-              </Link>
+                <MessageCircleMore className="size-4" />
+                {assistantLabel}
+              </Button>
               <Link
                 className="flex items-center gap-3 rounded-2xl border border-border px-4 py-3 text-sm font-medium text-foreground transition hover:bg-brand-soft"
                 href="/settings"

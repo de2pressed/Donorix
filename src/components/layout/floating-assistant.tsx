@@ -16,6 +16,7 @@ type AssistantMessage = { role: "assistant" | "user" | "system"; content: string
 
 const STORAGE_KEY = "donorix-assistant-messages";
 const LANGUAGE_STORAGE_KEY = "donorix-assistant-language";
+export const ASSISTANT_OPEN_EVENT = "donorix-assistant:open";
 
 export function FloatingAssistant() {
   const pathname = usePathname();
@@ -84,6 +85,16 @@ export function FloatingAssistant() {
     setHasUnread(false);
     messagesEndRef.current?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "end" });
   }, [messages, open, reduceMotion]);
+
+  useEffect(() => {
+    function handleOpen() {
+      setOpen(true);
+      setHasUnread(false);
+    }
+
+    window.addEventListener(ASSISTANT_OPEN_EVENT, handleOpen);
+    return () => window.removeEventListener(ASSISTANT_OPEN_EVENT, handleOpen);
+  }, []);
 
   if (hidden) return null;
 
@@ -207,7 +218,7 @@ export function FloatingAssistant() {
 
       <button
         aria-label={open ? "Close Donorix assistant" : "Open Donorix assistant"}
-        className="fixed bottom-[calc(env(safe-area-inset-bottom)+10.5rem)] right-4 z-[65] flex size-[52px] items-center justify-center rounded-full bg-brand text-brand-foreground shadow-glow transition hover:opacity-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:bottom-6 lg:right-6"
+        className="fixed bottom-6 right-6 z-[65] hidden size-[52px] items-center justify-center rounded-full bg-brand text-brand-foreground shadow-glow transition hover:opacity-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:flex"
         type="button"
         onClick={() => {
           setOpen((current) => !current);

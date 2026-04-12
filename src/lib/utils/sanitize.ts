@@ -1,15 +1,14 @@
-import DOMPurify from "isomorphic-dompurify";
-
 export function sanitizeText(value: string) {
-  return DOMPurify.sanitize(value, {
-    ALLOWED_TAGS: [],
-    ALLOWED_ATTR: [],
-  }).trim();
+  return value
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export function sanitizeHtml(value: string) {
-  return DOMPurify.sanitize(value, {
-    ALLOWED_TAGS: ["b", "strong", "i", "em", "p", "br", "ul", "li"],
-    ALLOWED_ATTR: [],
-  });
+  return value
+    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
+    .replace(/\son\w+=(['"]).*?\1/gi, "")
+    .replace(/javascript:/gi, "")
+    .trim();
 }

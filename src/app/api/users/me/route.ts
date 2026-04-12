@@ -32,7 +32,7 @@ export async function PATCH(request: Request) {
     .update(parsed.data)
     .eq("id", profile.id)
     .select(
-      "id, email, phone, full_name, username, avatar_url, blood_type, gender, date_of_birth, city, state, pincode, weight_kg, last_donated_at, total_donations, karma, is_admin, is_available, is_verified, has_chronic_disease, is_smoker, is_on_medication, preferred_language, consent_terms, consent_privacy, consent_notifications, status, timeout_until, deleted_at, created_at, updated_at",
+      "id, email, phone, full_name, username, avatar_url, blood_type, gender, date_of_birth, city, state, pincode, weight_kg, last_donated_at, total_donations, karma, is_admin, is_available, is_verified, has_chronic_disease, is_smoker, is_on_medication, allow_sms_alerts, allow_email_alerts, is_discoverable, allow_emergency_direct_contact, hide_from_leaderboard, notification_radius_km, preferred_language, consent_terms, consent_privacy, consent_notifications, status, timeout_until, deleted_at, created_at, updated_at",
     )
     .single();
 

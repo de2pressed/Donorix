@@ -44,14 +44,14 @@ export function PhoneInput({
   return (
     <div
       className={cn(
-        "flex h-11 w-full overflow-hidden rounded-2xl border border-border bg-card/80 shadow-sm transition focus-within:ring-2 focus-within:ring-ring",
+        "grid w-full overflow-hidden rounded-2xl border border-border bg-card/80 shadow-sm transition focus-within:ring-2 focus-within:ring-ring sm:grid-cols-[minmax(0,15rem)_1fr]",
         className,
       )}
     >
-      <div className="relative flex shrink-0 items-center border-r border-border bg-muted/40">
+      <div className="relative min-w-0 border-b border-border bg-muted/40 sm:border-b-0 sm:border-r">
         <select
           aria-label="Select country code"
-          className="h-full appearance-none bg-transparent px-3 pr-8 text-sm text-foreground focus:outline-none"
+          className="h-11 w-full appearance-none bg-transparent px-3 pr-8 text-sm text-foreground focus:outline-none"
           id={`${id}-country`}
           value={countryCode}
           onBlur={onBlur}
@@ -67,10 +67,12 @@ export function PhoneInput({
             </option>
           ))}
         </select>
-        <span className="pointer-events-none absolute right-2 text-xs text-muted-foreground">▼</span>
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+          v
+        </span>
       </div>
       <input
-        className="h-full flex-1 bg-transparent px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+        className="h-11 min-w-0 bg-transparent px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
         id={id}
         inputMode="tel"
         placeholder={currentCountry.placeholder}

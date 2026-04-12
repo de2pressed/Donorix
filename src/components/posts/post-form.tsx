@@ -18,7 +18,6 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { BLOOD_TYPES } from "@/lib/constants";
-import { MONTH_OPTIONS, getDayOptions } from "@/lib/date-options";
 import { getCitiesForRegion, INDIAN_REGION_NAMES } from "@/lib/india-locations";
 import { createPostSchema, type CreatePostInput } from "@/lib/validations/post";
 
@@ -87,12 +86,33 @@ function FieldBlock({
   );
 }
 
+function getRequestErrorMessage(payload: unknown) {
+  if (typeof payload === "string" && payload.trim()) {
+    return payload;
+  }
+
+  if (payload && typeof payload === "object" && "error" in payload) {
+    const error = (payload as { error?: unknown }).error;
+
+    if (typeof error === "string" && error.trim()) {
+      return error;
+    }
+
+    if (error && typeof error === "object" && "formErrors" in error) {
+      const formErrors = (error as { formErrors?: string[] }).formErrors;
+      if (Array.isArray(formErrors) && formErrors[0]) {
+        return formErrors[0];
+      }
+    }
+  }
+
+  return "Unable to create request";
+}
+
 export function PostForm() {
   const router = useRouter();
   const [step, setStep] = useState(0);
-  const [requiredDay, setRequiredDay] = useState("");
-  const [requiredMonth, setRequiredMonth] = useState("");
-  const [requiredYear, setRequiredYear] = useState("");
+  const [requiredDate, setRequiredDate] = useState("");
   const [requiredTime, setRequiredTime] = useState("");
 
   const form = useForm<PostFormValues, unknown, CreatePostInput>({
@@ -115,28 +135,17 @@ export function PostForm() {
   const cityOptions = useMemo(() => getCitiesForRegion(selectedState), [selectedState]);
   const radius = Number(form.watch("initial_radius_km") ?? 7);
   const emergency = Boolean(form.watch("is_emergency"));
-  const selectedDay = Number(requiredDay);
-  const selectedMonth = Number(requiredMonth);
-  const selectedYear = Number(requiredYear);
-  const yearOptions = Array.from({ length: 4 }, (_, index) => String(new Date().getFullYear() + index));
-  const dayOptions = getDayOptions(selectedMonth, selectedYear);
 
   useEffect(() => {
-    if (selectedDay > dayOptions.length) {
-      setRequiredDay("");
-    }
-  }, [dayOptions.length, selectedDay]);
-
-  useEffect(() => {
-    if (!requiredYear || !requiredMonth || !requiredDay || !requiredTime) {
+    if (!requiredDate || !requiredTime) {
       form.setValue("required_by", "", { shouldDirty: true });
       return;
     }
 
-    const localDate = `${requiredYear}-${requiredMonth.padStart(2, "0")}-${requiredDay.padStart(2, "0")}T${requiredTime}`;
+    const localDate = `${requiredDate}T${requiredTime}`;
     const isoDate = new Date(localDate).toISOString();
     form.setValue("required_by", isoDate, { shouldDirty: true, shouldValidate: step === 3 });
-  }, [form, requiredDay, requiredMonth, requiredTime, requiredYear, step]);
+  }, [form, requiredDate, requiredTime, step]);
 
   async function handleNext() {
     if (!currentStep.fields.length) return;
@@ -146,30 +155,34 @@ export function PostForm() {
   }
 
   const onSubmit = form.handleSubmit(async (values) => {
-    const response = await fetch("/api/posts", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(values),
-    });
+    try {
+      const response = await fetch("/api/posts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(values),
+      });
 
-    const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+      const payload = await response.json().catch(() => null);
 
-    if (!response.ok) {
-      toast.error(payload?.error ?? "Unable to create request");
-      return;
+      if (!response.ok) {
+        toast.error(getRequestErrorMessage(payload));
+        return;
+      }
+
+      toast.success("Blood request published");
+      router.push("/");
+      router.refresh();
+    } catch {
+      toast.error("Unable to create request");
     }
-
-    toast.success("Blood request published");
-    router.push("/");
-    router.refresh();
   });
 
   const errors = form.formState.errors;
 
   return (
-    <Card className="w-full max-w-3xl">
+    <Card className="w-full max-w-3xl overflow-hidden">
       <CardHeader className="space-y-4">
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-4 text-sm text-muted-foreground">
@@ -218,17 +231,22 @@ export function PostForm() {
                 <FieldBlock
                   error={errors.units_needed?.message}
                   htmlFor="units_needed"
-                  label="Units Needed (litres)"
-                  note="Use decimal values if the clinical team specified litres instead of whole units."
+                  label="Units Needed"
+                  note="Enter the number of blood units required."
                 >
                   <Input
                     id="units_needed"
                     max={10}
-                    min={0.1}
-                    placeholder="Enter the amount required in litres"
-                    step="0.1"
+                    min={1}
+                    placeholder="Enter the number of units required"
+                    step="1"
                     type="number"
                     {...form.register("units_needed", { valueAsNumber: true })}
+                    onKeyDown={(event) => {
+                      if ([".", "-", "+", "e", "E"].includes(event.key)) {
+                        event.preventDefault();
+                      }
+                    }}
                   />
                 </FieldBlock>
               </div>
@@ -335,49 +353,16 @@ export function PostForm() {
                 />
               </FieldBlock>
               <div className="space-y-2">
-                <label className="text-sm font-medium" htmlFor="required_day">
+                <label className="text-sm font-medium" htmlFor="required_date">
                   Required By
                 </label>
-                <div className="grid gap-3 md:grid-cols-[1fr_1fr_1fr_180px]">
-                  <select
-                    className="h-11 rounded-2xl border border-border bg-card/80 px-4 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    id="required_day"
-                    value={requiredDay}
-                    onChange={(event) => setRequiredDay(event.target.value)}
-                  >
-                    <option value="">Date</option>
-                    {dayOptions.map((day) => (
-                      <option key={day} value={day}>
-                        {day}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    className="h-11 rounded-2xl border border-border bg-card/80 px-4 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    id="required_month"
-                    value={requiredMonth}
-                    onChange={(event) => setRequiredMonth(event.target.value)}
-                  >
-                    <option value="">Month</option>
-                    {MONTH_OPTIONS.map((month, index) => (
-                      <option key={month} value={String(index + 1)}>
-                        {month}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    className="h-11 rounded-2xl border border-border bg-card/80 px-4 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    id="required_year"
-                    value={requiredYear}
-                    onChange={(event) => setRequiredYear(event.target.value)}
-                  >
-                    <option value="">Year</option>
-                    {yearOptions.map((year) => (
-                      <option key={year} value={year}>
-                        {year}
-                      </option>
-                    ))}
-                  </select>
+                <div className="grid gap-3 sm:grid-cols-[1fr_170px]">
+                  <Input
+                    id="required_date"
+                    type="date"
+                    value={requiredDate}
+                    onChange={(event) => setRequiredDate(event.target.value)}
+                  />
                   <Input
                     id="required_time"
                     placeholder="Select time"
@@ -395,13 +380,13 @@ export function PostForm() {
             <div className="space-y-5">
               <div className="rounded-[1.5rem] border border-border p-4">
                 <div className="flex items-center justify-between gap-4 text-sm">
-                  <div>
+                  <div className="min-w-0">
                     <p className="font-medium">Notification Radius</p>
                     <p className="text-muted-foreground">
                       Expand the initial donor search radius between 1 km and 35 km.
                     </p>
                   </div>
-                  <span className="font-semibold">{radius} km</span>
+                  <span className="min-w-[4.25rem] text-right font-semibold tabular-nums">{radius} km</span>
                 </div>
                 <Slider
                   className="mt-4"
@@ -469,7 +454,7 @@ export function PostForm() {
                 <p><span className="font-medium text-foreground">Blood Type:</span> {form.watch("blood_type_needed")}</p>
                 <p>
                   <span className="font-medium text-foreground">Units Needed:</span>{" "}
-                  {Number(form.watch("units_needed") ?? 0)} litres
+                  {Number(form.watch("units_needed") ?? 0)} units
                 </p>
                 <p><span className="font-medium text-foreground">Hospital:</span> {form.watch("hospital_name")}</p>
                 <p><span className="font-medium text-foreground">Hospital Address:</span> {form.watch("hospital_address")}</p>

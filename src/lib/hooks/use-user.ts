@@ -47,6 +47,12 @@ function buildProfileFallback(user: User): Profile {
     has_chronic_disease: typeof metadata?.has_chronic_disease === "boolean" ? metadata.has_chronic_disease : false,
     is_smoker: typeof metadata?.is_smoker === "boolean" ? metadata.is_smoker : false,
     is_on_medication: typeof metadata?.is_on_medication === "boolean" ? metadata.is_on_medication : false,
+    allow_sms_alerts: false,
+    allow_email_alerts: true,
+    is_discoverable: true,
+    allow_emergency_direct_contact: false,
+    hide_from_leaderboard: false,
+    notification_radius_km: 25,
     preferred_language:
       typeof metadata?.preferred_language === "string" ? metadata.preferred_language : "en",
     consent_terms: typeof metadata?.consent_terms === "boolean" ? metadata.consent_terms : false,

@@ -16,6 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import { INDIAN_LANGUAGES } from "@/lib/constants";
 import { useUser } from "@/lib/hooks/use-user";
 import { cn } from "@/lib/utils/cn";
+import type { Profile } from "@/types/user";
 
 type SettingsState = {
   sms: boolean;
@@ -39,6 +40,34 @@ const defaultSettings: SettingsState = {
   language: "en",
 };
 
+const languageOptions = INDIAN_LANGUAGES.filter(({ code }) => code === "en" || code === "hi");
+
+function buildSettingsState(user: Profile, locale: string): SettingsState {
+  return {
+    sms: user.allow_sms_alerts,
+    push: user.consent_notifications,
+    email: user.allow_email_alerts,
+    discoverable: user.is_discoverable,
+    directContact: user.allow_emergency_direct_contact,
+    privateLeaderboard: user.hide_from_leaderboard,
+    radius: user.notification_radius_km,
+    language: user.preferred_language || locale,
+  };
+}
+
+function areSettingsEqual(left: SettingsState, right: SettingsState) {
+  return (
+    left.sms === right.sms &&
+    left.push === right.push &&
+    left.email === right.email &&
+    left.discoverable === right.discoverable &&
+    left.directContact === right.directContact &&
+    left.privateLeaderboard === right.privateLeaderboard &&
+    left.radius === right.radius &&
+    left.language === right.language
+  );
+}
+
 export default function SettingsPage() {
   const router = useRouter();
   const t = useTranslations("settings");
@@ -47,18 +76,23 @@ export default function SettingsPage() {
   const { data: user } = useUser();
   const [isSaving, setIsSaving] = useState(false);
   const [settings, setSettings] = useState<SettingsState>(defaultSettings);
+  const [savedSettings, setSavedSettings] = useState<SettingsState | null>(null);
 
   useEffect(() => {
     if (!user) return;
 
-    setSettings((current) => ({
-      ...current,
-      push: user.consent_notifications,
-      language: user.preferred_language || locale,
-    }));
+    const nextSettings = buildSettingsState(user, locale);
+    setSettings(nextSettings);
+    setSavedSettings(nextSettings);
   }, [locale, user]);
 
+  const hasChanges = savedSettings ? !areSettingsEqual(settings, savedSettings) : false;
+
   async function handleSave() {
+    if (!user || !hasChanges) {
+      return;
+    }
+
     setIsSaving(true);
 
     try {
@@ -68,7 +102,13 @@ export default function SettingsPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          allow_sms_alerts: settings.sms,
+          allow_email_alerts: settings.email,
+          allow_emergency_direct_contact: settings.directContact,
           consent_notifications: settings.push,
+          hide_from_leaderboard: settings.privateLeaderboard,
+          is_discoverable: settings.discoverable,
+          notification_radius_km: settings.radius,
           preferred_language: settings.language,
         }),
       });
@@ -80,7 +120,11 @@ export default function SettingsPage() {
         return;
       }
 
-      await setLocalePreference(settings.language === "hi" ? "hi" : "en");
+      if (settings.language !== locale) {
+        await setLocalePreference(settings.language === "hi" ? "hi" : "en");
+      }
+
+      setSavedSettings(settings);
       router.refresh();
       toast.success(t("saved"));
     } catch {
@@ -97,9 +141,11 @@ export default function SettingsPage() {
           <h1 className="text-3xl font-semibold">{t("title")}</h1>
           <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
         </div>
-        <Button disabled={isSaving} type="button" onClick={() => void handleSave()}>
-          {isSaving ? t("saving") : t("save")}
-        </Button>
+        {hasChanges ? (
+          <Button disabled={isSaving} type="button" onClick={() => void handleSave()}>
+            {isSaving ? t("saving") : t("save")}
+          </Button>
+        ) : null}
       </div>
 
       <div className="grid gap-4">
@@ -175,7 +221,10 @@ export default function SettingsPage() {
                 description: t("notificationEmailBody"),
               },
             ].map((item) => (
-              <div key={item.key} className="flex flex-wrap items-center justify-between gap-4 rounded-[1.5rem] border border-border p-4">
+              <div
+                key={item.key}
+                className="flex flex-col items-start gap-4 rounded-[1.5rem] border border-border p-4 sm:flex-row sm:items-center sm:justify-between"
+              >
                 <div className="min-w-0">
                   <p className="flex items-center gap-2 font-medium">
                     <item.icon className="size-4 text-brand" />
@@ -214,7 +263,7 @@ export default function SettingsPage() {
                   setSettings((current) => ({ ...current, language: event.target.value }))
                 }
               >
-                {INDIAN_LANGUAGES.map((language) => (
+                {languageOptions.map((language) => (
                   <option key={language.code} value={language.code}>
                     {language.label}
                   </option>
@@ -224,12 +273,14 @@ export default function SettingsPage() {
             </div>
 
             <div className="space-y-3 rounded-[1.5rem] border border-border p-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
                   <p className="font-medium">{t("radiusTitle")}</p>
                   <p className="text-sm text-muted-foreground">{t("radiusBody")}</p>
                 </div>
-                <span className="text-sm font-semibold">{settings.radius} km</span>
+                <span className="min-w-[4.5rem] text-right text-sm font-semibold tabular-nums">
+                  {settings.radius} km
+                </span>
               </div>
               <Slider
                 max={50}
@@ -269,8 +320,11 @@ export default function SettingsPage() {
                 description: t("privacyLeaderboardBody"),
               },
             ].map((item) => (
-              <div key={item.key} className="flex flex-wrap items-center justify-between gap-4 rounded-[1.5rem] border border-border p-4">
-                <div>
+              <div
+                key={item.key}
+                className="flex flex-col items-start gap-4 rounded-[1.5rem] border border-border p-4 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="min-w-0">
                   <p className="font-medium">{item.title}</p>
                   <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
                 </div>

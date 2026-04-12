@@ -25,21 +25,6 @@ type SignupValues = z.input<typeof signupSchema>;
 type SignupSubmitValues = z.output<typeof signupSchema>;
 type SignupFieldName = keyof SignupSubmitValues;
 
-const MONTH_OPTIONS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-] as const;
-
 const GENDER_OPTIONS = [
   { value: "male", label: "Male" },
   { value: "female", label: "Female" },
@@ -163,9 +148,6 @@ export function SignupForm() {
   const [step, setStep] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [dobDay, setDobDay] = useState("");
-  const [dobMonth, setDobMonth] = useState("");
-  const [dobYear, setDobYear] = useState("");
   const firstFieldRef = useRef<HTMLElement | null>(null);
 
   const form = useForm<SignupValues, unknown, SignupSubmitValues>({
@@ -183,18 +165,18 @@ export function SignupForm() {
   const progress = ((step + 1) / STEP_CONFIG.length) * 100;
   const selectedState = form.watch("state");
   const cityOptions = useMemo(() => getCitiesForRegion(selectedState), [selectedState]);
-  const selectedDay = Number(dobDay);
-  const selectedMonth = Number(dobMonth);
-  const selectedYear = Number(dobYear);
-  const maxAdultYear = new Date().getFullYear() - 18;
-  const minAdultYear = new Date().getFullYear() - 100;
-  const yearOptions = Array.from(
-    { length: maxAdultYear - minAdultYear + 1 },
-    (_, index) => String(maxAdultYear - index),
-  );
-  const dayCount =
-    selectedMonth && selectedYear ? new Date(selectedYear, selectedMonth, 0).getDate() : 31;
-  const dayOptions = Array.from({ length: dayCount }, (_, index) => String(index + 1));
+  const maxAdultDate = useMemo(() => {
+    const cutoff = new Date();
+    cutoff.setFullYear(cutoff.getFullYear() - 18);
+    const year = cutoff.getFullYear();
+    const month = String(cutoff.getMonth() + 1).padStart(2, "0");
+    const day = String(cutoff.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }, []);
+  const hasChronicDisease = Boolean(form.watch("has_chronic_disease"));
+  const isSmoker = Boolean(form.watch("is_smoker"));
+  const isOnMedication = Boolean(form.watch("is_on_medication"));
+  const noneOfTheAbove = !hasChronicDisease && !isSmoker && !isOnMedication;
 
   useEffect(() => {
     const rafId = window.requestAnimationFrame(() => {
@@ -203,22 +185,6 @@ export function SignupForm() {
 
     return () => window.cancelAnimationFrame(rafId);
   }, [step]);
-
-  useEffect(() => {
-    if (!dobYear || !dobMonth || !dobDay) {
-      form.setValue("date_of_birth", "", { shouldDirty: true });
-      return;
-    }
-
-    const isoDate = `${dobYear}-${dobMonth.padStart(2, "0")}-${dobDay.padStart(2, "0")}`;
-    form.setValue("date_of_birth", isoDate, { shouldDirty: true, shouldValidate: step === 2 });
-  }, [dobDay, dobMonth, dobYear, form, step]);
-
-  useEffect(() => {
-    if (selectedDay > dayCount) {
-      setDobDay("");
-    }
-  }, [dayCount, selectedDay]);
 
   async function handleNext() {
     const isValid = await form.trigger(currentStep.fields, { shouldFocus: true });
@@ -256,6 +222,7 @@ export function SignupForm() {
 
   const errors = form.formState.errors;
   const fullNameField = form.register("full_name");
+  const dateOfBirthField = form.register("date_of_birth");
   const passwordField = form.register("password");
   const weightField = form.register("weight_kg", { valueAsNumber: true });
 
@@ -403,53 +370,21 @@ export function SignupForm() {
                 </FieldShell>
               </div>
 
-              <div className="space-y-2 md:col-span-2">
-                <label className="text-sm font-medium" htmlFor="dob-day">
-                  Date of Birth
-                </label>
-                <div className="grid grid-cols-3 gap-3">
-                  <select
-                    className="h-11 rounded-2xl border border-border bg-card/80 px-4 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    id="dob-day"
-                    ref={(instance) => setFirstFieldElement(instance)}
-                    value={dobDay}
-                    onChange={(event) => setDobDay(event.target.value)}
-                  >
-                    <option value="">Day</option>
-                    {dayOptions.map((day) => (
-                      <option key={day} value={day}>
-                        {day}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    className="h-11 rounded-2xl border border-border bg-card/80 px-4 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    id="dob-month"
-                    value={dobMonth}
-                    onChange={(event) => setDobMonth(event.target.value)}
-                  >
-                    <option value="">Month</option>
-                    {MONTH_OPTIONS.map((month, index) => (
-                      <option key={month} value={String(index + 1)}>
-                        {month}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    className="h-11 rounded-2xl border border-border bg-card/80 px-4 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    id="dob-year"
-                    value={dobYear}
-                    onChange={(event) => setDobYear(event.target.value)}
-                  >
-                    <option value="">Year</option>
-                    {yearOptions.map((year) => (
-                      <option key={year} value={year}>
-                        {year}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <FieldError message={errors.date_of_birth?.message} />
+              <div className="md:col-span-2">
+                <FieldShell
+                  error={errors.date_of_birth?.message}
+                  htmlFor="date_of_birth"
+                  label="Date of Birth"
+                  note="Use the native date picker. You must be at least 18 years old to register."
+                >
+                  <Input
+                    id="date_of_birth"
+                    max={maxAdultDate}
+                    type="date"
+                    {...dateOfBirthField}
+                    ref={assignFirstFieldRef<HTMLInputElement>(dateOfBirthField.ref)}
+                  />
+                </FieldShell>
               </div>
 
               <div className="md:col-span-2">
@@ -585,24 +520,36 @@ export function SignupForm() {
             <div className="space-y-4">
               <div className="grid gap-4">
                 <ToggleCard
-                  checked={Boolean(form.watch("has_chronic_disease"))}
+                  checked={noneOfTheAbove}
+                  description="Select this if none of the listed health declarations apply to you right now."
+                  id="health_none"
+                  inputRef={(instance) => setFirstFieldElement(instance)}
+                  label="None of the above"
+                  onChange={(checked) => {
+                    if (!checked) return;
+                    form.setValue("has_chronic_disease", false, { shouldDirty: true });
+                    form.setValue("is_smoker", false, { shouldDirty: true });
+                    form.setValue("is_on_medication", false, { shouldDirty: true });
+                  }}
+                />
+                <ToggleCard
+                  checked={hasChronicDisease}
                   description="Tell us if you currently live with any chronic disease that could affect donor eligibility."
                   id="has_chronic_disease"
-                  inputRef={(instance) => setFirstFieldElement(instance)}
                   label="Chronic Disease"
                   onChange={(checked) =>
                     form.setValue("has_chronic_disease", checked, { shouldDirty: true })
                   }
                 />
                 <ToggleCard
-                  checked={Boolean(form.watch("is_smoker"))}
+                  checked={isSmoker}
                   description="Smoking status helps clinical staff review your donor suitability safely."
                   id="is_smoker"
                   label="Smoker"
                   onChange={(checked) => form.setValue("is_smoker", checked, { shouldDirty: true })}
                 />
                 <ToggleCard
-                  checked={Boolean(form.watch("is_on_medication"))}
+                  checked={isOnMedication}
                   description="Ongoing medication may affect donation timing or require medical review."
                   id="is_on_medication"
                   label="On Medication"

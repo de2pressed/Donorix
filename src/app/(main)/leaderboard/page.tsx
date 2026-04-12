@@ -9,7 +9,9 @@ export default async function LeaderboardPage() {
   return (
     <div className="space-y-4 pt-1">
       <div>
-        <h1 className="text-3xl font-semibold leading-[1.05]">{t("leaderboard.title")}</h1>
+        <h1 className="text-[clamp(2.25rem,8vw,3rem)] font-semibold leading-[1.05]">
+          {t("leaderboard.title")}
+        </h1>
         <p className="text-sm text-muted-foreground">
           {t("leaderboard.subtitle")}
         </p>

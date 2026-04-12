@@ -1,0 +1,25 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/expand-radius",
+      "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/expire-posts",
+      "schedule": "0 * * * *"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, no-cache"
+        }
+      ]
+    }
+  ],
+  "regions": ["bom1"],
+  "framework": "nextjs"
+}

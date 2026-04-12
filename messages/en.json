@@ -1,0 +1,18 @@
+{
+  "nav.home": "Home",
+  "nav.leaderboard": "Leaderboard",
+  "nav.notifications": "Notifications",
+  "nav.chat": "AI Assistant",
+  "nav.policies": "Policies",
+  "hero.title": "Find verified blood donors faster.",
+  "hero.subtitle": "Emergency-first matching, privacy-safe communication, and multilingual guidance for recipients across India.",
+  "cta.request": "Create blood request",
+  "cta.explore": "Explore live feed",
+  "feed.empty": "No active blood requests yet.",
+  "feed.emptySubtitle": "The next verified request will appear here in real time.",
+  "status.emergency": "Emergency",
+  "status.available": "Available",
+  "status.offline": "You are offline. Some live updates are paused.",
+  "auth.login": "Login",
+  "auth.signup": "Sign up"
+}

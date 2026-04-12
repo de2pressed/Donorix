@@ -20,7 +20,30 @@ const envSchema = z.object({
   CRON_SECRET: z.string().min(16).optional(),
 });
 
-const parsed = envSchema.safeParse(process.env);
+const rawEnv = {
+  NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  SUPABASE_SERVICE_ROLE_KEY:
+    typeof window === "undefined" ? process.env.SUPABASE_SERVICE_ROLE_KEY : undefined,
+  NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+  NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
+  TWILIO_ACCOUNT_SID: typeof window === "undefined" ? process.env.TWILIO_ACCOUNT_SID : undefined,
+  TWILIO_AUTH_TOKEN: typeof window === "undefined" ? process.env.TWILIO_AUTH_TOKEN : undefined,
+  TWILIO_PHONE_NUMBER: typeof window === "undefined" ? process.env.TWILIO_PHONE_NUMBER : undefined,
+  OPENAI_API_KEY: typeof window === "undefined" ? process.env.OPENAI_API_KEY : undefined,
+  UPSTASH_REDIS_REST_URL:
+    typeof window === "undefined" ? process.env.UPSTASH_REDIS_REST_URL : undefined,
+  UPSTASH_REDIS_REST_TOKEN:
+    typeof window === "undefined" ? process.env.UPSTASH_REDIS_REST_TOKEN : undefined,
+  NEXT_PUBLIC_MAPBOX_TOKEN: process.env.NEXT_PUBLIC_MAPBOX_TOKEN,
+  ADMIN_USER_ID_1: typeof window === "undefined" ? process.env.ADMIN_USER_ID_1 : undefined,
+  ADMIN_USER_ID_2: typeof window === "undefined" ? process.env.ADMIN_USER_ID_2 : undefined,
+  NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  NEXTAUTH_SECRET: typeof window === "undefined" ? process.env.NEXTAUTH_SECRET : undefined,
+  CRON_SECRET: typeof window === "undefined" ? process.env.CRON_SECRET : undefined,
+};
+
+const parsed = envSchema.safeParse(rawEnv);
 
 if (!parsed.success) {
   console.warn("Invalid environment variables detected", parsed.error.flatten().fieldErrors);

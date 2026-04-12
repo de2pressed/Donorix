@@ -1,12 +1,8 @@
 {
   "crons": [
     {
-      "path": "/api/cron/expand-radius",
-      "schedule": "*/30 * * * *"
-    },
-    {
       "path": "/api/cron/expire-posts",
-      "schedule": "0 * * * *"
+      "schedule": "0 2 * * *"
     }
   ],
   "headers": [

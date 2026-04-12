@@ -6,33 +6,39 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getCurrentProfile, getFeedPosts } from "@/lib/data";
+import { getRequestMessages, translate } from "@/lib/i18n";
 
 export default async function HomePage() {
-  const [posts, currentProfile] = await Promise.all([getFeedPosts(), getCurrentProfile()]);
+  const [{ messages }, posts, currentProfile] = await Promise.all([
+    getRequestMessages(),
+    getFeedPosts(),
+    getCurrentProfile(),
+  ]);
+  const t = (key: string) => translate(messages, key);
 
   return (
     <div className="space-y-6">
       <section className="surface hero-grid overflow-hidden p-8 md:p-10">
         <div className="grid gap-8 xl:grid-cols-[1.2fr_0.8fr]">
           <div className="space-y-6">
-            <Badge variant="danger">SDG 3 aligned | Emergency-first routing</Badge>
+            <Badge variant="danger">{t("hero.badge")}</Badge>
             <div className="space-y-4">
               <h1 className="max-w-3xl text-balance text-4xl font-semibold md:text-6xl">
-                Find verified blood donors faster when the window is tight.
+                {t("hero.title")}
               </h1>
               <p className="max-w-2xl text-balance text-base text-muted-foreground md:text-lg">
-                Donorix combines urgency scoring, karma-backed trust, privacy-safe donor matching, and multilingual support for recipients across India.
+                {t("hero.subtitle")}
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
               <Button asChild size="lg">
                 <Link href="/posts/new">
-                  Create blood request
+                  {t("hero.primaryCta")}
                   <ArrowRight className="size-4" />
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline">
-                <Link href="/leaderboard">View top donors</Link>
+                <Link href="/leaderboard">{t("hero.secondaryCta")}</Link>
               </Button>
             </div>
           </div>
@@ -40,18 +46,18 @@ export default async function HomePage() {
             {[
               {
                 icon: ShieldCheck,
-                title: "Verified donor graph",
-                description: "Consent-aware profiles, 90-day donation cooldown, and public reputation signals.",
+                title: t("hero.featureOneTitle"),
+                description: t("hero.featureOneBody"),
               },
               {
                 icon: Zap,
-                title: "Emergency prioritisation",
-                description: "Critical requests rise to the top and unlock direct contact when medically urgent.",
+                title: t("hero.featureTwoTitle"),
+                description: t("hero.featureTwoBody"),
               },
               {
                 icon: Sparkles,
-                title: "Multilingual assistance",
-                description: "English and Hindi today, with architecture ready for 28+ Indian languages.",
+                title: t("hero.featureThreeTitle"),
+                description: t("hero.featureThreeBody"),
               },
             ].map((item) => (
               <Card key={item.title} className="bg-card/75">
@@ -73,9 +79,9 @@ export default async function HomePage() {
       <section className="space-y-4">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-semibold">Live request feed</h2>
+            <h2 className="text-2xl font-semibold">{t("hero.feedTitle")}</h2>
             <p className="text-sm text-muted-foreground">
-              Emergency posts are ranked first, followed by urgency, freshness, and community trust.
+              {t("hero.feedSubtitle")}
             </p>
           </div>
         </div>

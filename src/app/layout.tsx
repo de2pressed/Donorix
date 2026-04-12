@@ -1,11 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
-import { cookies } from "next/headers";
 import { Analytics } from "@vercel/analytics/react";
 
 import { AppProviders } from "@/components/providers/app-providers";
 import { APP_NAME, APP_TAGLINE } from "@/lib/constants";
 import { env } from "@/lib/env";
+import { getRequestMessages } from "@/lib/i18n";
 import { cn } from "@/lib/utils/cn";
 import "./globals.css";
 
@@ -44,27 +44,27 @@ export const viewport: Viewport = {
   colorScheme: "light dark",
 };
 
-async function getMessages(locale: string) {
-  if (locale === "hi") {
-    const messages = await import("../../messages/hi.json");
-    return messages.default;
-  }
-
-  const messages = await import("../../messages/en.json");
-  return messages.default;
-}
+const themeInitScript = `
+  try {
+    var storedTheme = window.localStorage.getItem('theme');
+    var isDark = storedTheme === 'dark';
+    document.documentElement.classList.toggle('dark', isDark);
+    document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+  } catch (error) {}
+`;
 
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const cookieStore = await cookies();
-  const locale = cookieStore.get("donorix_locale")?.value === "hi" ? "hi" : "en";
-  const messages = await getMessages(locale);
+  const { locale, messages } = await getRequestMessages();
 
   return (
     <html lang={locale} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className={cn(geistSans.variable, geistMono.variable, "min-h-screen")}>
         <AppProviders locale={locale} messages={messages}>
           {children}

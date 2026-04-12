@@ -5,10 +5,11 @@ import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { Ref } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import { PhoneInput } from "@/components/shared/phone-input";
 import { SearchablePicker } from "@/components/shared/searchable-picker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -253,7 +254,6 @@ export function SignupForm() {
   const errors = form.formState.errors;
   const fullNameField = form.register("full_name");
   const passwordField = form.register("password");
-  const phoneField = form.register("phone");
   const weightField = form.register("weight_kg", { valueAsNumber: true });
 
   function assignFirstFieldRef<T extends HTMLElement>(registerRef?: (instance: T | null) => void) {
@@ -384,11 +384,18 @@ export function SignupForm() {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="md:col-span-2">
                 <FieldShell error={errors.phone?.message} htmlFor="phone" label="Phone Number">
-                  <Input
-                    id="phone"
-                    placeholder="+91 XXXXX XXXXX"
-                    {...phoneField}
-                    ref={assignFirstFieldRef<HTMLInputElement>(phoneField.ref)}
+                  <Controller
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <PhoneInput
+                        id="phone"
+                        inputRef={assignFirstFieldRef<HTMLInputElement>()}
+                        value={field.value ?? ""}
+                        onBlur={field.onBlur}
+                        onChange={field.onChange}
+                      />
+                    )}
                   />
                 </FieldShell>
               </div>
@@ -496,17 +503,17 @@ export function SignupForm() {
                 label="Weight (kg)"
                 note="Donors must weigh at least 50 kg as per Indian medical guidelines"
               >
-                  <Input
-                    id="weight_kg"
-                    max={200}
-                    min={50}
-                    placeholder="Enter your weight in kg"
-                    type="number"
-                    {...weightField}
-                    ref={assignFirstFieldRef<HTMLInputElement>(weightField.ref)}
-                    onKeyDown={(event) => {
-                      if (["-", "+", "e", "E"].includes(event.key)) {
-                        event.preventDefault();
+                <Input
+                  id="weight_kg"
+                  max={200}
+                  min={50}
+                  placeholder="Enter your weight in kg"
+                  type="number"
+                  {...weightField}
+                  ref={assignFirstFieldRef<HTMLInputElement>(weightField.ref)}
+                  onKeyDown={(event) => {
+                    if (["-", "+", "e", "E"].includes(event.key)) {
+                      event.preventDefault();
                     }
                   }}
                 />

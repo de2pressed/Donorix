@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { Award, Bell, FileText, HeartHandshake, Home, PlusSquare, Settings } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 
-import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { MAIN_NAV } from "@/lib/constants";
 import { cn } from "@/lib/utils/cn";
 import { Badge } from "@/components/ui/badge";
@@ -13,13 +13,16 @@ const icons = [Home, Award, PlusSquare, Bell, FileText];
 
 export function Sidebar() {
   const pathname = usePathname();
+  const tNav = useTranslations("nav");
+  const tSidebar = useTranslations("sidebar");
+  const labels = [tNav("home"), tNav("leaderboard"), tNav("request"), tNav("notifications"), tNav("policies")];
 
   return (
-    <aside className="glass sticky top-6 hidden h-[calc(100vh-3rem)] w-[250px] shrink-0 flex-col justify-between overflow-hidden p-5 lg:flex">
+    <aside className="glass sticky top-6 hidden h-[calc(100vh-3rem)] w-[15.5rem] shrink-0 flex-col justify-between overflow-hidden p-5 lg:flex">
       <div className="space-y-8">
         <div className="space-y-3">
           <Badge className="w-fit" variant="danger">
-            India-first blood matching
+            {tSidebar("badge")}
           </Badge>
           <div className="flex items-center gap-3">
             <div className="flex size-12 items-center justify-center rounded-2xl bg-brand text-brand-foreground shadow-glow">
@@ -27,7 +30,7 @@ export function Sidebar() {
             </div>
             <div>
               <h1 className="text-xl font-semibold">Donorix</h1>
-              <p className="text-sm text-muted-foreground">Urgent care starts with faster matching.</p>
+              <p className="text-sm text-muted-foreground">{tSidebar("subtitle")}</p>
             </div>
           </div>
         </div>
@@ -44,7 +47,7 @@ export function Sidebar() {
                 )}
               >
                 <Icon className="size-4" />
-                {item.label}
+                {labels[index]}
               </Link>
             );
           })}
@@ -59,18 +62,13 @@ export function Sidebar() {
           href="/settings"
         >
           <Settings className="size-4" />
-          Settings
+          {tNav("settings")}
         </Link>
         <div className="rounded-[1.5rem] border border-border bg-card/60 p-4">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-sm font-medium">Emergency routing enabled</p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Requests marked emergency receive priority scoring, contact unlock, and expanded notification reach.
-              </p>
-            </div>
-            <ThemeToggle />
-          </div>
+          <p className="text-sm font-medium">{tSidebar("emergencyTitle")}</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {tSidebar("emergencyBody")}
+          </p>
         </div>
       </div>
     </aside>

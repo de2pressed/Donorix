@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
 import { PostCard } from "@/components/posts/post-card";
@@ -14,6 +15,7 @@ export function PostFeed({
   posts: FeedPost[];
   isAuthenticated?: boolean;
 }) {
+  const tFeed = useTranslations("feed");
   const [query, setQuery] = useState("");
   const [emergencyOnly, setEmergencyOnly] = useState(false);
 
@@ -46,12 +48,12 @@ export function PostFeed({
 
       <div className="space-y-5 overflow-x-hidden">
         {filteredPosts.length ? (
-          filteredPosts.map((post) => (
-            <PostCard key={post.id} isAuthenticated={isAuthenticated} post={post} />
+          filteredPosts.map((post, index) => (
+            <PostCard key={post.id} index={index} isAuthenticated={isAuthenticated} post={post} />
           ))
         ) : (
           <div className="rounded-[1.75rem] border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
-            No blood requests match the current search or filter.
+            {tFeed("noMatches")}
           </div>
         )}
       </div>

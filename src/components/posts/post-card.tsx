@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { motion, useReducedMotion } from "framer-motion";
 import { Clock3, Droplets, Hospital, MapPin, Users } from "lucide-react";
 
 import { DonateButton } from "@/components/posts/donate-button";
@@ -14,13 +17,28 @@ import type { FeedPost } from "@/types/post";
 export function PostCard({
   post,
   isAuthenticated = false,
+  index = 0,
 }: {
   post: FeedPost;
   isAuthenticated?: boolean;
+  index?: number;
 }) {
+  const reduceMotion = useReducedMotion();
+
   return (
-    <Card className={cn("min-w-0 overflow-hidden", post.is_emergency && "border-danger/40 shadow-glow")}>
-      <CardContent className="space-y-5 p-0">
+    <motion.div
+      initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+      transition={{ delay: index * 0.05, duration: 0.24, ease: "easeOut" }}
+      viewport={{ amount: 0.2, once: true }}
+      whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+    >
+      <Card
+        className={cn(
+          "min-w-0 overflow-hidden",
+          post.is_emergency && "emergency-pulse border-danger/40 shadow-glow",
+        )}
+      >
+        <CardContent className="space-y-5 p-0">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0 space-y-3">
             <div className="flex flex-wrap items-center gap-3">
@@ -94,7 +112,8 @@ export function PostCard({
             <DonateButton isAuthenticated={isAuthenticated} postId={post.id} />
           </div>
         </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }

@@ -12,7 +12,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
-const STORAGE_KEY = "donorix_disclaimer_seen";
+const STORAGE_KEY = "donorix_disclaimer_v1_seen";
+const DISCLAIMER_EVENT = "donorix:disclaimer-seen";
 
 export function DisclaimerModal() {
   const [open, setOpen] = useState(false);
@@ -25,6 +26,7 @@ export function DisclaimerModal() {
 
   const handleContinue = () => {
     window.localStorage.setItem(STORAGE_KEY, "true");
+    window.dispatchEvent(new CustomEvent(DISCLAIMER_EVENT));
     setOpen(false);
   };
 

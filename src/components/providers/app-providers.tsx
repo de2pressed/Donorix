@@ -1,11 +1,14 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { NextIntlClientProvider } from "next-intl";
+import type { AbstractIntlMessages } from "next-intl";
 import { ThemeProvider } from "next-themes";
 import { useState } from "react";
 import { Toaster } from "sonner";
 
+import { PageTransitionShell } from "@/components/layout/page-transition-shell";
+import { LocalePreferenceProvider } from "@/components/providers/locale-provider";
+import { ScrollReset } from "@/components/layout/scroll-reset";
 import { AuthPromptProvider } from "@/components/shared/auth-prompt-modal";
 import { CookieConsentBanner } from "@/components/shared/cookie-consent-banner";
 import { DisclaimerModal } from "@/components/shared/disclaimer-modal";
@@ -15,7 +18,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 type AppProvidersProps = {
   children: React.ReactNode;
   locale: string;
-  messages: Record<string, string>;
+  messages: AbstractIntlMessages;
 };
 
 export function AppProviders({ children, locale, messages }: AppProvidersProps) {
@@ -34,19 +37,20 @@ export function AppProviders({ children, locale, messages }: AppProvidersProps) 
 
   return (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-      <NextIntlClientProvider locale={locale} messages={messages}>
+      <LocalePreferenceProvider initialLocale={locale} initialMessages={messages}>
         <QueryClientProvider client={queryClient}>
           <TooltipProvider delayDuration={150}>
             <AuthPromptProvider>
+              <ScrollReset />
               <OfflineBanner />
               <DisclaimerModal />
               <CookieConsentBanner />
-              {children}
+              <PageTransitionShell>{children}</PageTransitionShell>
             </AuthPromptProvider>
           </TooltipProvider>
           <Toaster position="top-right" richColors />
         </QueryClientProvider>
-      </NextIntlClientProvider>
+      </LocalePreferenceProvider>
     </ThemeProvider>
   );
 }

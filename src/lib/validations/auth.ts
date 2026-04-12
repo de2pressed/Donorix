@@ -1,26 +1,26 @@
+import { differenceInYears, isValid, parseISO } from "date-fns";
 import { z } from "zod";
 
 import { BLOOD_TYPES } from "@/lib/constants";
+import { validatePhoneNumber } from "@/lib/utils/phone";
 
 const minimumAdultAgeYears = 18;
 const minimumWeightKg = 50;
 
 function isRealAdultDate(value: string) {
-  const date = new Date(`${value}T00:00:00`);
-  if (Number.isNaN(date.getTime())) return false;
+  const date = parseISO(`${value}T00:00:00`);
+  if (!isValid(date)) return false;
 
   const [year, month, day] = value.split("-").map(Number);
   if (
-    date.getUTCFullYear() !== year ||
-    date.getUTCMonth() + 1 !== month ||
-    date.getUTCDate() !== day
+    date.getFullYear() !== year ||
+    date.getMonth() + 1 !== month ||
+    date.getDate() !== day
   ) {
     return false;
   }
 
-  const adultCutoff = new Date();
-  adultCutoff.setFullYear(adultCutoff.getFullYear() - minimumAdultAgeYears);
-  return date <= adultCutoff;
+  return differenceInYears(new Date(), date) >= minimumAdultAgeYears;
 }
 
 export const signupSchema = z
@@ -32,7 +32,7 @@ export const signupSchema = z
       .max(30)
       .regex(/^[a-z0-9_]+$/, "Only lowercase letters, numbers, and underscores"),
     email: z.string().email(),
-    phone: z.string().regex(/^\+91[6-9]\d{9}$/, "Invalid Indian mobile number"),
+    phone: z.string().refine(validatePhoneNumber, "Invalid mobile number"),
     password: z
       .string()
       .min(8)

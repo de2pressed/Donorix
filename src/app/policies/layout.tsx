@@ -28,17 +28,10 @@ export default function PoliciesLayout({ children }: { children: React.ReactNode
             className="rounded-full"
             type="button"
             variant="ghost"
-            onClick={() => {
-              if (window.history.length > 1) {
-                router.back();
-                return;
-              }
-
-              router.push("/");
-            }}
+            onClick={() => router.push("/")}
           >
             <ArrowLeft className="size-4" />
-            Back
+            Back to Donorix
           </Button>
           <Link className="font-semibold tracking-tight" href="/">
             Donorix

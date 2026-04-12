@@ -2,6 +2,7 @@ import { addHours } from "date-fns";
 import { z } from "zod";
 
 import { BLOOD_TYPES } from "@/lib/constants";
+import { validatePhoneNumber } from "@/lib/utils/phone";
 
 export const createPostSchema = z.object({
   patient_name: z.string().min(2).max(100).trim(),
@@ -16,7 +17,7 @@ export const createPostSchema = z.object({
   contact_name: z.string().min(2).max(100).trim(),
   contact_phone: z
     .string()
-    .regex(/^\+91[6-9]\d{9}$/, "Invalid Indian mobile number"),
+    .refine(validatePhoneNumber, "Invalid mobile number"),
   contact_email: z.union([z.string().email(), z.literal(""), z.undefined()]).optional(),
   medical_condition: z.string().max(500).optional(),
   additional_notes: z.string().max(1000).optional(),

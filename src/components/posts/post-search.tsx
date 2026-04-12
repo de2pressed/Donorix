@@ -35,10 +35,10 @@ export function PostSearch({
   }, []);
 
   useEffect(() => {
-    if ((expanded || !collapsed) && inputRef.current) {
+    if (expanded && inputRef.current) {
       inputRef.current.focus();
     }
-  }, [collapsed, expanded]);
+  }, [expanded]);
 
   const showCompactButton = collapsed && !expanded && !value;
 

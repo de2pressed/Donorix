@@ -20,7 +20,9 @@ export default async function ProfilePage() {
       <ProfileHeader profile={profile} />
       <KarmaProgress karma={profile.karma} />
       <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <EditProfileForm profile={profile} />
+        <div id="edit-profile">
+          <EditProfileForm profile={profile} />
+        </div>
         <DonationHistory donations={donations} />
       </div>
     </div>

@@ -15,7 +15,9 @@ import {
 } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 
-const COOKIE_KEY = "donorix_cookie_consent";
+const COOKIE_KEY = "donorix_cookie_consent_v1";
+const DISCLAIMER_KEY = "donorix_disclaimer_v1_seen";
+const DISCLAIMER_EVENT = "donorix:disclaimer-seen";
 
 type Preferences = Record<string, boolean>;
 
@@ -30,24 +32,30 @@ export function CookieConsentBanner() {
   const [preferences, setPreferences] = useState(defaultPreferences);
 
   useEffect(() => {
-    const existing = document.cookie
-      .split("; ")
-      .find((cookie) => cookie.startsWith(`${COOKIE_KEY}=`));
+    const evaluateVisibility = () => {
+      const disclaimerSeen = window.localStorage.getItem(DISCLAIMER_KEY) === "true";
+      const existing = window.localStorage.getItem(COOKIE_KEY);
 
-    if (!existing) {
-      setVisible(true);
-    }
+      setVisible(disclaimerSeen && !existing);
+    };
+
+    evaluateVisibility();
+    window.addEventListener(DISCLAIMER_EVENT, evaluateVisibility);
+
+    return () => {
+      window.removeEventListener(DISCLAIMER_EVENT, evaluateVisibility);
+    };
   }, []);
 
   const persist = (nextPreferences: Preferences) => {
-    document.cookie = `${COOKIE_KEY}=${encodeURIComponent(JSON.stringify(nextPreferences))}; Path=/; Max-Age=31536000; SameSite=Lax`;
+    window.localStorage.setItem(COOKIE_KEY, JSON.stringify(nextPreferences));
     setVisible(false);
   };
 
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-4 z-[70] px-4">
+    <div className="fixed inset-x-0 bottom-0 z-[60] px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-4">
       <div className="mx-auto flex max-w-5xl flex-col gap-4 rounded-[1.75rem] border border-border bg-card/95 p-5 shadow-soft backdrop-blur">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>

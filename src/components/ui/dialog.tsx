@@ -17,7 +17,7 @@ const DialogOverlay = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Overlay
     ref={ref}
-    className={cn("fixed inset-0 z-50 bg-black/50 backdrop-blur-sm", className)}
+    className={cn("dialog-overlay fixed inset-0 z-50 bg-black/50 backdrop-blur-sm", className)}
     {...props}
   />
 ));
@@ -32,7 +32,7 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-[1.8rem] border border-border bg-card p-6 shadow-soft focus:outline-none",
+        "dialog-content fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-[1.8rem] border border-border bg-card p-6 shadow-soft focus:outline-none",
         className,
       )}
       {...props}

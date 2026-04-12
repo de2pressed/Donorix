@@ -1,4 +1,8 @@
+"use client";
+
 import { Trophy } from "lucide-react";
+import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -7,10 +11,12 @@ import { getKarmaRank } from "@/lib/utils/karma";
 import type { Profile } from "@/types/user";
 
 export function LeaderboardTable({ leaders }: { leaders: Profile[] }) {
+  const tLeaderboard = useTranslations("leaderboard");
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Top 100 lifesavers</CardTitle>
+        <CardTitle>{tLeaderboard("cardTitle")}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         {leaders.length ? (
@@ -18,7 +24,13 @@ export function LeaderboardTable({ leaders }: { leaders: Profile[] }) {
             const rank = getKarmaRank(leader.karma);
 
             return (
-              <div key={leader.id} className="flex items-center justify-between rounded-[1.5rem] border border-border p-4">
+              <motion.div
+                key={leader.id}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex items-center justify-between rounded-[1.5rem] border border-border p-4"
+                initial={{ opacity: 0, x: -18 }}
+                transition={{ delay: index * 0.03, duration: 0.22, ease: "easeOut" }}
+              >
                 <div className="flex items-center gap-4">
                   <div className="flex size-10 items-center justify-center rounded-full bg-brand-soft font-semibold text-brand">
                     {index + 1}
@@ -42,16 +54,16 @@ export function LeaderboardTable({ leaders }: { leaders: Profile[] }) {
                       {leader.karma}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {leader.total_donations} donations
+                      {tLeaderboard("donations", { count: leader.total_donations })}
                     </p>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             );
           })
         ) : (
           <div className="rounded-[1.5rem] border border-dashed border-border p-6 text-sm text-muted-foreground">
-            Leaderboard unlocks once verified donations begin flowing through the platform.
+            {tLeaderboard("empty")}
           </div>
         )}
       </CardContent>

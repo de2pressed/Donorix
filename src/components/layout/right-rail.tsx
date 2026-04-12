@@ -9,7 +9,7 @@ export async function RightRail() {
   const leaders = (await getLeaderboard()).slice(0, 5);
 
   return (
-    <aside className="hidden w-[320px] shrink-0 xl:block">
+    <aside className="hidden w-[19rem] shrink-0 xl:block">
       <div className="sticky top-6 space-y-4">
         <Card>
           <CardHeader>

@@ -1,15 +1,17 @@
 import { LeaderboardTable } from "@/components/leaderboard/leaderboard-table";
 import { getLeaderboard } from "@/lib/data";
+import { getRequestMessages, translate } from "@/lib/i18n";
 
 export default async function LeaderboardPage() {
-  const leaders = await getLeaderboard();
+  const [{ messages }, leaders] = await Promise.all([getRequestMessages(), getLeaderboard()]);
+  const t = (key: string) => translate(messages, key);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pt-1">
       <div>
-        <h1 className="text-3xl font-semibold">Karma leaderboard</h1>
+        <h1 className="text-3xl font-semibold leading-[1.05]">{t("leaderboard.title")}</h1>
         <p className="text-sm text-muted-foreground">
-          Ranked by verified donations, responsive participation, and zero no-shows.
+          {t("leaderboard.subtitle")}
         </p>
       </div>
       <LeaderboardTable leaders={leaders} />

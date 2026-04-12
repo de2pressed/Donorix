@@ -10,8 +10,18 @@ export default function ResetPasswordPage() {
         <CardDescription>Passwords require uppercase, number, and special character.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Input placeholder="New password" type="password" />
-        <Input placeholder="Confirm password" type="password" />
+        <div className="space-y-2">
+          <label className="text-sm font-medium" htmlFor="new-password">
+            New password
+          </label>
+          <Input id="new-password" placeholder="Enter a new password" type="password" />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium" htmlFor="confirm-new-password">
+            Confirm password
+          </label>
+          <Input id="confirm-new-password" placeholder="Confirm the new password" type="password" />
+        </div>
         <Button className="w-full">Update password</Button>
       </CardContent>
     </Card>

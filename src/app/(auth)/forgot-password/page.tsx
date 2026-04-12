@@ -10,7 +10,12 @@ export default function ForgotPasswordPage() {
         <CardDescription>We will send a password reset link to your verified email address.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Input placeholder="Email address" type="email" />
+        <div className="space-y-2">
+          <label className="text-sm font-medium" htmlFor="forgot-password-email">
+            Email
+          </label>
+          <Input id="forgot-password-email" placeholder="Enter your email address" type="email" />
+        </div>
         <Button className="w-full">Send reset link</Button>
       </CardContent>
     </Card>

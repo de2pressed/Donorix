@@ -5,17 +5,32 @@ import { updateSession } from "@/lib/supabase/middleware";
 
 const protectedPrefixes = ["/profile", "/notifications", "/settings", "/posts/new"];
 const adminPrefixes = ["/admin"];
+const authPrefixes = ["/login", "/signup"];
 
 export async function middleware(request: NextRequest) {
-  const response = await updateSession(request);
+  const { response, user } = await updateSession(request);
   const pathname = request.nextUrl.pathname;
+  const search = request.nextUrl.search;
 
-  if (protectedPrefixes.some((prefix) => pathname.startsWith(prefix)) && !request.cookies.get("sb-access-token")) {
-    return NextResponse.redirect(new URL("/login", request.url));
+  if (pathname.startsWith("/api/auth/callback")) {
+    return response;
   }
 
-  if (adminPrefixes.some((prefix) => pathname.startsWith(prefix)) && !request.cookies.get("sb-access-token")) {
-    return NextResponse.redirect(new URL("/login", request.url));
+  const isProtected = protectedPrefixes.some((prefix) => pathname.startsWith(prefix));
+  const isAdminRoute = adminPrefixes.some((prefix) => pathname.startsWith(prefix));
+  const isAuthRoute = authPrefixes.some((prefix) => pathname.startsWith(prefix));
+
+  if ((isProtected || isAdminRoute) && !user) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("redirect", `${pathname}${search}`);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  if (isAuthRoute && user) {
+    const redirectTo = request.nextUrl.searchParams.get("redirect");
+    const destination =
+      redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//") ? redirectTo : "/";
+    return NextResponse.redirect(new URL(destination, request.url));
   }
 
   response.headers.set("X-Frame-Options", "DENY");

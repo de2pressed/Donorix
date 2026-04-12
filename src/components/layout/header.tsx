@@ -1,30 +1,42 @@
+"use client";
+
 import Link from "next/link";
-import { MoonStar, Search, ShieldCheck, SunMedium } from "lucide-react";
+import { Settings, ShieldCheck } from "lucide-react";
 
 import { NotificationBell } from "@/components/notifications/notification-bell";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { UserMenu } from "@/components/layout/user-menu";
 import { Button } from "@/components/ui/button";
 
 export function Header() {
   return (
     <header className="glass sticky top-4 z-40 flex items-center justify-between gap-4 px-4 py-3">
-      <div className="flex flex-1 items-center gap-3 rounded-full border border-border bg-card/70 px-4 py-3 text-sm text-muted-foreground">
-        <Search className="size-4" />
-        Search by hospital, blood type, city, or condition
+      <div className="min-w-0">
+        <Link className="inline-flex items-center gap-3" href="/">
+          <span className="text-lg font-semibold tracking-tight text-foreground">Donorix</span>
+          <span className="hidden text-sm text-muted-foreground md:inline">
+            Faster blood coordination across India
+          </span>
+        </Link>
       </div>
-      <div className="hidden items-center gap-3 md:flex">
-        <div className="rounded-full border border-border bg-card/80 p-3 text-muted-foreground">
-          <SunMedium className="size-4 dark:hidden" />
-          <MoonStar className="hidden size-4 dark:block" />
-        </div>
-        <div className="flex items-center gap-2 rounded-full border border-success/30 bg-success/10 px-4 py-2 text-sm text-success">
+
+      <div className="flex items-center gap-2">
+        <div className="hidden items-center gap-2 rounded-full border border-success/30 bg-success/10 px-4 py-2 text-sm text-success lg:flex">
           <ShieldCheck className="size-4" />
           Verified network
         </div>
+        <Button asChild className="hidden md:inline-flex" size="sm">
+          <Link href="/posts/new">New Request</Link>
+        </Button>
+        <NotificationBell />
+        <Button asChild aria-label="Open settings" size="icon" variant="ghost">
+          <Link href="/settings">
+            <Settings className="size-4" />
+          </Link>
+        </Button>
+        <ThemeToggle />
+        <UserMenu />
       </div>
-      <NotificationBell />
-      <Button asChild size="sm">
-        <Link href="/posts/new">New Request</Link>
-      </Button>
     </header>
   );
 }

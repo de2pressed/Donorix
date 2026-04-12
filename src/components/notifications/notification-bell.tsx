@@ -5,7 +5,7 @@ export function NotificationBell({ unreadCount = 0 }: { unreadCount?: number }) 
   return (
     <Link
       href="/notifications"
-      className="relative rounded-full border border-border bg-card/80 p-3 text-foreground"
+      className="relative flex size-11 items-center justify-center rounded-full border border-border bg-card/80 text-foreground"
       aria-label="Open notifications"
     >
       <Bell className="size-4" />

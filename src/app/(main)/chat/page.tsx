@@ -1,15 +1,15 @@
-import { ChatWindow } from "@/components/chatbot/chat-window";
-
 export default function ChatPage() {
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-3xl font-semibold">AI blood assistant</h1>
+    <div className="surface space-y-4 p-8">
+      <div className="space-y-3">
+        <h1 className="text-3xl font-semibold">Assistant moved to the floating panel</h1>
         <p className="text-sm text-muted-foreground">
-          Ask about eligibility, create a request conversationally, or find matching donations by blood type.
+          The Donorix Assistant now lives in the bottom-right corner so it stays available without taking over a full page.
         </p>
       </div>
-      <ChatWindow />
+      <p className="text-sm text-muted-foreground">
+        Open the floating assistant from any main app page to continue the same session conversation.
+      </p>
     </div>
   );
 }

@@ -7,7 +7,13 @@ import { PostFilter } from "@/components/posts/post-filter";
 import { PostSearch } from "@/components/posts/post-search";
 import type { FeedPost } from "@/types/post";
 
-export function PostFeed({ posts }: { posts: FeedPost[] }) {
+export function PostFeed({
+  posts,
+  isAuthenticated = false,
+}: {
+  posts: FeedPost[];
+  isAuthenticated?: boolean;
+}) {
   const [query, setQuery] = useState("");
   const [emergencyOnly, setEmergencyOnly] = useState(false);
 
@@ -18,7 +24,14 @@ export function PostFeed({ posts }: { posts: FeedPost[] }) {
       if (emergencyOnly && !post.is_emergency) return false;
       if (!normalizedQuery) return true;
 
-      return [post.blood_type_needed, post.city, post.hospital_name, post.medical_condition]
+      return [
+        post.patient_name,
+        post.blood_type_needed,
+        post.city,
+        post.state,
+        post.hospital_name,
+        post.medical_condition,
+      ]
         .filter(Boolean)
         .some((value) => value?.toLowerCase().includes(normalizedQuery));
     });
@@ -31,9 +44,11 @@ export function PostFeed({ posts }: { posts: FeedPost[] }) {
         <PostFilter emergencyOnly={emergencyOnly} onEmergencyChange={setEmergencyOnly} />
       </div>
 
-      <div className="space-y-5">
+      <div className="space-y-5 overflow-x-hidden">
         {filteredPosts.length ? (
-          filteredPosts.map((post) => <PostCard key={post.id} post={post} />)
+          filteredPosts.map((post) => (
+            <PostCard key={post.id} isAuthenticated={isAuthenticated} post={post} />
+          ))
         ) : (
           <div className="rounded-[1.75rem] border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
             No blood requests match the current search or filter.

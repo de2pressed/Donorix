@@ -21,7 +21,6 @@ export const MAIN_NAV = [
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/posts/new", label: "Request Blood" },
   { href: "/notifications", label: "Notifications" },
-  { href: "/chat", label: "AI Assistant" },
   { href: "/policies/terms", label: "Policies" },
 ];
 

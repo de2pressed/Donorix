@@ -1,33 +1,112 @@
-import Link from "next/link";
+"use client";
 
+import Link from "next/link";
+import { ArrowLeft, Menu } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+
+import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { POLICY_NAV } from "@/lib/constants";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils/cn";
 
 export default function PoliciesLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const router = useRouter();
+
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-8 lg:flex-row lg:px-6">
-      <aside className="surface lg:sticky lg:top-6 lg:h-[calc(100vh-3rem)] lg:w-80">
-        <div className="space-y-3 p-6">
-          <h1 className="text-2xl font-semibold">Policies</h1>
-          <p className="text-sm text-muted-foreground">
-            The legal, consent, privacy, and misuse controls that govern Donorix.
-          </p>
+    <div className="mx-auto min-h-screen max-w-[1400px] px-4 py-4 lg:px-6">
+      <header className="glass sticky top-4 z-40 flex items-center justify-between gap-4 px-4 py-3">
+        <div className="flex items-center gap-3">
+          <Button
+            className="rounded-full"
+            type="button"
+            variant="ghost"
+            onClick={() => {
+              if (window.history.length > 1) {
+                router.back();
+                return;
+              }
+
+              router.push("/");
+            }}
+          >
+            <ArrowLeft className="size-4" />
+            Back
+          </Button>
+          <Link className="font-semibold tracking-tight" href="/">
+            Donorix
+          </Link>
         </div>
-        <ScrollArea className="h-[420px] px-2 pb-4 lg:h-[calc(100%-120px)]">
-          <nav className="space-y-1 px-3">
+        <ThemeToggle />
+      </header>
+
+      <div className="mt-6 flex flex-col gap-6 lg:grid lg:grid-cols-[280px_minmax(0,720px)]">
+        <aside className="hidden rounded-[1.75rem] border border-border bg-card/80 p-4 lg:block lg:sticky lg:top-24 lg:h-[calc(100vh-7rem)]">
+          <div className="space-y-2 px-2 pb-4">
+            <h1 className="text-2xl font-semibold">Policies</h1>
+            <p className="text-sm text-muted-foreground">
+              Legal, consent, privacy, and safety controls for the Donorix platform.
+            </p>
+          </div>
+          <nav className="space-y-1 overflow-y-auto pr-1">
             {POLICY_NAV.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="block rounded-2xl px-4 py-3 text-sm text-muted-foreground transition hover:bg-brand-soft hover:text-brand"
+                className={cn(
+                  "block rounded-2xl px-4 py-3 text-sm text-muted-foreground transition hover:bg-brand-soft hover:text-brand",
+                  pathname === item.href && "bg-brand-soft text-brand",
+                )}
               >
                 {item.label}
               </Link>
             ))}
           </nav>
-        </ScrollArea>
-      </aside>
-      <div className="min-w-0 flex-1">{children}</div>
+        </aside>
+
+        <div className="space-y-4">
+          <div className="lg:hidden">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button className="w-full justify-center" type="button" variant="outline">
+                  <Menu className="size-4" />
+                  Policy Menu
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-[calc(100vw-1rem)]">
+                <DialogHeader>
+                  <DialogTitle>Policy Menu</DialogTitle>
+                </DialogHeader>
+                <nav className="max-h-[60vh] space-y-1 overflow-y-auto">
+                  {POLICY_NAV.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={cn(
+                        "block rounded-2xl px-4 py-3 text-sm text-muted-foreground transition hover:bg-brand-soft hover:text-brand",
+                        pathname === item.href && "bg-brand-soft text-brand",
+                      )}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </nav>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          <div className="min-w-0 rounded-[1.75rem] border border-border bg-card/85 p-6 shadow-soft md:p-8">
+            <div className="mx-auto max-w-[720px]">{children}</div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

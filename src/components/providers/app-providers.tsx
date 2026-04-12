@@ -10,6 +10,7 @@ import { AuthPromptProvider } from "@/components/shared/auth-prompt-modal";
 import { CookieConsentBanner } from "@/components/shared/cookie-consent-banner";
 import { DisclaimerModal } from "@/components/shared/disclaimer-modal";
 import { OfflineBanner } from "@/components/shared/offline-banner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 type AppProvidersProps = {
   children: React.ReactNode;
@@ -32,15 +33,17 @@ export function AppProviders({ children, locale, messages }: AppProvidersProps) 
   );
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
       <NextIntlClientProvider locale={locale} messages={messages}>
         <QueryClientProvider client={queryClient}>
-          <AuthPromptProvider>
-            <OfflineBanner />
-            <DisclaimerModal />
-            <CookieConsentBanner />
-            {children}
-          </AuthPromptProvider>
+          <TooltipProvider delayDuration={150}>
+            <AuthPromptProvider>
+              <OfflineBanner />
+              <DisclaimerModal />
+              <CookieConsentBanner />
+              {children}
+            </AuthPromptProvider>
+          </TooltipProvider>
           <Toaster position="top-right" richColors />
         </QueryClientProvider>
       </NextIntlClientProvider>

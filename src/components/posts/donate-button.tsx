@@ -1,10 +1,19 @@
 "use client";
 
 import { HeartHandshake } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
+import { format } from "date-fns";
 
 import { Button } from "@/components/ui/button";
 import { useAuthPrompt } from "@/components/shared/auth-prompt-modal";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useUser } from "@/lib/hooks/use-user";
+import {
+  getNextEligibleDonationDate,
+  isDonationEligible,
+} from "@/lib/utils/donation-eligibility";
 
 export function DonateButton({
   postId,
@@ -13,24 +22,67 @@ export function DonateButton({
   postId: string;
   isAuthenticated?: boolean;
 }) {
+  const router = useRouter();
   const { openPrompt } = useAuthPrompt();
+  const { data: user } = useUser();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const nextEligibleDate = getNextEligibleDonationDate(user?.last_donated_at);
+  const eligibleToDonate = isDonationEligible(user?.last_donated_at);
+  const cooldownMessage = nextEligibleDate
+    ? `You can donate again on ${format(nextEligibleDate, "d MMM yyyy")}.`
+    : "You are currently not eligible to donate.";
 
-  return (
+  async function handleDonate() {
+    if (!isAuthenticated) {
+      openPrompt();
+      return;
+    }
+
+    if (!eligibleToDonate) {
+      toast.error(cooldownMessage);
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(`/api/posts/${postId}/donors`, { method: "POST" });
+      const body = (await response.json().catch(() => null)) as { error?: string } | null;
+
+      if (!response.ok) {
+        toast.error(body?.error ?? "Unable to submit donor application");
+        return;
+      }
+
+      toast.success("Application submitted");
+      router.refresh();
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  const button = (
     <Button
+      disabled={isSubmitting || (isAuthenticated && !eligibleToDonate)}
       variant="secondary"
       onClick={() => {
-        if (!isAuthenticated) {
-          openPrompt();
-          return;
-        }
-
-        void fetch(`/api/posts/${postId}/donors`, { method: "POST" }).then(() =>
-          toast.success("Application submitted"),
-        );
+        void handleDonate();
       }}
     >
       <HeartHandshake className="size-4" />
       I can donate
     </Button>
+  );
+
+  if (isAuthenticated && !eligibleToDonate) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>{button}</TooltipTrigger>
+        <TooltipContent>{cooldownMessage}</TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return (
+    button
   );
 }

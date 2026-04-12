@@ -5,17 +5,17 @@ import { PostFeed } from "@/components/posts/post-feed";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { getFeedPosts } from "@/lib/data";
+import { getCurrentProfile, getFeedPosts } from "@/lib/data";
 
 export default async function HomePage() {
-  const posts = await getFeedPosts();
+  const [posts, currentProfile] = await Promise.all([getFeedPosts(), getCurrentProfile()]);
 
   return (
     <div className="space-y-6">
       <section className="surface hero-grid overflow-hidden p-8 md:p-10">
         <div className="grid gap-8 xl:grid-cols-[1.2fr_0.8fr]">
           <div className="space-y-6">
-            <Badge variant="danger">SDG 3 aligned • Emergency-first routing</Badge>
+            <Badge variant="danger">SDG 3 aligned | Emergency-first routing</Badge>
             <div className="space-y-4">
               <h1 className="max-w-3xl text-balance text-4xl font-semibold md:text-6xl">
                 Find verified blood donors faster when the window is tight.
@@ -59,7 +59,7 @@ export default async function HomePage() {
                   <div className="flex size-11 items-center justify-center rounded-2xl bg-brand-soft text-brand">
                     <item.icon className="size-5" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <h2 className="font-semibold">{item.title}</h2>
                     <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
                   </div>
@@ -71,7 +71,7 @@ export default async function HomePage() {
       </section>
 
       <section className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl font-semibold">Live request feed</h2>
             <p className="text-sm text-muted-foreground">
@@ -79,7 +79,7 @@ export default async function HomePage() {
             </p>
           </div>
         </div>
-        <PostFeed posts={posts} />
+        <PostFeed isAuthenticated={Boolean(currentProfile)} posts={posts} />
       </section>
     </div>
   );

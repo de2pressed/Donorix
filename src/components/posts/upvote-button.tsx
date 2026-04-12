@@ -1,6 +1,8 @@
 "use client";
 
 import { ArrowBigUp } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -15,21 +17,36 @@ export function UpvoteButton({
   count: number;
   isAuthenticated?: boolean;
 }) {
+  const router = useRouter();
   const { openPrompt } = useAuthPrompt();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   return (
     <Button
+      disabled={isSubmitting}
       variant="ghost"
       size="sm"
-      onClick={() => {
+      onClick={async () => {
         if (!isAuthenticated) {
           openPrompt();
           return;
         }
 
-        void fetch(`/api/posts/${postId}/upvote`, { method: "POST" }).then(() =>
-          toast.success("Vote recorded"),
-        );
+        setIsSubmitting(true);
+        try {
+          const response = await fetch(`/api/posts/${postId}/upvote`, { method: "POST" });
+          const body = (await response.json().catch(() => null)) as { error?: string } | null;
+
+          if (!response.ok) {
+            toast.error(body?.error ?? "Unable to record vote");
+            return;
+          }
+
+          toast.success("Vote recorded");
+          router.refresh();
+        } finally {
+          setIsSubmitting(false);
+        }
       }}
     >
       <ArrowBigUp className="size-4" />

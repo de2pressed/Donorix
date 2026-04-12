@@ -52,6 +52,7 @@ html.dark {
 
 html {
   color-scheme: light;
+  overflow-x: hidden;
   scroll-behavior: smooth;
 }
 
@@ -60,7 +61,7 @@ html.dark {
 }
 
 body {
-  @apply min-h-screen bg-background text-foreground font-sans antialiased;
+  @apply min-h-screen overflow-x-hidden bg-background font-sans text-foreground antialiased;
   background-image:
     radial-gradient(circle at top left, rgba(179, 12, 49, 0.12), transparent 28%),
     radial-gradient(circle at 80% 10%, rgba(255, 122, 89, 0.12), transparent 18%),
@@ -76,6 +77,13 @@ body {
 
 a {
   @apply transition-colors;
+}
+
+input,
+select,
+textarea,
+button {
+  max-width: 100%;
 }
 
 ::selection {

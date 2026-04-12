@@ -18,7 +18,7 @@ import { Progress } from "@/components/ui/progress";
 import { BLOOD_TYPES } from "@/lib/constants";
 import { getCitiesForRegion, INDIAN_REGION_NAMES } from "@/lib/india-locations";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { signupSchema } from "@/lib/validations/auth";
+import { signupProfileSeedSchema, signupSchema } from "@/lib/validations/auth";
 import { cn } from "@/lib/utils/cn";
 
 type SignupValues = z.input<typeof signupSchema>;
@@ -233,12 +233,15 @@ export function SignupForm() {
       return;
     }
 
+    const password = values.password;
+    const profileSeed = signupProfileSeedSchema.parse(values);
+
     const { error } = await supabase.auth.signUp({
       email: values.email,
-      password: values.password,
+      password,
       options: {
         emailRedirectTo: `${window.location.origin}/api/auth/callback`,
-        data: values,
+        data: profileSeed,
       },
     });
 

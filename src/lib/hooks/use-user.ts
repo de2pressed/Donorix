@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 
+import { authenticatedFetch } from "@/lib/supabase/authenticated-fetch";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { Profile } from "@/types/user";
 
@@ -31,13 +32,14 @@ function buildProfileFallback(user: User): Profile {
     full_name: fullName,
     username,
     avatar_url: typeof metadata?.avatar_url === "string" ? metadata.avatar_url : null,
-    blood_type: typeof metadata?.blood_type === "string" ? metadata.blood_type : "",
+    account_type: metadata?.account_type === "hospital" ? "hospital" : "donor",
+    blood_type: typeof metadata?.blood_type === "string" ? metadata.blood_type : null,
     gender: typeof metadata?.gender === "string" ? metadata.gender : "prefer_not_to_say",
-    date_of_birth: typeof metadata?.date_of_birth === "string" ? metadata.date_of_birth : "",
+    date_of_birth: typeof metadata?.date_of_birth === "string" ? metadata.date_of_birth : null,
     city: typeof metadata?.city === "string" ? metadata.city : "",
     state: typeof metadata?.state === "string" ? metadata.state : "",
     pincode: typeof metadata?.pincode === "string" ? metadata.pincode : "",
-    weight_kg: typeof metadata?.weight_kg === "number" ? metadata.weight_kg : 0,
+    weight_kg: typeof metadata?.weight_kg === "number" ? metadata.weight_kg : null,
     last_donated_at: null,
     total_donations: 0,
     karma: 0,
@@ -63,6 +65,7 @@ function buildProfileFallback(user: User): Profile {
     status: "active",
     timeout_until: null,
     deleted_at: null,
+    is_demo: false,
     created_at: user.created_at,
     updated_at: user.updated_at ?? user.created_at,
   };
@@ -105,7 +108,9 @@ export function useUser() {
           await wait(delay);
         }
 
-        const response = await fetch("/api/users/me", { cache: "no-store" });
+        const response = await authenticatedFetch("/api/users/me", {
+          cache: "no-store",
+        });
         if (response.ok) {
           return (await response.json()) as Profile;
         }

@@ -6,12 +6,13 @@ import { validatePhoneNumber } from "@/lib/utils/phone";
 
 export const createPostSchema = z.object({
   patient_name: z.string().min(2).max(100).trim(),
+  patient_id: z.string().min(2).max(80).trim(),
   blood_type_needed: z.enum(BLOOD_TYPES),
   units_needed: z.coerce.number().int().min(1).max(10),
-  hospital_name: z.string().min(3).max(200).trim(),
-  hospital_address: z.string().min(5).max(500).trim(),
-  city: z.string().min(2).max(100).trim(),
-  state: z.string().min(2).max(100).trim(),
+  hospital_name: z.string().min(3).max(200).trim().optional(),
+  hospital_address: z.string().min(5).max(500).trim().optional(),
+  city: z.string().min(2).max(100).trim().optional(),
+  state: z.string().min(2).max(100).trim().optional(),
   latitude: z.coerce.number().min(-90).max(90).optional().nullable(),
   longitude: z.coerce.number().min(-180).max(180).optional().nullable(),
   contact_name: z.string().min(2).max(100).trim(),
@@ -19,7 +20,11 @@ export const createPostSchema = z.object({
     .string()
     .refine(validatePhoneNumber, "Invalid mobile number"),
   contact_email: z.union([z.string().email(), z.literal(""), z.undefined()]).optional(),
-  medical_condition: z.string().max(500).optional(),
+  medical_condition: z
+    .string()
+    .trim()
+    .min(8, "Please describe the patient's medical condition or reason for blood requirement.")
+    .max(500),
   additional_notes: z.string().max(1000).optional(),
   is_emergency: z.boolean().default(false),
   required_by: z

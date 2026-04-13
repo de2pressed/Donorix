@@ -10,6 +10,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return jsonError("Unauthorized", 401);
   }
 
+  if (profile.account_type !== "hospital" && !profile.is_admin) {
+    return jsonError("Only hospital accounts can approve donors.", 403);
+  }
+
   const body = (await request.json()) as { donorId?: string };
   if (!body.donorId) {
     return jsonError("donorId is required", 422);

@@ -13,6 +13,10 @@ export default async function ProfilePage() {
     redirect("/login");
   }
 
+  if (profile.account_type === "hospital") {
+    redirect("/settings");
+  }
+
   const donations = await getRecentDonations(profile.id);
 
   return (

@@ -13,7 +13,7 @@ export default async function PublicProfilePage({
   const { username } = await params;
   const profile = await getProfileByUsername(username);
 
-  if (!profile) {
+  if (!profile || profile.account_type !== "donor" || !profile.is_discoverable) {
     notFound();
   }
 

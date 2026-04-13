@@ -1,11 +1,61 @@
 import Link from "next/link";
+import { Building2, HeartHandshake } from "lucide-react";
 
 import { LoginForm } from "@/components/auth/login-form";
+import { cn } from "@/lib/utils/cn";
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const resolvedSearchParams = (await searchParams) ?? {};
+  const account = resolvedSearchParams.account === "hospital" ? "hospital" : "donor";
+
   return (
-    <div className="space-y-6">
-      <LoginForm />
+    <div className="w-full max-w-4xl space-y-6">
+      <div className="grid gap-3 md:grid-cols-2">
+        <Link
+          className={cn(
+            "rounded-[1.75rem] border p-5 text-left transition",
+            account === "donor"
+              ? "border-brand bg-brand-soft/40 shadow-soft"
+              : "border-border bg-card/70 hover:border-brand/30 hover:bg-brand-soft/20",
+          )}
+          href="/login?account=donor"
+        >
+          <div className="flex items-start gap-4">
+            <div className="flex size-11 items-center justify-center rounded-2xl bg-brand-soft text-brand">
+              <HeartHandshake className="size-5" />
+            </div>
+            <div>
+              <p className="font-semibold">Login as Donor</p>
+              <p className="mt-1 text-sm text-muted-foreground">Access your donor profile and donation feed</p>
+            </div>
+          </div>
+        </Link>
+        <Link
+          className={cn(
+            "rounded-[1.75rem] border p-5 text-left transition",
+            account === "hospital"
+              ? "border-brand bg-brand-soft/40 shadow-soft"
+              : "border-border bg-card/70 hover:border-brand/30 hover:bg-brand-soft/20",
+          )}
+          href="/login?account=hospital"
+        >
+          <div className="flex items-start gap-4">
+            <div className="flex size-11 items-center justify-center rounded-2xl bg-brand-soft text-brand">
+              <Building2 className="size-5" />
+            </div>
+            <div>
+              <p className="font-semibold">Login as Hospital</p>
+              <p className="mt-1 text-sm text-muted-foreground">Manage patient requests and donor applicants</p>
+            </div>
+          </div>
+        </Link>
+      </div>
+
+      <LoginForm accountType={account} />
       <p className="text-center text-sm text-muted-foreground">
         New to Donorix?{" "}
         <Link className="font-medium text-brand" href="/signup">

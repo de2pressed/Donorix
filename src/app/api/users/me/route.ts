@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 
-import { requireServerUser } from "@/lib/http";
+import { PROFILE_SELECT, requireServerUser } from "@/lib/http";
 import { profileSchema } from "@/lib/validations/profile";
 
-export async function GET() {
-  const { profile } = await requireServerUser();
+export async function GET(request: Request) {
+  const { profile } = await requireServerUser(request);
 
   if (!profile) {
     return NextResponse.json(null, { status: 401 });
@@ -14,7 +14,7 @@ export async function GET() {
 }
 
 export async function PATCH(request: Request) {
-  const { supabase, profile } = await requireServerUser();
+  const { supabase, profile } = await requireServerUser(request);
 
   if (!supabase || !profile) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -31,9 +31,7 @@ export async function PATCH(request: Request) {
     .from("profiles")
     .update(parsed.data)
     .eq("id", profile.id)
-    .select(
-      "id, email, phone, full_name, username, avatar_url, blood_type, gender, date_of_birth, city, state, pincode, weight_kg, last_donated_at, total_donations, karma, is_admin, is_available, is_verified, has_chronic_disease, is_smoker, is_on_medication, allow_sms_alerts, allow_email_alerts, is_discoverable, allow_emergency_direct_contact, hide_from_leaderboard, notification_radius_km, preferred_language, consent_terms, consent_privacy, consent_notifications, status, timeout_until, deleted_at, created_at, updated_at",
-    )
+    .select(PROFILE_SELECT)
     .single();
 
   if (error) {

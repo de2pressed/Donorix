@@ -7,10 +7,14 @@ import { sanitizeText } from "@/lib/utils/sanitize";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { supabase, profile } = await requireServerUser();
+  const { supabase, profile } = await requireServerUser(request);
 
   if (!supabase || !profile) {
     return jsonError("Unauthorized", 401);
+  }
+
+  if (profile.account_type !== "donor") {
+    return jsonError("Only donor accounts can apply to donate.", 403);
   }
 
   const rateLimit = await enforceRateLimit(`donor-application:${profile.id}`);

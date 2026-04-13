@@ -3,9 +3,9 @@ import { NextResponse } from "next/server";
 import { jsonError, requireServerUser } from "@/lib/http";
 import { enforceRateLimit } from "@/lib/rate-limit";
 
-export async function POST(_: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { supabase, profile } = await requireServerUser();
+  const { supabase, profile } = await requireServerUser(request);
 
   if (!supabase || !profile) {
     return jsonError("Unauthorized", 401);

@@ -1,15 +1,14 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Building2, IdCard, MapPin } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
 import { PhoneInput } from "@/components/shared/phone-input";
-import { SearchablePicker } from "@/components/shared/searchable-picker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,40 +17,36 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { BLOOD_TYPES } from "@/lib/constants";
-import { getCitiesForRegion, INDIAN_REGION_NAMES } from "@/lib/india-locations";
+import { authenticatedFetch } from "@/lib/supabase/authenticated-fetch";
 import { createPostSchema, type CreatePostInput } from "@/lib/validations/post";
+import type { HospitalAccount } from "@/types/user";
 
 type PostFormValues = z.input<typeof createPostSchema>;
 
 const STEP_CONFIG = [
   {
     title: "Patient Details",
-    description: "Capture the core medical need before moving into logistics.",
-    fields: ["patient_name", "blood_type_needed", "units_needed"] as const,
-  },
-  {
-    title: "Hospital & Location",
-    description: "Use accurate hospital and city data so matching stays reliable.",
-    fields: ["hospital_name", "hospital_address", "state", "city"] as const,
+    description: "Capture the patient identity and the exact blood requirement.",
+    fields: ["patient_name", "patient_id", "blood_type_needed", "units_needed"] as const,
   },
   {
     title: "Contact Information",
-    description: "These details are used for donor outreach and emergency coordination.",
+    description: "This contact is used for donor coordination and hospital follow-up.",
     fields: ["contact_name", "contact_phone", "contact_email"] as const,
   },
   {
     title: "Medical Details",
-    description: "Add medical context and the exact deadline for this request.",
+    description: "Add the medical reason and the exact time by which blood is needed.",
     fields: ["medical_condition", "additional_notes", "required_by"] as const,
   },
   {
     title: "Request Settings",
-    description: "Control the radius, emergency mode, and how the request is distributed.",
+    description: "Control urgency and the donor notification radius for this patient.",
     fields: ["initial_radius_km", "is_emergency"] as const,
   },
   {
     title: "Confirm & Post",
-    description: "Review every detail before sending the request live.",
+    description: "Review the request before publishing it to matched donors.",
     fields: [] as const,
   },
 ] as const;
@@ -109,7 +104,7 @@ function getRequestErrorMessage(payload: unknown) {
   return "Unable to create request";
 }
 
-export function PostForm() {
+export function PostForm({ hospital }: { hospital: HospitalAccount }) {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [requiredDate, setRequiredDate] = useState("");
@@ -119,21 +114,23 @@ export function PostForm() {
     resolver: zodResolver(createPostSchema),
     mode: "onTouched",
     defaultValues: {
-      initial_radius_km: 7,
+      patient_name: "",
+      patient_id: "",
+      initial_radius_km: 25,
       units_needed: 1,
       is_emergency: false,
       required_by: "",
       medical_condition: "",
       additional_notes: "",
-      contact_email: "",
+      contact_email: hospital.official_contact_email,
+      contact_phone: hospital.official_contact_phone,
+      contact_name: hospital.contact_person_name,
     },
   });
 
   const currentStep = STEP_CONFIG[step];
   const progress = ((step + 1) / STEP_CONFIG.length) * 100;
-  const selectedState = form.watch("state");
-  const cityOptions = useMemo(() => getCitiesForRegion(selectedState), [selectedState]);
-  const radius = Number(form.watch("initial_radius_km") ?? 7);
+  const radius = Number(form.watch("initial_radius_km") ?? 25);
   const emergency = Boolean(form.watch("is_emergency"));
 
   useEffect(() => {
@@ -144,7 +141,7 @@ export function PostForm() {
 
     const localDate = `${requiredDate}T${requiredTime}`;
     const isoDate = new Date(localDate).toISOString();
-    form.setValue("required_by", isoDate, { shouldDirty: true, shouldValidate: step === 3 });
+    form.setValue("required_by", isoDate, { shouldDirty: true, shouldValidate: step === 2 });
   }, [form, requiredDate, requiredTime, step]);
 
   async function handleNext() {
@@ -156,11 +153,8 @@ export function PostForm() {
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {
-      const response = await fetch("/api/posts", {
+      const response = await authenticatedFetch("/api/posts", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify(values),
       });
 
@@ -182,7 +176,7 @@ export function PostForm() {
   const errors = form.formState.errors;
 
   return (
-    <Card className="w-full max-w-3xl overflow-hidden">
+    <Card className="w-full max-w-4xl overflow-hidden">
       <CardHeader className="space-y-4">
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-4 text-sm text-muted-foreground">
@@ -200,10 +194,45 @@ export function PostForm() {
       </CardHeader>
       <CardContent>
         <form className="space-y-6" onSubmit={onSubmit}>
+          <div className="grid gap-4 rounded-[1.5rem] border border-border bg-muted/30 p-4 md:grid-cols-2">
+            <div className="rounded-[1.25rem] border border-border bg-card px-4 py-3">
+              <p className="flex items-center gap-2 text-sm font-medium">
+                <Building2 className="size-4 text-brand" />
+                Hospital
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">{hospital.hospital_name}</p>
+            </div>
+            <div className="rounded-[1.25rem] border border-border bg-card px-4 py-3">
+              <p className="flex items-center gap-2 text-sm font-medium">
+                <MapPin className="size-4 text-brand" />
+                Location
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {hospital.address}, {hospital.city}, {hospital.state}
+              </p>
+            </div>
+          </div>
+
           {step === 0 ? (
             <div className="grid gap-4 md:grid-cols-2">
               <FieldBlock error={errors.patient_name?.message} htmlFor="patient_name" label="Patient Name">
                 <Input id="patient_name" placeholder="Enter the patient name" {...form.register("patient_name")} />
+              </FieldBlock>
+              <FieldBlock
+                error={errors.patient_id?.message}
+                htmlFor="patient_id"
+                label="Patient ID / Internal Reference"
+                note="Use the hospital's internal patient or case reference."
+              >
+                <div className="relative">
+                  <IdCard className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="patient_id"
+                    className="pl-11"
+                    placeholder="Enter the patient ID"
+                    {...form.register("patient_id")}
+                  />
+                </div>
               </FieldBlock>
               <FieldBlock error={errors.blood_type_needed?.message} htmlFor="blood_type_needed" label="Blood Type Needed">
                 <select
@@ -227,84 +256,31 @@ export function PostForm() {
                   ))}
                 </select>
               </FieldBlock>
-              <div className="md:col-span-2">
-                <FieldBlock
-                  error={errors.units_needed?.message}
-                  htmlFor="units_needed"
-                  label="Units Needed"
-                  note="Enter the number of blood units required."
-                >
-                  <Input
-                    id="units_needed"
-                    max={10}
-                    min={1}
-                    placeholder="Enter the number of units required"
-                    step="1"
-                    type="number"
-                    {...form.register("units_needed", { valueAsNumber: true })}
-                    onKeyDown={(event) => {
-                      if ([".", "-", "+", "e", "E"].includes(event.key)) {
-                        event.preventDefault();
-                      }
-                    }}
-                  />
-                </FieldBlock>
-              </div>
+              <FieldBlock
+                error={errors.units_needed?.message}
+                htmlFor="units_needed"
+                label="Units Needed"
+                note="Enter the number of blood units required."
+              >
+                <Input
+                  id="units_needed"
+                  max={10}
+                  min={1}
+                  placeholder="Enter the number of units required"
+                  step="1"
+                  type="number"
+                  {...form.register("units_needed", { valueAsNumber: true })}
+                  onKeyDown={(event) => {
+                    if ([".", "-", "+", "e", "E"].includes(event.key)) {
+                      event.preventDefault();
+                    }
+                  }}
+                />
+              </FieldBlock>
             </div>
           ) : null}
 
           {step === 1 ? (
-            <div className="grid gap-4 md:grid-cols-2">
-              <FieldBlock error={errors.hospital_name?.message} htmlFor="hospital_name" label="Hospital Name">
-                <Input id="hospital_name" placeholder="Enter the hospital name" {...form.register("hospital_name")} />
-              </FieldBlock>
-              <FieldBlock error={errors.hospital_address?.message} htmlFor="hospital_address" label="Hospital Address">
-                <Input
-                  id="hospital_address"
-                  placeholder="Enter the hospital address"
-                  {...form.register("hospital_address")}
-                />
-              </FieldBlock>
-              <div className="md:col-span-2">
-                <FieldBlock error={errors.state?.message} htmlFor="request-state" label="State">
-                  <SearchablePicker
-                    description="Search all Indian states and union territories."
-                    emptyMessage="No state or union territory matches that search."
-                    id="request-state"
-                    options={INDIAN_REGION_NAMES}
-                    placeholder="Select State"
-                    searchPlaceholder="Search state or union territory"
-                    title="Select state"
-                    value={selectedState}
-                    onChange={(value) => {
-                      form.setValue("state", value, { shouldDirty: true, shouldValidate: true });
-                      form.setValue("city", "", { shouldDirty: true });
-                    }}
-                  />
-                </FieldBlock>
-              </div>
-              <div className="md:col-span-2">
-                <FieldBlock error={errors.city?.message} htmlFor="request-city" label="City">
-                  <SearchablePicker
-                    description="Choose the city or district nearest to the hospital."
-                    disabled={!selectedState}
-                    emptyMessage={selectedState ? "No city matches that search." : "Select state first."}
-                    id="request-city"
-                    options={cityOptions}
-                    placeholder={selectedState ? "Select City" : "Select state first"}
-                    searchPlaceholder="Search city or district"
-                    title="Select city"
-                    value={form.watch("city") ?? undefined}
-                    onChange={(value) =>
-                      form.setValue("city", value, { shouldDirty: true, shouldValidate: true })
-                    }
-                  />
-                </FieldBlock>
-              </div>
-            </div>
-          ) : null}
-
-          {step === 2 ? (
             <div className="grid gap-4 md:grid-cols-2">
               <FieldBlock error={errors.contact_name?.message} htmlFor="contact_name" label="Contact Person Name">
                 <Input id="contact_name" placeholder="Enter the contact person's name" {...form.register("contact_name")} />
@@ -324,10 +300,10 @@ export function PostForm() {
                 />
               </FieldBlock>
               <div className="md:col-span-2">
-                <FieldBlock error={errors.contact_email?.message} htmlFor="contact_email" label="Contact Email (optional)">
+                <FieldBlock error={errors.contact_email?.message} htmlFor="contact_email" label="Contact Email">
                   <Input
                     id="contact_email"
-                    placeholder="Enter an email address if available"
+                    placeholder="Enter the official coordination email"
                     type="email"
                     {...form.register("contact_email")}
                   />
@@ -336,16 +312,21 @@ export function PostForm() {
             </div>
           ) : null}
 
-          {step === 3 ? (
+          {step === 2 ? (
             <div className="grid gap-4">
-              <FieldBlock error={errors.medical_condition?.message} htmlFor="medical_condition" label="Medical Condition / Disease (optional)">
+              <FieldBlock
+                error={errors.medical_condition?.message}
+                htmlFor="medical_condition"
+                label="Medical Condition / Disease"
+                note="E.g. surgery, accident, anaemia, thalassemia, dengue. Be as specific as possible to help match the right donors."
+              >
                 <Textarea
                   id="medical_condition"
-                  placeholder="Describe the diagnosis or reason for transfusion"
+                  placeholder="Describe the reason blood is required"
                   {...form.register("medical_condition")}
                 />
               </FieldBlock>
-              <FieldBlock error={errors.additional_notes?.message} htmlFor="additional_notes" label="Additional Notes (optional)">
+              <FieldBlock error={errors.additional_notes?.message} htmlFor="additional_notes" label="Additional Notes">
                 <Textarea
                   id="additional_notes"
                   placeholder="Add any instructions, ward details, or coordination notes"
@@ -376,26 +357,26 @@ export function PostForm() {
             </div>
           ) : null}
 
-          {step === 4 ? (
+          {step === 3 ? (
             <div className="space-y-5">
               <div className="rounded-[1.5rem] border border-border p-4">
                 <div className="flex items-center justify-between gap-4 text-sm">
                   <div className="min-w-0">
                     <p className="font-medium">Notification Radius</p>
                     <p className="text-muted-foreground">
-                      Expand the initial donor search radius between 1 km and 35 km.
+                      Expand the initial donor search radius between 5 km and 35 km.
                     </p>
                   </div>
-                  <span className="min-w-[4.25rem] text-right font-semibold tabular-nums">{radius} km</span>
+                  <span className="min-w-[4.5rem] text-right font-semibold tabular-nums">{radius} km</span>
                 </div>
                 <Slider
                   className="mt-4"
                   max={35}
-                  min={1}
+                  min={5}
                   step={1}
                   value={[radius]}
                   onValueChange={(value) =>
-                    form.setValue("initial_radius_km", value[0] ?? 7, { shouldDirty: true })
+                    form.setValue("initial_radius_km", value[0] ?? 25, { shouldDirty: true })
                   }
                 />
               </div>
@@ -408,7 +389,7 @@ export function PostForm() {
                       Emergency Mode
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Emergency mode boosts ranking and widens coordination urgency. Misuse can lead to account suspension and admin review.
+                      Emergency mode boosts ranking, pulses the request card, and prioritizes high-value donor outreach.
                     </p>
                   </div>
                   <Switch
@@ -419,29 +400,10 @@ export function PostForm() {
                   />
                 </div>
               </div>
-
-              <div className="rounded-[1.5rem] border border-border bg-muted/30 p-4">
-                <p className="font-medium">Quick Review</p>
-                <div className="mt-3 grid gap-3 text-sm text-muted-foreground md:grid-cols-2">
-                  <p>
-                    <span className="font-medium text-foreground">Patient:</span> {form.watch("patient_name") || "Not set"}
-                  </p>
-                  <p>
-                    <span className="font-medium text-foreground">Blood Type:</span> {form.watch("blood_type_needed") || "Not set"}
-                  </p>
-                  <p>
-                    <span className="font-medium text-foreground">Hospital:</span> {form.watch("hospital_name") || "Not set"}
-                  </p>
-                  <p>
-                    <span className="font-medium text-foreground">Location:</span> {form.watch("city") || "Not set"}
-                    {form.watch("state") ? `, ${form.watch("state")}` : ""}
-                  </p>
-                </div>
-              </div>
             </div>
           ) : null}
 
-          {step === 5 ? (
+          {step === 4 ? (
             <div className="space-y-4 rounded-[1.5rem] border border-border bg-muted/30 p-5">
               <div>
                 <h3 className="text-lg font-semibold">Review request summary</h3>
@@ -451,17 +413,18 @@ export function PostForm() {
               </div>
               <div className="grid gap-3 text-sm md:grid-cols-2">
                 <p><span className="font-medium text-foreground">Patient Name:</span> {form.watch("patient_name")}</p>
+                <p><span className="font-medium text-foreground">Patient ID:</span> {form.watch("patient_id")}</p>
                 <p><span className="font-medium text-foreground">Blood Type:</span> {form.watch("blood_type_needed")}</p>
                 <p>
                   <span className="font-medium text-foreground">Units Needed:</span>{" "}
                   {Number(form.watch("units_needed") ?? 0)} units
                 </p>
-                <p><span className="font-medium text-foreground">Hospital:</span> {form.watch("hospital_name")}</p>
-                <p><span className="font-medium text-foreground">Hospital Address:</span> {form.watch("hospital_address")}</p>
-                <p><span className="font-medium text-foreground">Location:</span> {form.watch("city")}, {form.watch("state")}</p>
+                <p><span className="font-medium text-foreground">Hospital:</span> {hospital.hospital_name}</p>
+                <p><span className="font-medium text-foreground">Hospital Address:</span> {hospital.address}</p>
+                <p><span className="font-medium text-foreground">Location:</span> {hospital.city}, {hospital.state}</p>
                 <p><span className="font-medium text-foreground">Contact Person:</span> {form.watch("contact_name")}</p>
                 <p><span className="font-medium text-foreground">Contact Phone:</span> {form.watch("contact_phone")}</p>
-                <p><span className="font-medium text-foreground">Contact Email:</span> {form.watch("contact_email") || "Not provided"}</p>
+                <p><span className="font-medium text-foreground">Medical Condition:</span> {form.watch("medical_condition")}</p>
                 <p><span className="font-medium text-foreground">Required By:</span> {form.watch("required_by") || "Not set"}</p>
                 <p><span className="font-medium text-foreground">Radius:</span> {radius} km</p>
                 <p><span className="font-medium text-foreground">Emergency:</span> {emergency ? "Yes" : "No"}</p>

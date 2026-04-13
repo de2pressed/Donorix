@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LogOut, MessageCircleMore, Settings, User2 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { Building2, LogOut, MessageCircleMore, Settings, User2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -39,7 +38,6 @@ function getInitials(name?: string | null) {
 
 export function UserMenu() {
   const router = useRouter();
-  const tNav = useTranslations("nav");
   const assistantLabel = "Ask Assistant";
   const [mobileOpen, setMobileOpen] = useState(false);
   const { data: user, isLoading } = useUser();
@@ -61,7 +59,7 @@ export function UserMenu() {
       return;
     }
 
-    toast.success(tNav("logout"));
+    toast.success("Logged out");
     router.replace("/login");
     router.refresh();
   }
@@ -81,14 +79,17 @@ export function UserMenu() {
     return (
       <div className="flex items-center gap-2">
         <Button asChild size="sm" variant="ghost">
-          <Link href="/login">{tNav("login")}</Link>
+          <Link href="/login">Login</Link>
         </Button>
         <Button asChild size="sm">
-          <Link href="/signup">{tNav("signup")}</Link>
+          <Link href="/signup">Sign Up</Link>
         </Button>
       </div>
     );
   }
+
+  const profileHref = user.account_type === "hospital" ? "/settings" : "/profile";
+  const profileLabel = user.account_type === "hospital" ? "Hospital Settings" : "View Profile";
 
   return (
     <>
@@ -106,14 +107,16 @@ export function UserMenu() {
             <DropdownMenuLabel>
               <div className="space-y-1">
                 <p className="font-medium normal-case tracking-normal text-foreground">{user.full_name}</p>
-                <p className="normal-case tracking-normal text-muted-foreground">@{user.username}</p>
+                <p className="normal-case tracking-normal text-muted-foreground">
+                  {user.account_type === "hospital" ? "Hospital account" : `@${user.username}`}
+                </p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href="/profile" className="flex w-full items-center gap-2">
-                <User2 className="size-4" />
-                {tNav("viewProfile")}
+              <Link href={profileHref} className="flex w-full items-center gap-2">
+                {user.account_type === "hospital" ? <Building2 className="size-4" /> : <User2 className="size-4" />}
+                {profileLabel}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem
@@ -129,7 +132,7 @@ export function UserMenu() {
             <DropdownMenuItem asChild>
               <Link href="/settings" className="flex w-full items-center gap-2">
                 <Settings className="size-4" />
-                {tNav("settings")}
+                Settings
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
@@ -141,7 +144,7 @@ export function UserMenu() {
               }}
             >
               <LogOut className="size-4" />
-              {tNav("logout")}
+              Log Out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -162,16 +165,16 @@ export function UserMenu() {
         <Dialog open={mobileOpen} onOpenChange={setMobileOpen}>
           <DialogContent className="dialog-bottom-sheet top-auto bottom-0 w-full max-w-none translate-x-[-50%] translate-y-0 rounded-b-none rounded-t-[1.75rem] px-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] pt-8 sm:max-w-none">
             <DialogHeader>
-              <DialogTitle>{tNav("profileActions")}</DialogTitle>
+              <DialogTitle>Profile actions</DialogTitle>
             </DialogHeader>
             <div className="space-y-2">
               <Link
                 className="flex items-center gap-3 rounded-2xl border border-border px-4 py-3 text-sm font-medium text-foreground transition hover:bg-brand-soft"
-                href="/profile"
+                href={profileHref}
                 onClick={() => setMobileOpen(false)}
               >
-                <User2 className="size-4" />
-                {tNav("viewProfile")}
+                {user.account_type === "hospital" ? <Building2 className="size-4" /> : <User2 className="size-4" />}
+                {profileLabel}
               </Link>
               <Button
                 className="w-full justify-start rounded-2xl border border-border px-4 py-3 text-sm font-medium"
@@ -191,7 +194,7 @@ export function UserMenu() {
                 onClick={() => setMobileOpen(false)}
               >
                 <Settings className="size-4" />
-                {tNav("settings")}
+                Settings
               </Link>
               <Button
                 className="w-full justify-start"
@@ -203,7 +206,7 @@ export function UserMenu() {
                 }}
               >
                 <LogOut className="size-4" />
-                {tNav("logout")}
+                Log Out
               </Button>
             </div>
           </DialogContent>

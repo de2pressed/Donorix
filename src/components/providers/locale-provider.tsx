@@ -2,7 +2,7 @@
 
 import type { AbstractIntlMessages } from "next-intl";
 import { NextIntlClientProvider } from "next-intl";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 type LocaleProviderProps = {
   children: React.ReactNode;
@@ -30,6 +30,26 @@ export function LocalePreferenceProvider({
   const [locale, setLocale] = useState(initialLocale);
   const [messages, setMessages] = useState<AbstractIntlMessages>(initialMessages);
 
+  useEffect(() => {
+    const storedLocale = window.localStorage.getItem("donorix_locale");
+    if (!storedLocale || storedLocale === locale || !(storedLocale in messageLoaders)) {
+      return;
+    }
+
+    const supportedLocale = storedLocale as keyof typeof messageLoaders;
+
+    void messageLoaders[supportedLocale]().then((nextMessages) => {
+      setLocale(supportedLocale);
+      setMessages(nextMessages);
+      document.cookie = `donorix_locale=${supportedLocale}; Path=/; Max-Age=31536000; SameSite=Lax`;
+      document.documentElement.lang = supportedLocale;
+    });
+  }, [locale]);
+
+  useEffect(() => {
+    window.localStorage.setItem("donorix_locale", locale);
+  }, [locale]);
+
   const value: LocaleContextValue = {
     locale,
     async setLocalePreference(nextLocale) {
@@ -38,6 +58,7 @@ export function LocalePreferenceProvider({
 
       setLocale(supportedLocale);
       setMessages(nextMessages);
+      window.localStorage.setItem("donorix_locale", supportedLocale);
       document.cookie = `donorix_locale=${supportedLocale}; Path=/; Max-Age=31536000; SameSite=Lax`;
       document.documentElement.lang = supportedLocale;
     },

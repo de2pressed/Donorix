@@ -11,13 +11,14 @@ export type Database = {
           full_name: string;
           username: string;
           avatar_url: string | null;
-          blood_type: string;
+          account_type: "donor" | "hospital";
+          blood_type: string | null;
           gender: string;
-          date_of_birth: string;
+          date_of_birth: string | null;
           city: string;
           state: string;
           pincode: string;
-          weight_kg: number;
+          weight_kg: number | null;
           last_donated_at: string | null;
           total_donations: number;
           karma: number;
@@ -37,9 +38,10 @@ export type Database = {
           consent_terms: boolean;
           consent_privacy: boolean;
           consent_notifications: boolean;
-          status: "active" | "banned" | "timeout" | "deleted";
+          status: "active" | "banned" | "timeout" | "deleted" | "deactivated";
           timeout_until: string | null;
           deleted_at: string | null;
+          is_demo: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -49,13 +51,14 @@ export type Database = {
           phone: string;
           full_name: string;
           username: string;
-          blood_type: string;
-          gender: string;
-          date_of_birth: string;
+          account_type?: "donor" | "hospital";
+          blood_type?: string | null;
+          gender?: string;
+          date_of_birth?: string | null;
           city: string;
           state: string;
           pincode: string;
-          weight_kg: number;
+          weight_kg?: number | null;
           consent_terms: boolean;
           consent_privacy: boolean;
           allow_sms_alerts?: boolean;
@@ -69,11 +72,57 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["profiles"]["Row"]>;
         Relationships: [];
       };
+      hospital_accounts: {
+        Row: {
+          profile_id: string;
+          hospital_name: string;
+          hospital_type:
+            | "government_hospital"
+            | "private_hospital"
+            | "clinic"
+            | "blood_bank"
+            | "nursing_home"
+            | "other";
+          registration_number: string;
+          address: string;
+          city: string;
+          state: string;
+          pincode: string;
+          official_contact_email: string;
+          official_contact_phone: string;
+          contact_person_name: string;
+          verification_status: "unverified" | "verified" | "rejected";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["hospital_accounts"]["Row"]> & {
+          profile_id: string;
+          hospital_name: string;
+          hospital_type:
+            | "government_hospital"
+            | "private_hospital"
+            | "clinic"
+            | "blood_bank"
+            | "nursing_home"
+            | "other";
+          registration_number: string;
+          address: string;
+          city: string;
+          state: string;
+          pincode: string;
+          official_contact_email: string;
+          official_contact_phone: string;
+          contact_person_name: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["hospital_accounts"]["Row"]>;
+        Relationships: [];
+      };
       posts: {
         Row: {
           id: string;
           created_by: string;
           patient_name: string;
+          patient_id: string | null;
           blood_type_needed: string;
           units_needed: number;
           hospital_name: string;
@@ -98,12 +147,15 @@ export type Database = {
           donor_count: number;
           approved_donor_id: string | null;
           sms_sent_count: number;
+          is_legacy: boolean;
+          is_demo: boolean;
           created_at: string;
           updated_at: string;
         };
         Insert: Partial<Database["public"]["Tables"]["posts"]["Row"]> & {
           created_by: string;
           patient_name: string;
+          patient_id?: string | null;
           blood_type_needed: string;
           units_needed: number;
           hospital_name: string;

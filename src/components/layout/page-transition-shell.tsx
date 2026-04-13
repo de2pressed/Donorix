@@ -1,7 +1,6 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Droplets } from "lucide-react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -11,7 +10,6 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
   const reduceMotion = useReducedMotion();
   const [progress, setProgress] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [showSplash, setShowSplash] = useState(false);
   const initialized = useRef(false);
   const previousPath = useRef(pathname);
 
@@ -21,16 +19,22 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
   }, [pathname, searchParams]);
 
   useEffect(() => {
-    if (sessionStorage.getItem("donorix_splash_v1_seen") === "true") {
+    const root = document.documentElement;
+    if (!root.classList.contains("donorix-booting")) {
       return;
     }
 
-    setShowSplash(true);
-    sessionStorage.setItem("donorix_splash_v1_seen", "true");
+    const startedAt =
+      typeof window.__donorixSplashStart === "number"
+        ? window.__donorixSplashStart
+        : Date.now();
+    const elapsed = Date.now() - startedAt;
+    const remaining = Math.max(0, 600 - elapsed);
 
     const timeoutId = window.setTimeout(() => {
-      setShowSplash(false);
-    }, 900);
+      root.classList.remove("donorix-booting");
+      window.sessionStorage.setItem("donorix_splash_v2_seen", "true");
+    }, remaining);
 
     return () => {
       window.clearTimeout(timeoutId);
@@ -124,46 +128,6 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
           transition={{ duration: reduceMotion ? 0 : 0.2, ease: "easeOut" }}
         />
       </div>
-
-      <AnimatePresence mode="wait">
-        {showSplash ? (
-          <motion.div
-            animate={{ opacity: 1 }}
-            className="fixed inset-0 z-[94] flex items-center justify-center bg-background"
-            exit={{ opacity: 0 }}
-            initial={{ opacity: 1 }}
-            key="donorix-splash"
-            transition={{ duration: reduceMotion ? 0 : 0.24, ease: "easeOut" }}
-          >
-            <div className="flex flex-col items-center gap-5 text-center">
-              <motion.div
-                animate={{ opacity: 1, scale: 1 }}
-                className="flex items-center gap-3"
-                initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.94 }}
-                transition={{ duration: reduceMotion ? 0 : 0.32, ease: "easeOut" }}
-              >
-                <div className="flex size-14 items-center justify-center rounded-[1.25rem] bg-brand text-brand-foreground shadow-glow">
-                  <Droplets className="size-7" />
-                </div>
-                <div className="text-left">
-                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-brand">
-                    India-first blood matching
-                  </p>
-                  <h1 className="text-3xl font-semibold tracking-tight text-foreground">Donorix</h1>
-                </div>
-              </motion.div>
-              <div className="h-16 w-8 overflow-hidden rounded-full border border-brand/20 bg-brand-soft/60 p-1">
-                <motion.div
-                  animate={{ height: "100%" }}
-                  className="w-full rounded-full bg-gradient-to-t from-brand via-brand to-[#ff7a59]"
-                  initial={{ height: reduceMotion ? "100%" : "12%" }}
-                  transition={{ duration: reduceMotion ? 0 : 0.72, ease: "easeInOut" }}
-                />
-              </div>
-            </div>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
 
       <AnimatePresence initial={false} mode="wait">
         <motion.div

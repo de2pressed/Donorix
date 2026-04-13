@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { authenticatedFetch } from "@/lib/supabase/authenticated-fetch";
 import { loginSchema } from "@/lib/validations/auth";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -19,7 +20,7 @@ type LoginValues = {
   password: string;
 };
 
-export function LoginForm() {
+export function LoginForm({ accountType = "donor" }: { accountType?: "donor" | "hospital" }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
@@ -42,7 +43,22 @@ export function LoginForm() {
       return;
     }
 
-    toast.success("Login successful");
+    const profileResponse = await authenticatedFetch("/api/users/me", {
+      cache: "no-store",
+    });
+    const profile = (await profileResponse.json().catch(() => null)) as { account_type?: "donor" | "hospital" } | null;
+
+    if (profile?.account_type && profile.account_type !== accountType) {
+      await supabase.auth.signOut();
+      toast.error(
+        accountType === "hospital"
+          ? "These credentials belong to a donor account. Use the donor login tab."
+          : "These credentials belong to a hospital account. Use the hospital login tab.",
+      );
+      return;
+    }
+
+    toast.success(accountType === "hospital" ? "Hospital login successful" : "Donor login successful");
     const redirectTo = searchParams.get("redirect");
     const destination =
       redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//") ? redirectTo : "/";
@@ -53,8 +69,12 @@ export function LoginForm() {
   return (
     <Card className="w-full max-w-lg">
       <CardHeader>
-        <CardTitle>Login</CardTitle>
-        <CardDescription>Access your donor profile, requests, and notification inbox.</CardDescription>
+        <CardTitle>{accountType === "hospital" ? "Hospital Login" : "Donor Login"}</CardTitle>
+        <CardDescription>
+          {accountType === "hospital"
+            ? "Access your hospital dashboard, patient posts, and donor applicants."
+            : "Access your donor profile, request feed, and notification inbox."}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form className="space-y-4" onSubmit={onSubmit}>
@@ -97,6 +117,52 @@ export function LoginForm() {
             Continue
           </Button>
         </form>
+
+        {accountType === "hospital" ? (
+          <div className="mt-6 rounded-[1.5rem] border border-border bg-muted/30 p-4 text-sm">
+            <p className="font-medium text-foreground">Demo Access</p>
+            <p className="mt-1 text-muted-foreground">
+              Demo hospital credentials for stakeholder walkthroughs.
+            </p>
+            <div className="mt-3 space-y-1 text-muted-foreground">
+              <p>Email: demo.hospital@donorix.in</p>
+              <p>Password: DemoHospital@2025</p>
+            </div>
+            <Button
+              className="mt-4 w-full"
+              type="button"
+              variant="outline"
+              onClick={() => {
+                form.setValue("email", "demo.hospital@donorix.in", { shouldDirty: true });
+                form.setValue("password", "DemoHospital@2025", { shouldDirty: true });
+              }}
+            >
+              Use Demo Hospital
+            </Button>
+          </div>
+        ) : (
+          <div className="mt-6 rounded-[1.5rem] border border-border bg-muted/30 p-4 text-sm">
+            <p className="font-medium text-foreground">Demo Access</p>
+            <p className="mt-1 text-muted-foreground">
+              Demo donor credentials for end-to-end testing of the donor flow.
+            </p>
+            <div className="mt-3 space-y-1 text-muted-foreground">
+              <p>Email: demo.donor@donorix.in</p>
+              <p>Password: DemoDonor@2025</p>
+            </div>
+            <Button
+              className="mt-4 w-full"
+              type="button"
+              variant="outline"
+              onClick={() => {
+                form.setValue("email", "demo.donor@donorix.in", { shouldDirty: true });
+                form.setValue("password", "DemoDonor@2025", { shouldDirty: true });
+              }}
+            >
+              Use Demo Donor
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

@@ -8,6 +8,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { useAuthPrompt } from "@/components/shared/auth-prompt-modal";
+import { authenticatedFetch } from "@/lib/supabase/authenticated-fetch";
 
 export function UpvoteButton({
   postId,
@@ -41,7 +42,9 @@ export function UpvoteButton({
 
         setIsSubmitting(true);
         try {
-          const response = await fetch(`/api/posts/${postId}/upvote`, { method: "POST" });
+          const response = await authenticatedFetch(`/api/posts/${postId}/upvote`, {
+            method: "POST",
+          });
           const body = (await response.json().catch(() => null)) as { error?: string } | null;
 
           if (!response.ok) {

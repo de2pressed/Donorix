@@ -14,10 +14,18 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { supabase, profile } = await requireServerUser();
+    const { supabase, profile, hospitalAccount } = await requireServerUser(request);
 
     if (!supabase || !profile) {
       return jsonError("Unauthorized", 401);
+    }
+
+    if (profile.account_type !== "hospital") {
+      return jsonError("Only hospital accounts can create blood requests.", 403);
+    }
+
+    if (!hospitalAccount) {
+      return jsonError("Hospital details are incomplete. Complete hospital registration first.", 409);
     }
 
     const rateLimit = await enforceRateLimit(`post-create:${profile.id}`);
@@ -39,12 +47,13 @@ export async function POST(request: NextRequest) {
       .insert({
         created_by: profile.id,
         patient_name: sanitizeText(payload.patient_name),
+        patient_id: sanitizeText(payload.patient_id),
         blood_type_needed: payload.blood_type_needed,
         units_needed: payload.units_needed,
-        hospital_name: sanitizeText(payload.hospital_name),
-        hospital_address: sanitizeText(payload.hospital_address),
-        city: sanitizeText(payload.city),
-        state: sanitizeText(payload.state),
+        hospital_name: sanitizeText(hospitalAccount.hospital_name),
+        hospital_address: sanitizeText(hospitalAccount.address),
+        city: sanitizeText(hospitalAccount.city),
+        state: sanitizeText(hospitalAccount.state),
         latitude: payload.latitude ?? null,
         longitude: payload.longitude ?? null,
         contact_name: sanitizeText(payload.contact_name),

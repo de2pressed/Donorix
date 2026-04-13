@@ -10,17 +10,21 @@ export function UserTable({ users }: { users: Profile[] }) {
       <CardContent className="space-y-3">
         {users.length ? (
           users.map((user) => (
-            <div key={user.id} className="grid gap-3 rounded-[1.5rem] border border-border p-4 md:grid-cols-[1.5fr_repeat(4,1fr)]">
-              <div>
-                <p className="font-medium">{user.full_name}</p>
-                <p className="text-sm text-muted-foreground">
+            <div
+              key={user.id}
+              className="grid gap-3 rounded-[1.5rem] border border-border p-4 md:grid-cols-[1.7fr_repeat(5,minmax(0,1fr))]"
+            >
+              <div className="min-w-0">
+                <p className="truncate font-medium">{user.full_name}</p>
+                <p className="truncate text-sm text-muted-foreground">
                   {user.email} • {user.phone}
                 </p>
               </div>
-              <div className="text-sm">{user.blood_type}</div>
+              <div className="text-sm capitalize">{user.account_type}</div>
+              <div className="text-sm">{user.blood_type ?? "—"}</div>
               <div className="text-sm">{user.karma}</div>
               <div className="text-sm">{user.status}</div>
-              <div className="text-sm text-muted-foreground">{user.city}</div>
+              <div className="truncate text-sm text-muted-foreground">{user.city}</div>
             </div>
           ))
         ) : (

@@ -2,7 +2,7 @@
 
 import { Check, ChevronsUpDown, Search } from "lucide-react";
 import type { Ref } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   Dialog,
@@ -44,12 +44,34 @@ export function SearchablePicker({
 }: SearchablePickerProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [isMobile, setIsMobile] = useState(false);
+  const [viewportHeight, setViewportHeight] = useState(640);
 
   const filteredOptions = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     if (!normalized) return options;
     return options.filter((option) => option.toLowerCase().includes(normalized));
   }, [options, query]);
+
+  useEffect(() => {
+    function syncViewport() {
+      setIsMobile(window.matchMedia("(max-width: 767px)").matches);
+      setViewportHeight(Math.round(window.visualViewport?.height ?? window.innerHeight));
+    }
+
+    syncViewport();
+    window.addEventListener("resize", syncViewport);
+    window.visualViewport?.addEventListener("resize", syncViewport);
+    window.visualViewport?.addEventListener("scroll", syncViewport);
+
+    return () => {
+      window.removeEventListener("resize", syncViewport);
+      window.visualViewport?.removeEventListener("resize", syncViewport);
+      window.visualViewport?.removeEventListener("scroll", syncViewport);
+    };
+  }, []);
+
+  const mobileSheetHeight = Math.max(280, Math.min(viewportHeight - 24, 560));
 
   return (
     <Dialog
@@ -75,7 +97,21 @@ export function SearchablePicker({
           <ChevronsUpDown className="ml-3 size-4 shrink-0 text-muted-foreground" />
         </button>
       </DialogTrigger>
-      <DialogContent className="max-h-[min(85vh,42rem)] max-w-[calc(100vw-1.5rem)] overflow-hidden p-0 sm:max-w-lg">
+      <DialogContent
+        className={cn(
+          "max-h-[min(85vh,42rem)] max-w-[calc(100vw-1.5rem)] overflow-hidden p-0 sm:max-w-lg",
+          isMobile &&
+            "inset-x-0 bottom-0 top-auto w-screen max-w-none translate-x-0 translate-y-0 rounded-b-none rounded-t-[1.75rem]",
+        )}
+        style={
+          isMobile
+            ? {
+                height: `${mobileSheetHeight}px`,
+                maxHeight: "calc(100dvh - 0.75rem)",
+              }
+            : undefined
+        }
+      >
         <DialogHeader className="border-b border-border px-6 py-5">
           <DialogTitle>{title}</DialogTitle>
           {description ? <DialogDescription>{description}</DialogDescription> : null}
@@ -92,7 +128,7 @@ export function SearchablePicker({
             />
           </div>
         </div>
-        <div className="max-h-[50vh] overflow-y-auto px-3 py-3">
+        <div className="max-h-[50vh] overflow-y-auto px-3 py-3 md:max-h-[50vh]" style={isMobile ? { maxHeight: `${Math.max(180, mobileSheetHeight - 148)}px` } : undefined}>
           {filteredOptions.length ? (
             <div className="space-y-1">
               {filteredOptions.map((option) => (

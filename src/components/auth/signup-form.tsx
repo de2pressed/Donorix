@@ -18,7 +18,7 @@ import { Progress } from "@/components/ui/progress";
 import { BLOOD_TYPES } from "@/lib/constants";
 import { getCitiesForRegion, INDIAN_REGION_NAMES } from "@/lib/india-locations";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { signupProfileSeedSchema, signupSchema } from "@/lib/validations/auth";
+import { donorSignupProfileSeedSchema, signupSchema } from "@/lib/validations/auth";
 import { cn } from "@/lib/utils/cn";
 
 type SignupValues = z.input<typeof signupSchema>;
@@ -29,6 +29,7 @@ const GENDER_OPTIONS = [
   { value: "male", label: "Male" },
   { value: "female", label: "Female" },
   { value: "non_binary", label: "Non-binary" },
+  { value: "other", label: "Other" },
   { value: "prefer_not_to_say", label: "Prefer not to say" },
 ] as const;
 
@@ -154,6 +155,7 @@ export function SignupForm() {
     resolver: zodResolver(signupSchema),
     mode: "onTouched",
     defaultValues: {
+      account_type: "donor",
       has_chronic_disease: false,
       is_smoker: false,
       is_on_medication: false,
@@ -200,7 +202,7 @@ export function SignupForm() {
     }
 
     const password = values.password;
-    const profileSeed = signupProfileSeedSchema.parse(values);
+    const profileSeed = donorSignupProfileSeedSchema.parse(values);
 
     const { error } = await supabase.auth.signUp({
       email: values.email,

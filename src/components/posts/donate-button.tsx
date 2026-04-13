@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useAuthPrompt } from "@/components/shared/auth-prompt-modal";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useUser } from "@/lib/hooks/use-user";
+import { authenticatedFetch } from "@/lib/supabase/authenticated-fetch";
 import {
   getNextEligibleDonationDate,
   isDonationEligible,
@@ -32,6 +33,10 @@ export function DonateButton({
     ? `You can donate again on ${format(nextEligibleDate, "d MMM yyyy")}.`
     : "You are currently not eligible to donate.";
 
+  if (isAuthenticated && user?.account_type === "hospital") {
+    return null;
+  }
+
   async function handleDonate() {
     if (!isAuthenticated) {
       openPrompt();
@@ -45,7 +50,9 @@ export function DonateButton({
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/posts/${postId}/donors`, { method: "POST" });
+      const response = await authenticatedFetch(`/api/posts/${postId}/donors`, {
+        method: "POST",
+      });
       const body = (await response.json().catch(() => null)) as { error?: string } | null;
 
       if (!response.ok) {

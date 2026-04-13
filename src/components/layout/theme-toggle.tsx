@@ -27,11 +27,14 @@ export function ThemeToggle({ className }: { className?: string }) {
       type="button"
       variant="ghost"
       onClick={() => {
-        document.documentElement.classList.add("theme-transition");
+        const root = document.documentElement;
+        root.classList.add("theme-transition");
+        window.requestAnimationFrame(() => {
+          setTheme(isDark ? "light" : "dark");
+        });
         window.setTimeout(() => {
-          document.documentElement.classList.remove("theme-transition");
+          root.classList.remove("theme-transition");
         }, 320);
-        setTheme(isDark ? "light" : "dark");
       }}
     >
       <motion.span

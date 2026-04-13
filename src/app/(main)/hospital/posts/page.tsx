@@ -1,0 +1,65 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getCurrentProfile, getHospitalPosts } from "@/lib/data";
+
+export default async function HospitalPostsPage() {
+  const profile = await getCurrentProfile();
+
+  if (!profile) {
+    redirect("/login?redirect=/hospital/posts");
+  }
+
+  if (profile.account_type !== "hospital") {
+    redirect("/");
+  }
+
+  const posts = await getHospitalPosts(profile.id);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-semibold">Patient Posts</h1>
+          <p className="text-sm text-muted-foreground">
+            All requests created by your hospital, sorted by patient name and case reference.
+          </p>
+        </div>
+        <Button asChild>
+          <Link href="/posts/new">New Request</Link>
+        </Button>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Hospital request log</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {posts.length ? (
+            posts.map((post) => (
+              <div key={post.id} className="grid gap-3 rounded-[1.25rem] border border-border p-4 md:grid-cols-[1.2fr_1fr_auto] md:items-center">
+                <div>
+                  <p className="font-medium">{post.patient_name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {post.patient_id ?? "No patient ID"} • {post.blood_type_needed}
+                  </p>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {post.units_needed} units • {post.donor_count} donor applicants
+                </div>
+                <Badge variant={post.status === "active" ? "danger" : "secondary"}>{post.status}</Badge>
+              </div>
+            ))
+          ) : (
+            <div className="rounded-[1.25rem] border border-dashed border-border p-6 text-sm text-muted-foreground">
+              No posts created yet.
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

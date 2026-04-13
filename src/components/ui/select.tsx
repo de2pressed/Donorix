@@ -38,7 +38,7 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Content
       ref={ref}
       position={position}
-      className={cn("z-50 min-w-[220px] rounded-2xl border border-border bg-card p-2 shadow-soft", className)}
+      className={cn("z-[90] min-w-[220px] rounded-2xl border border-border bg-card p-2 shadow-soft", className)}
       {...props}
     >
       <SelectPrimitive.Viewport className="p-1">{children}</SelectPrimitive.Viewport>

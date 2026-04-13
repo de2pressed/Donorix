@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 
+import { authenticatedFetch } from "@/lib/supabase/authenticated-fetch";
 import type { Notification } from "@/types/notification";
 
 export function useNotifications({ enabled = true }: { enabled?: boolean } = {}) {
@@ -9,7 +10,7 @@ export function useNotifications({ enabled = true }: { enabled?: boolean } = {})
     enabled,
     queryKey: ["notifications"],
     queryFn: async () => {
-      const response = await fetch("/api/notifications");
+      const response = await authenticatedFetch("/api/notifications");
       if (!response.ok) throw new Error("Unable to fetch notifications");
       const payload = await response.json();
       return payload.notifications as Notification[];

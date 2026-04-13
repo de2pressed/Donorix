@@ -4,9 +4,9 @@ import { jsonError, requireServerUser } from "@/lib/http";
 import { sanitizeText } from "@/lib/utils/sanitize";
 import { updatePostSchema } from "@/lib/validations/post";
 
-export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { supabase } = await requireServerUser();
+  const { supabase } = await requireServerUser(request);
 
   if (!supabase) {
     return jsonError("Supabase not configured", 503);
@@ -15,7 +15,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
   const { data } = await supabase
     .from("posts")
     .select(
-      "id, created_by, patient_name, blood_type_needed, units_needed, hospital_name, hospital_address, city, state, latitude, longitude, contact_name, contact_phone, contact_email, medical_condition, additional_notes, is_emergency, required_by, initial_radius_km, current_radius_km, expires_at, status, priority_score, upvote_count, donor_count, approved_donor_id, sms_sent_count, created_at, updated_at",
+      "id, created_by, patient_name, patient_id, blood_type_needed, units_needed, hospital_name, hospital_address, city, state, latitude, longitude, contact_name, contact_phone, contact_email, medical_condition, additional_notes, is_emergency, required_by, initial_radius_km, current_radius_km, expires_at, status, priority_score, upvote_count, donor_count, approved_donor_id, sms_sent_count, is_legacy, is_demo, created_at, updated_at",
     )
     .eq("id", id)
     .single();
@@ -29,7 +29,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { supabase, profile } = await requireServerUser();
+  const { supabase, profile } = await requireServerUser(request);
 
   if (!supabase || !profile) {
     return jsonError("Unauthorized", 401);
@@ -80,9 +80,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   return NextResponse.json({ ok: true });
 }
 
-export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { supabase, profile } = await requireServerUser();
+  const { supabase, profile } = await requireServerUser(request);
 
   if (!supabase || !profile) {
     return jsonError("Unauthorized", 401);

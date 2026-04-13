@@ -1,11 +1,12 @@
-import { subDays } from "date-fns";
+import { startOfMonth, subDays } from "date-fns";
 
 import { adminUserIds } from "@/lib/env";
+import { HOSPITAL_ACCOUNT_SELECT, PROFILE_SELECT } from "@/lib/http";
 import { sortPostsByPriority } from "@/lib/utils/priority-score";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { FeedPost, Post } from "@/types/post";
 import type { Notification } from "@/types/notification";
-import type { Profile } from "@/types/user";
+import type { HospitalAccount, Profile } from "@/types/user";
 
 export async function getCurrentProfile() {
   const supabase = await createServerSupabaseClient();
@@ -19,9 +20,7 @@ export async function getCurrentProfile() {
 
   const { data } = await supabase
     .from("profiles")
-    .select(
-      "id, email, phone, full_name, username, avatar_url, blood_type, gender, date_of_birth, city, state, pincode, weight_kg, last_donated_at, total_donations, karma, is_admin, is_available, is_verified, has_chronic_disease, is_smoker, is_on_medication, allow_sms_alerts, allow_email_alerts, is_discoverable, allow_emergency_direct_contact, hide_from_leaderboard, notification_radius_km, preferred_language, consent_terms, consent_privacy, consent_notifications, status, timeout_until, deleted_at, created_at, updated_at",
-    )
+    .select(PROFILE_SELECT)
     .eq("id", user.id)
     .single();
 
@@ -37,10 +36,11 @@ export async function getFeedPosts() {
     .select(
       `
         id, created_by, patient_name, blood_type_needed, units_needed, hospital_name,
+        patient_id,
         hospital_address, city, state, latitude, longitude, contact_name, contact_phone,
         contact_email, medical_condition, additional_notes, is_emergency, required_by,
         initial_radius_km, current_radius_km, expires_at, status, priority_score,
-        upvote_count, donor_count, approved_donor_id, sms_sent_count, created_at, updated_at
+        upvote_count, donor_count, approved_donor_id, sms_sent_count, is_legacy, is_demo, created_at, updated_at
       `,
     )
     .in("status", ["active", "fulfilled"])
@@ -59,10 +59,11 @@ export async function getPostById(postId: string) {
     .select(
       `
         id, created_by, patient_name, blood_type_needed, units_needed, hospital_name,
+        patient_id,
         hospital_address, city, state, latitude, longitude, contact_name, contact_phone,
         contact_email, medical_condition, additional_notes, is_emergency, required_by,
         initial_radius_km, current_radius_km, expires_at, status, priority_score,
-        upvote_count, donor_count, approved_donor_id, sms_sent_count, created_at, updated_at
+        upvote_count, donor_count, approved_donor_id, sms_sent_count, is_legacy, is_demo, created_at, updated_at
       `,
     )
     .eq("id", postId)
@@ -77,9 +78,7 @@ export async function getProfileByUsername(username: string) {
 
   const { data } = await supabase
     .from("profiles")
-    .select(
-      "id, email, phone, full_name, username, avatar_url, blood_type, gender, date_of_birth, city, state, pincode, weight_kg, last_donated_at, total_donations, karma, is_admin, is_available, is_verified, has_chronic_disease, is_smoker, is_on_medication, allow_sms_alerts, allow_email_alerts, is_discoverable, allow_emergency_direct_contact, hide_from_leaderboard, notification_radius_km, preferred_language, consent_terms, consent_privacy, consent_notifications, status, timeout_until, deleted_at, created_at, updated_at",
-    )
+    .select(PROFILE_SELECT)
     .eq("username", username)
     .single();
 
@@ -92,16 +91,155 @@ export async function getLeaderboard() {
 
   const { data } = await supabase
     .from("profiles")
-    .select(
-      "id, email, phone, full_name, username, avatar_url, blood_type, gender, date_of_birth, city, state, pincode, weight_kg, last_donated_at, total_donations, karma, is_admin, is_available, is_verified, has_chronic_disease, is_smoker, is_on_medication, allow_sms_alerts, allow_email_alerts, is_discoverable, allow_emergency_direct_contact, hide_from_leaderboard, notification_radius_km, preferred_language, consent_terms, consent_privacy, consent_notifications, status, timeout_until, deleted_at, created_at, updated_at",
-    )
+    .select(PROFILE_SELECT)
     .eq("status", "active")
+    .eq("account_type", "donor")
     .eq("is_discoverable", true)
     .eq("hide_from_leaderboard", false)
     .order("karma", { ascending: false })
     .limit(100);
 
   return (data as Profile[] | null) ?? [];
+}
+
+export async function getAdminUsers() {
+  const supabase = await createServerSupabaseClient();
+  if (!supabase) return [] as Profile[];
+
+  const { data } = await supabase
+    .from("profiles")
+    .select(PROFILE_SELECT)
+    .order("created_at", { ascending: false })
+    .limit(200);
+
+  return (data as Profile[] | null) ?? [];
+}
+
+export async function getHospitalAccountByProfileId(profileId: string) {
+  const supabase = await createServerSupabaseClient();
+  if (!supabase) return null;
+
+  const { data } = await supabase
+    .from("hospital_accounts")
+    .select(HOSPITAL_ACCOUNT_SELECT)
+    .eq("profile_id", profileId)
+    .maybeSingle();
+
+  return (data as HospitalAccount | null) ?? null;
+}
+
+export async function getHospitalPosts(profileId: string, sortBy: "patient_name" | "patient_id" = "patient_name") {
+  const supabase = await createServerSupabaseClient();
+  if (!supabase) return [] as Post[];
+
+  const { data } = await supabase
+    .from("posts")
+    .select(
+      `
+        id, created_by, patient_name, patient_id, blood_type_needed, units_needed, hospital_name,
+        hospital_address, city, state, latitude, longitude, contact_name, contact_phone,
+        contact_email, medical_condition, additional_notes, is_emergency, required_by,
+        initial_radius_km, current_radius_km, expires_at, status, priority_score,
+        upvote_count, donor_count, approved_donor_id, sms_sent_count, is_legacy, is_demo, created_at, updated_at
+      `,
+    )
+    .eq("created_by", profileId)
+    .order(sortBy, { ascending: true })
+    .order("created_at", { ascending: false });
+
+  return (data as Post[] | null) ?? [];
+}
+
+export async function getHospitalDashboard(profileId: string) {
+  const supabase = await createServerSupabaseClient();
+
+  if (!supabase) {
+    return {
+      stats: {
+        activeRequests: 0,
+        pendingApplications: 0,
+        fulfilledThisMonth: 0,
+      },
+      posts: [] as Post[],
+      applicants: [] as Array<{
+        id: string;
+        post_id: string;
+        donor_id: string;
+        status: string;
+        eligibility_score: number;
+        distance_km: number | null;
+        note: string | null;
+        created_at: string;
+        donor: Pick<Profile, "id" | "full_name" | "username" | "blood_type" | "city" | "state" | "karma"> | null;
+        post: Pick<Post, "id" | "patient_name" | "patient_id" | "blood_type_needed" | "status"> | null;
+      }>,
+    };
+  }
+
+  const posts = await getHospitalPosts(profileId);
+  const postIds = posts.map((post) => post.id);
+  const monthStart = startOfMonth(new Date()).toISOString();
+
+  const pendingApplicationsPromise = postIds.length
+    ? supabase
+        .from("donor_applications")
+        .select("id", { count: "exact", head: true })
+        .in("post_id", postIds)
+        .eq("status", "pending")
+    : Promise.resolve({ count: 0 } as { count: number | null });
+
+  const fulfilledThisMonthPromise = supabase
+    .from("posts")
+    .select("id", { count: "exact", head: true })
+    .eq("created_by", profileId)
+    .eq("status", "fulfilled")
+    .gte("updated_at", monthStart);
+
+  const donorApplicationsPromise = postIds.length
+    ? supabase
+        .from("donor_applications")
+        .select("id, post_id, donor_id, status, eligibility_score, distance_km, note, created_at")
+        .in("post_id", postIds)
+        .order("created_at", { ascending: false })
+        .limit(20)
+    : Promise.resolve({ data: [] } as { data: [] });
+
+  const [{ count: pendingApplications }, { count: fulfilledThisMonth }, { data: donorApplications }] =
+    await Promise.all([pendingApplicationsPromise, fulfilledThisMonthPromise, donorApplicationsPromise]);
+
+  const donorIds = [...new Set((donorApplications ?? []).map((application) => application.donor_id))];
+  const donorLookup =
+    donorIds.length > 0
+      ? await supabase
+          .from("profiles")
+          .select("id, full_name, username, blood_type, city, state, karma")
+          .in("id", donorIds)
+      : { data: [] };
+
+  const donorMap = new Map((donorLookup.data ?? []).map((donor) => [donor.id, donor]));
+  const postMap = new Map(posts.map((post) => [post.id, post]));
+
+  return {
+    stats: {
+      activeRequests: posts.filter((post) => post.status === "active").length,
+      pendingApplications: pendingApplications ?? 0,
+      fulfilledThisMonth: fulfilledThisMonth ?? 0,
+    },
+    posts,
+    applicants: (donorApplications ?? []).map((application) => ({
+      ...application,
+      donor: donorMap.get(application.donor_id) ?? null,
+      post: postMap.get(application.post_id)
+        ? {
+            id: postMap.get(application.post_id)!.id,
+            patient_name: postMap.get(application.post_id)!.patient_name,
+            patient_id: postMap.get(application.post_id)!.patient_id,
+            blood_type_needed: postMap.get(application.post_id)!.blood_type_needed,
+            status: postMap.get(application.post_id)!.status,
+          }
+        : null,
+    })),
+  };
 }
 
 export async function getNotifications(userId?: string) {

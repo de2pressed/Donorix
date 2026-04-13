@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { INDIAN_LANGUAGES } from "@/lib/constants";
 import { getCitiesForRegion, INDIAN_REGION_NAMES } from "@/lib/india-locations";
+import { authenticatedFetch } from "@/lib/supabase/authenticated-fetch";
 import { profileSchema, type ProfileInput } from "@/lib/validations/profile";
 import type { Profile } from "@/types/user";
 
@@ -45,11 +46,8 @@ export function EditProfileForm({ profile }: { profile: Profile }) {
   const cityOptions = useMemo(() => getCitiesForRegion(selectedState), [selectedState]);
 
   const onSubmit = form.handleSubmit(async (values) => {
-    const response = await fetch("/api/users/me", {
+    const response = await authenticatedFetch("/api/users/me", {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
       body: JSON.stringify(values),
     });
 

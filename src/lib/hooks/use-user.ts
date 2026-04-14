@@ -3,7 +3,7 @@
 import type { User } from "@supabase/supabase-js";
 import { useQuery } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { authenticatedFetch } from "@/lib/supabase/authenticated-fetch";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -73,14 +73,24 @@ function buildProfileFallback(user: User): Profile {
 
 export function useUser() {
   const queryClient = useQueryClient();
+  const [sessionFallback, setSessionFallback] = useState<Profile | null>(null);
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
     if (!supabase) return;
 
+    void (async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      setSessionFallback(session?.user ? buildProfileFallback(session.user) : null);
+    })();
+
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(() => {
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSessionFallback(session?.user ? buildProfileFallback(session.user) : null);
       void queryClient.invalidateQueries({ queryKey: ["current-user"] });
     });
 
@@ -89,7 +99,7 @@ export function useUser() {
     };
   }, [queryClient]);
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ["current-user"],
     queryFn: async () => {
       const supabase = getSupabaseBrowserClient();
@@ -125,4 +135,10 @@ export function useUser() {
     },
     staleTime: 0,
   });
+
+  return {
+    ...query,
+    data: query.data ?? sessionFallback,
+    isLoading: query.isLoading && !sessionFallback,
+  };
 }

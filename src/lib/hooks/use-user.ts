@@ -95,14 +95,6 @@ export function useUser() {
       const supabase = getSupabaseBrowserClient();
       if (!supabase) return null;
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        return null;
-      }
-
       for (const delay of [0, 250, 750]) {
         if (delay > 0) {
           await wait(delay);
@@ -117,7 +109,19 @@ export function useUser() {
         }
       }
 
-      return buildProfileFallback(user);
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (session?.user) {
+        return buildProfileFallback(session.user);
+      }
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      return user ? buildProfileFallback(user) : null;
     },
     staleTime: 0,
   });

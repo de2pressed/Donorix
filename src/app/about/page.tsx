@@ -2,7 +2,6 @@
 
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import {
-  ArrowLeft,
   BellRing,
   Building2,
   CheckCircle2,
@@ -13,7 +12,7 @@ import {
 import Link from "next/link";
 import { useRef } from "react";
 
-import { Button } from "@/components/ui/button";
+import { SecondaryPageBackLink } from "@/components/layout/secondary-page-back-link";
 import { Card, CardContent } from "@/components/ui/card";
 import { SUPPORT_EMAIL } from "@/lib/constants";
 
@@ -95,12 +94,7 @@ export default function AboutPage() {
   return (
     <div className="space-y-8 pb-4">
       <div>
-        <Button asChild className="rounded-full" type="button" variant="ghost">
-          <Link href="/">
-            <ArrowLeft className="size-4" />
-            Back to Donorix
-          </Link>
-        </Button>
+        <SecondaryPageBackLink />
       </div>
 
       <section className="glass overflow-hidden rounded-[2rem] border border-border p-6 md:p-8">

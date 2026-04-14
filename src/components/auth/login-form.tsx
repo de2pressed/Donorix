@@ -4,45 +4,39 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
+import { DEMO_ACCOUNTS } from "@/lib/demo-accounts";
+import { authenticatedFetch } from "@/lib/supabase/authenticated-fetch";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { loginSchema } from "@/lib/validations/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { authenticatedFetch } from "@/lib/supabase/authenticated-fetch";
-import { loginSchema } from "@/lib/validations/auth";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type LoginValues = {
   email: string;
   password: string;
 };
 
-const DEMO_ACCOUNTS = {
-  donor: {
-    email: "demo.donor@donorix.in",
-    password: "DemoDonor@2025",
-    label: "Demo Donor Account",
-    subtitle: "Auto-login into the donor workflow",
-    redirectTo: "/find",
-  },
-  hospital: {
-    email: "demo.hospital@donorix.in",
-    password: "DemoHospital@2025",
-    label: "Demo Hospital Account",
-    subtitle: "City Lifeline Hospital demo dashboard",
-    redirectTo: "/",
-  },
-} as const;
+type PendingLogin = {
+  expectedAccountType: "donor" | "hospital";
+  redirectFallback: string;
+  useRedirectParam: boolean;
+  successMessage: string;
+};
 
 export function LoginForm({ accountType = "donor" }: { accountType?: "donor" | "hospital" }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [demoLoading, setDemoLoading] = useState<"donor" | "hospital" | null>(null);
+  const [demoStatus, setDemoStatus] = useState<"loading" | "ready" | "missing" | "error">("loading");
+  const [isSettingUpDemo, setIsSettingUpDemo] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const pendingLoginRef = useRef<PendingLogin | null>(null);
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
   });
@@ -58,6 +52,130 @@ export function LoginForm({ accountType = "donor" }: { accountType?: "donor" | "
       : fallback;
   }
 
+  async function finalizeLogin(attempt: PendingLogin) {
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) {
+      toast.error("Supabase auth is not configured yet.");
+      return;
+    }
+
+    for (const delay of [0, 250, 750]) {
+      if (delay > 0) {
+        await new Promise((resolve) => window.setTimeout(resolve, delay));
+      }
+
+      const response = await authenticatedFetch("/api/users/me", {
+        cache: "no-store",
+        redirectOnAuthFailure: false,
+      });
+      const profile = (await response.json().catch(() => null)) as { account_type?: "donor" | "hospital" } | null;
+
+      if (!response.ok || !profile?.account_type) {
+        continue;
+      }
+
+      if (profile.account_type !== attempt.expectedAccountType) {
+        await supabase.auth.signOut();
+        toast.error(
+          attempt.expectedAccountType === "hospital"
+            ? "These credentials belong to a donor account. Use the donor login tab."
+            : "These credentials belong to a hospital account. Use the hospital login tab.",
+        );
+        return;
+      }
+
+      toast.success(attempt.successMessage);
+      router.replace(
+        getRedirectDestination(
+          attempt.useRedirectParam
+            ? profile.account_type === "hospital"
+              ? "/"
+              : attempt.redirectFallback
+            : attempt.redirectFallback,
+          attempt.useRedirectParam,
+        ),
+      );
+      router.refresh();
+      return;
+    }
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const fallbackAccountType =
+      user?.user_metadata?.account_type === "hospital" ? "hospital" : "donor";
+
+    if (fallbackAccountType !== attempt.expectedAccountType) {
+      await supabase.auth.signOut();
+      toast.error(
+        attempt.expectedAccountType === "hospital"
+          ? "These credentials belong to a donor account. Use the donor login tab."
+          : "These credentials belong to a hospital account. Use the hospital login tab.",
+      );
+      return;
+    }
+
+    toast.success(attempt.successMessage);
+    router.replace(
+      getRedirectDestination(
+        attempt.useRedirectParam
+          ? fallbackAccountType === "hospital"
+            ? "/"
+            : attempt.redirectFallback
+          : attempt.redirectFallback,
+        attempt.useRedirectParam,
+      ),
+    );
+    router.refresh();
+  }
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadDemoStatus() {
+      try {
+        const response = await fetch("/api/demo-accounts", { cache: "no-store" });
+        const payload = (await response.json().catch(() => null)) as { ready?: boolean } | null;
+
+        if (isActive) {
+          setDemoStatus(payload?.ready ? "ready" : "missing");
+        }
+      } catch {
+        if (isActive) {
+          setDemoStatus("error");
+        }
+      }
+    }
+
+    void loadDemoStatus();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) return;
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event !== "SIGNED_IN" || !pendingLoginRef.current) {
+        return;
+      }
+
+      const attempt = pendingLoginRef.current;
+      pendingLoginRef.current = null;
+      void finalizeLogin(attempt);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [router, searchParams]);
+
   async function loginWithCredentials(
     values: LoginValues,
     expectedAccountType: "donor" | "hospital",
@@ -71,37 +189,37 @@ export function LoginForm({ accountType = "donor" }: { accountType?: "donor" | "
       return;
     }
 
+    pendingLoginRef.current = {
+      expectedAccountType,
+      redirectFallback,
+      useRedirectParam: options?.useRedirectParam ?? true,
+      successMessage:
+        expectedAccountType === "hospital" ? "Hospital login successful" : "Donor login successful",
+    };
+
     const { error } = await supabase.auth.signInWithPassword(values);
 
     if (error) {
+      pendingLoginRef.current = null;
       toast.error(error.message);
       return;
     }
 
-    const profileResponse = await authenticatedFetch("/api/users/me", {
-      cache: "no-store",
-    });
-    const profile = (await profileResponse.json().catch(() => null)) as { account_type?: "donor" | "hospital" } | null;
+    window.setTimeout(() => {
+      if (!pendingLoginRef.current) {
+        return;
+      }
 
-    if (profile?.account_type && profile.account_type !== expectedAccountType) {
-      await supabase.auth.signOut();
-      toast.error(
-        expectedAccountType === "hospital"
-          ? "These credentials belong to a donor account. Use the donor login tab."
-          : "These credentials belong to a hospital account. Use the hospital login tab.",
-      );
-      return;
-    }
-
-    toast.success(expectedAccountType === "hospital" ? "Hospital login successful" : "Donor login successful");
-    router.replace(getRedirectDestination(redirectFallback, options?.useRedirectParam ?? true));
-    router.refresh();
+      const attempt = pendingLoginRef.current;
+      pendingLoginRef.current = null;
+      void finalizeLogin(attempt);
+    }, 700);
   }
 
   const onSubmit = form.handleSubmit(async (values) => {
     setIsSubmitting(true);
     try {
-      await loginWithCredentials(values, accountType, accountType === "hospital" ? "/" : "/");
+      await loginWithCredentials(values, accountType, "/");
     } finally {
       setIsSubmitting(false);
     }
@@ -123,7 +241,12 @@ export function LoginForm({ accountType = "donor" }: { accountType?: "donor" | "
             <label className="text-sm font-medium" htmlFor="login-email">
               Email
             </label>
-            <Input id="login-email" placeholder="Enter your email address" type="email" {...form.register("email")} />
+            <Input
+              id="login-email"
+              placeholder="Enter your email address"
+              type="email"
+              {...form.register("email")}
+            />
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-3">
@@ -154,7 +277,11 @@ export function LoginForm({ accountType = "donor" }: { accountType?: "donor" | "
               </Button>
             </div>
           </div>
-          <Button className="w-full" disabled={isSubmitting || demoLoading !== null} type="submit">
+          <Button
+            className="w-full"
+            disabled={isSubmitting || demoLoading !== null || isSettingUpDemo}
+            type="submit"
+          >
             {isSubmitting ? "Logging in..." : "Continue"}
           </Button>
         </form>
@@ -164,37 +291,85 @@ export function LoginForm({ accountType = "donor" }: { accountType?: "donor" | "
           <p className="mt-1 text-muted-foreground">
             Use a pre-seeded account to jump straight into the donor or hospital demo.
           </p>
-          <div className="mt-4 grid gap-3">
-            {(["donor", "hospital"] as const).map((demoType) => (
-              <button
-                key={demoType}
-                className="rounded-[1.25rem] border border-border bg-card/80 px-4 py-3 text-left transition hover:border-brand/30 hover:bg-brand-soft/20 disabled:opacity-60"
-                disabled={isSubmitting || demoLoading !== null}
+
+          {demoStatus === "missing" ? (
+            <div className="mt-4">
+              <Button
+                className="w-full"
+                disabled={isSettingUpDemo || isSubmitting || demoLoading !== null}
                 type="button"
                 onClick={async () => {
-                  setDemoLoading(demoType);
+                  setIsSettingUpDemo(true);
                   try {
-                    await loginWithCredentials(
-                      {
-                        email: DEMO_ACCOUNTS[demoType].email,
-                        password: DEMO_ACCOUNTS[demoType].password,
-                      },
-                      demoType,
-                      DEMO_ACCOUNTS[demoType].redirectTo,
-                      { useRedirectParam: false },
+                    const response = await fetch("/api/demo-accounts", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                    });
+                    const payload = (await response.json().catch(() => null)) as
+                      | { message?: string; error?: string }
+                      | null;
+
+                    if (!response.ok) {
+                      throw new Error(payload?.error ?? "Unable to create demo accounts.");
+                    }
+
+                    setDemoStatus("ready");
+                    toast.success(payload?.message ?? "Demo accounts ready. You can now sign in.");
+                  } catch (error) {
+                    toast.error(
+                      error instanceof Error ? error.message : "Unable to create demo accounts.",
                     );
                   } finally {
-                    setDemoLoading(null);
+                    setIsSettingUpDemo(false);
                   }
                 }}
               >
-                <p className="font-medium text-foreground">
-                  {demoLoading === demoType ? "Logging in..." : DEMO_ACCOUNTS[demoType].label}
-                </p>
-                <p className="mt-1 text-muted-foreground">{DEMO_ACCOUNTS[demoType].subtitle}</p>
-              </button>
-            ))}
-          </div>
+                {isSettingUpDemo ? "Creating demo accounts..." : "Set Up Demo Accounts"}
+              </Button>
+            </div>
+          ) : null}
+
+          {demoStatus === "ready" ? (
+            <div className="mt-4 grid gap-3">
+              {(["donor", "hospital"] as const).map((demoType) => (
+                <button
+                  key={demoType}
+                  className="rounded-[1.25rem] border border-border bg-card/80 px-4 py-3 text-left transition hover:border-brand/30 hover:bg-brand-soft/20 disabled:opacity-60"
+                  disabled={isSubmitting || demoLoading !== null || isSettingUpDemo}
+                  type="button"
+                  onClick={async () => {
+                    setDemoLoading(demoType);
+                    try {
+                      await loginWithCredentials(
+                        {
+                          email: DEMO_ACCOUNTS[demoType].email,
+                          password: DEMO_ACCOUNTS[demoType].password,
+                        },
+                        demoType,
+                        DEMO_ACCOUNTS[demoType].redirectTo,
+                        { useRedirectParam: false },
+                      );
+                    } finally {
+                      setDemoLoading(null);
+                    }
+                  }}
+                >
+                  <p className="font-medium text-foreground">
+                    {demoLoading === demoType ? "Signing you in..." : DEMO_ACCOUNTS[demoType].label}
+                  </p>
+                  <p className="mt-1 text-muted-foreground">{DEMO_ACCOUNTS[demoType].subtitle}</p>
+                </button>
+              ))}
+            </div>
+          ) : null}
+
+          {demoStatus === "loading" ? (
+            <p className="mt-4 text-muted-foreground">Checking demo account availability...</p>
+          ) : null}
+
+          {demoStatus === "error" ? (
+            <p className="mt-4 text-danger">Unable to load demo account status right now.</p>
+          ) : null}
         </div>
       </CardContent>
     </Card>

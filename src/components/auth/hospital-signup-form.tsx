@@ -8,12 +8,6 @@ import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { PhoneInput } from "@/components/shared/phone-input";
-import { SearchablePicker } from "@/components/shared/searchable-picker";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
 import { HOSPITAL_TYPES } from "@/lib/account";
 import { getCitiesForRegion, INDIAN_REGION_NAMES } from "@/lib/india-locations";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -21,6 +15,12 @@ import {
   hospitalSignupProfileSeedSchema,
   hospitalSignupSchema,
 } from "@/lib/validations/auth";
+import { PhoneInput } from "@/components/shared/phone-input";
+import { SearchablePicker } from "@/components/shared/searchable-picker";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
 
 type HospitalSignupValues = z.input<typeof hospitalSignupSchema>;
 type HospitalSignupSubmitValues = z.output<typeof hospitalSignupSchema>;
@@ -187,13 +187,6 @@ export function HospitalSignupForm() {
   return (
     <Card className="w-full max-w-2xl overflow-hidden">
       <CardHeader className="space-y-4">
-        {step === 0 ? (
-          <div>
-            <Link className="text-sm font-medium text-muted-foreground hover:text-brand" href="/">
-              ← Back to Home
-            </Link>
-          </div>
-        ) : null}
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-4 text-sm text-muted-foreground">
             <span>
@@ -213,7 +206,11 @@ export function HospitalSignupForm() {
           {step === 0 ? (
             <div className="grid gap-4">
               <FieldShell error={errors.hospital_name?.message} htmlFor="hospital_name" label="Hospital Name">
-                <Input id="hospital_name" placeholder="Enter the hospital name" {...form.register("hospital_name")} />
+                <Input
+                  id="hospital_name"
+                  placeholder="Enter the hospital name"
+                  {...form.register("hospital_name")}
+                />
               </FieldShell>
               <FieldShell error={errors.hospital_type?.message} htmlFor="hospital_type" label="Hospital Type">
                 <select
@@ -221,10 +218,14 @@ export function HospitalSignupForm() {
                   id="hospital_type"
                   value={form.watch("hospital_type") ?? "private_hospital"}
                   onChange={(event) =>
-                    form.setValue("hospital_type", event.target.value as HospitalSignupValues["hospital_type"], {
-                      shouldDirty: true,
-                      shouldValidate: true,
-                    })
+                    form.setValue(
+                      "hospital_type",
+                      event.target.value as HospitalSignupValues["hospital_type"],
+                      {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      },
+                    )
                   }
                 >
                   {HOSPITAL_TYPES.map((option) => (
@@ -240,8 +241,16 @@ export function HospitalSignupForm() {
           {step === 1 ? (
             <div className="grid gap-4 md:grid-cols-2">
               <div className="md:col-span-2">
-                <FieldShell error={errors.registration_number?.message} htmlFor="registration_number" label="Registration / License Number">
-                  <Input id="registration_number" placeholder="Enter the official registration number" {...form.register("registration_number")} />
+                <FieldShell
+                  error={errors.registration_number?.message}
+                  htmlFor="registration_number"
+                  label="Registration / License Number"
+                >
+                  <Input
+                    id="registration_number"
+                    placeholder="Enter the official registration number"
+                    {...form.register("registration_number")}
+                  />
                 </FieldShell>
               </div>
               <div className="md:col-span-2">
@@ -267,19 +276,31 @@ export function HospitalSignupForm() {
                   <SearchablePicker
                     description="Choose the city or district that matches the hospital location."
                     disabled={!selectedState}
-                    emptyMessage={selectedState ? "No city matches that search." : "Select a state before choosing a city."}
+                    emptyMessage={
+                      selectedState
+                        ? "No city matches that search."
+                        : "Select a state before choosing a city."
+                    }
                     id="hospital-city"
                     options={cityOptions}
                     placeholder={selectedState ? "Select City" : "Select state first"}
                     searchPlaceholder="Search city or district"
                     title="Select city"
                     value={form.watch("city") ?? undefined}
-                    onChange={(value) => form.setValue("city", value, { shouldDirty: true, shouldValidate: true })}
+                    onChange={(value) =>
+                      form.setValue("city", value, { shouldDirty: true, shouldValidate: true })
+                    }
                   />
                 </FieldShell>
               </div>
               <FieldShell error={errors.pincode?.message} htmlFor="hospital-pincode" label="Pincode">
-                <Input id="hospital-pincode" inputMode="numeric" maxLength={6} placeholder="Enter 6-digit pincode" {...form.register("pincode")} />
+                <Input
+                  id="hospital-pincode"
+                  inputMode="numeric"
+                  maxLength={6}
+                  placeholder="Enter 6-digit pincode"
+                  {...form.register("pincode")}
+                />
               </FieldShell>
               <div className="md:col-span-2">
                 <FieldShell error={errors.address?.message} htmlFor="address" label="Full Address">
@@ -291,10 +312,22 @@ export function HospitalSignupForm() {
 
           {step === 2 ? (
             <div className="grid gap-4 md:grid-cols-2">
-              <FieldShell error={errors.contact_person_name?.message} htmlFor="contact_person_name" label="Primary Contact Person">
-                <Input id="contact_person_name" placeholder="Enter the primary contact person's name" {...form.register("contact_person_name")} />
+              <FieldShell
+                error={errors.contact_person_name?.message}
+                htmlFor="contact_person_name"
+                label="Primary Contact Person"
+              >
+                <Input
+                  id="contact_person_name"
+                  placeholder="Enter the primary contact person's name"
+                  {...form.register("contact_person_name")}
+                />
               </FieldShell>
-              <FieldShell error={errors.official_contact_phone?.message} htmlFor="official_contact_phone" label="Official Phone Number">
+              <FieldShell
+                error={errors.official_contact_phone?.message}
+                htmlFor="official_contact_phone"
+                label="Official Phone Number"
+              >
                 <Controller
                   control={form.control}
                   name="official_contact_phone"
@@ -305,7 +338,10 @@ export function HospitalSignupForm() {
                       onBlur={field.onBlur}
                       onChange={(nextValue) => {
                         field.onChange(nextValue);
-                        form.setValue("phone", nextValue as never, { shouldDirty: true, shouldValidate: true });
+                        form.setValue("phone", nextValue as never, {
+                          shouldDirty: true,
+                          shouldValidate: true,
+                        });
                       }}
                     />
                   )}
@@ -350,12 +386,22 @@ export function HospitalSignupForm() {
                     type={showPassword ? "text" : "password"}
                     {...form.register("password")}
                   />
-                  <Button className="absolute right-1 top-1 size-11 rounded-full" size="icon" type="button" variant="ghost" onClick={() => setShowPassword((current) => !current)}>
+                  <Button
+                    className="absolute right-1 top-1 size-11 rounded-full"
+                    size="icon"
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setShowPassword((current) => !current)}
+                  >
                     {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                   </Button>
                 </div>
               </FieldShell>
-              <FieldShell error={errors.confirm_password?.message} htmlFor="hospital-confirm-password" label="Confirm Password">
+              <FieldShell
+                error={errors.confirm_password?.message}
+                htmlFor="hospital-confirm-password"
+                label="Confirm Password"
+              >
                 <div className="relative">
                   <Input
                     id="hospital-confirm-password"
@@ -364,7 +410,13 @@ export function HospitalSignupForm() {
                     type={showConfirmPassword ? "text" : "password"}
                     {...form.register("confirm_password")}
                   />
-                  <Button className="absolute right-1 top-1 size-11 rounded-full" size="icon" type="button" variant="ghost" onClick={() => setShowConfirmPassword((current) => !current)}>
+                  <Button
+                    className="absolute right-1 top-1 size-11 rounded-full"
+                    size="icon"
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setShowConfirmPassword((current) => !current)}
+                  >
                     {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                   </Button>
                 </div>
@@ -379,7 +431,12 @@ export function HospitalSignupForm() {
                 description="I have read and agree to the Terms of Use."
                 id="hospital-consent-terms"
                 label="Terms of Use"
-                onChange={(checked) => form.setValue("consent_terms", checked, { shouldDirty: true, shouldValidate: true })}
+                onChange={(checked) =>
+                  form.setValue("consent_terms", checked, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  })
+                }
               />
               <FieldError message={errors.consent_terms?.message} />
               <ToggleCard
@@ -387,7 +444,12 @@ export function HospitalSignupForm() {
                 description="I have read and agree to the Privacy Policy."
                 id="hospital-consent-privacy"
                 label="Privacy Policy"
-                onChange={(checked) => form.setValue("consent_privacy", checked, { shouldDirty: true, shouldValidate: true })}
+                onChange={(checked) =>
+                  form.setValue("consent_privacy", checked, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  })
+                }
               />
               <FieldError message={errors.consent_privacy?.message} />
               <ToggleCard
@@ -410,7 +472,12 @@ export function HospitalSignupForm() {
           <input type="hidden" {...form.register("phone")} />
 
           <div className="flex items-center justify-between gap-3 pt-2">
-            <Button disabled={step === 0} type="button" variant="outline" onClick={() => setStep((current) => Math.max(current - 1, 0))}>
+            <Button
+              disabled={step === 0}
+              type="button"
+              variant="outline"
+              onClick={() => setStep((current) => Math.max(current - 1, 0))}
+            >
               Back
             </Button>
             {step === STEP_CONFIG.length - 1 ? (

@@ -54,6 +54,7 @@ html {
   color-scheme: light;
   overflow-x: hidden;
   scroll-behavior: smooth;
+  scrollbar-gutter: stable both-edges;
 }
 
 html.dark {
@@ -340,22 +341,22 @@ button {
 @keyframes dialog-sheet-in {
   from {
     opacity: 0;
-    transform: translate(-50%, 2rem);
+    transform: translateY(2rem);
   }
   to {
     opacity: 1;
-    transform: translate(-50%, 0);
+    transform: translateY(0);
   }
 }
 
 @keyframes dialog-sheet-out {
   from {
     opacity: 1;
-    transform: translate(-50%, 0);
+    transform: translateY(0);
   }
   to {
     opacity: 0;
-    transform: translate(-50%, 1.5rem);
+    transform: translateY(1.5rem);
   }
 }
 

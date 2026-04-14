@@ -11,10 +11,10 @@ export function PostFilter({
 }) {
   return (
     <Select value={emergencyOnly ? "emergency" : "all"} onValueChange={(value) => onEmergencyChange(value === "emergency")}>
-      <SelectTrigger aria-label="Filter feed">
+      <SelectTrigger aria-label="Filter feed" className="min-w-[220px]">
         <SelectValue placeholder="Filter requests" />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent className="min-w-[220px]">
         <SelectItem value="all">All requests</SelectItem>
         <SelectItem value="emergency">Emergency only</SelectItem>
       </SelectContent>

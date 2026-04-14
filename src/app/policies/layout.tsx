@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Menu } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { Menu } from "lucide-react";
+import { usePathname } from "next/navigation";
 
-import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { SecondaryPageBackLink } from "@/components/layout/secondary-page-back-link";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,26 +18,16 @@ import { cn } from "@/lib/utils/cn";
 
 export default function PoliciesLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
 
   return (
     <div className="mx-auto min-h-screen w-full max-w-[1900px] px-4 py-4 lg:px-8 2xl:px-10">
       <header className="glass sticky top-4 z-40 flex items-center justify-between gap-4 px-4 py-3">
         <div className="flex items-center gap-3">
-          <Button
-            className="rounded-full"
-            type="button"
-            variant="ghost"
-            onClick={() => router.push("/")}
-          >
-            <ArrowLeft className="size-4" />
-            Back to Donorix
-          </Button>
+          <SecondaryPageBackLink />
           <Link className="font-semibold tracking-tight" href="/">
             Donorix
           </Link>
         </div>
-        <ThemeToggle />
       </header>
 
       <div className="mt-8 flex flex-col gap-6 lg:grid lg:grid-cols-[300px_minmax(0,1fr)]">

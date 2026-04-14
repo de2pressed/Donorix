@@ -14,11 +14,6 @@ export default async function LoginPage({
 
   return (
     <div className="w-full space-y-6">
-      <div>
-        <Link className="text-sm font-medium text-muted-foreground hover:text-brand" href="/">
-          ← Back to Home
-        </Link>
-      </div>
       <div className="mx-auto grid max-w-4xl gap-3 md:grid-cols-2">
         <Link
           className={cn(
@@ -35,7 +30,9 @@ export default async function LoginPage({
             </div>
             <div>
               <p className="font-semibold">Login as Donor</p>
-              <p className="mt-1 text-sm text-muted-foreground">Access your donor profile and donation feed</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Access your donor profile and donation feed
+              </p>
             </div>
           </div>
         </Link>
@@ -54,7 +51,9 @@ export default async function LoginPage({
             </div>
             <div>
               <p className="font-semibold">Login as Hospital</p>
-              <p className="mt-1 text-sm text-muted-foreground">Manage patient requests and donor applicants</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Manage patient requests and donor applicants
+              </p>
             </div>
           </div>
         </Link>

@@ -45,10 +45,6 @@ export function SearchablePicker({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [isMobile, setIsMobile] = useState(false);
-  const [viewportHeight, setViewportHeight] = useState(640);
-  const [triggerElement, setTriggerElement] = useState<HTMLButtonElement | null>(null);
-  const [mobileTop, setMobileTop] = useState(96);
-  const [mobileSheetHeight, setMobileSheetHeight] = useState(360);
 
   const filteredOptions = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -59,25 +55,18 @@ export function SearchablePicker({
   useEffect(() => {
     function syncViewport() {
       setIsMobile(window.matchMedia("(max-width: 767px)").matches);
-      setViewportHeight(Math.round(window.visualViewport?.height ?? window.innerHeight));
     }
 
     syncViewport();
     window.addEventListener("resize", syncViewport);
-    window.visualViewport?.addEventListener("resize", syncViewport);
-    window.visualViewport?.addEventListener("scroll", syncViewport);
 
     return () => {
       window.removeEventListener("resize", syncViewport);
-      window.visualViewport?.removeEventListener("resize", syncViewport);
-      window.visualViewport?.removeEventListener("scroll", syncViewport);
     };
   }, []);
 
   const mergedTriggerRef = useCallback(
     (node: HTMLButtonElement | null) => {
-      setTriggerElement(node);
-
       if (!triggerRef) return;
 
       if (typeof triggerRef === "function") {
@@ -90,57 +79,14 @@ export function SearchablePicker({
     [triggerRef],
   );
 
-  useEffect(() => {
-    if (!open || !isMobile || !triggerElement) {
-      return;
-    }
-
-    function updateMobilePlacement() {
-      const anchor = triggerElement;
-      if (!anchor) {
-        return;
-      }
-
-      const visualViewport = window.visualViewport;
-      const viewportTop = Math.round(visualViewport?.offsetTop ?? 0);
-      const viewportBottom = viewportTop + Math.round(visualViewport?.height ?? window.innerHeight);
-      const rect = anchor.getBoundingClientRect();
-      const safeTop = viewportTop + 12;
-      const safeBottom = viewportBottom - 12;
-      const spaceBelow = safeBottom - rect.bottom - 8;
-      const spaceAbove = rect.top - safeTop - 8;
-      const renderAbove = spaceBelow < 260 && spaceAbove > spaceBelow;
-      const maxViewportHeight = Math.max(160, Math.min(safeBottom - safeTop, 420));
-      const preferredSpace = Math.max(220, Math.min(renderAbove ? spaceAbove : spaceBelow, 420));
-      const availableSpace = Math.min(preferredSpace, maxViewportHeight);
-
-      setMobileSheetHeight(availableSpace);
-      setMobileTop(
-        renderAbove
-          ? Math.max(safeTop, rect.top - availableSpace - 8)
-          : Math.min(rect.bottom + 8, safeBottom - availableSpace),
-      );
-    }
-
-    updateMobilePlacement();
-
-    window.addEventListener("resize", updateMobilePlacement);
-    window.visualViewport?.addEventListener("resize", updateMobilePlacement);
-    window.visualViewport?.addEventListener("scroll", updateMobilePlacement);
-
-    return () => {
-      window.removeEventListener("resize", updateMobilePlacement);
-      window.visualViewport?.removeEventListener("resize", updateMobilePlacement);
-      window.visualViewport?.removeEventListener("scroll", updateMobilePlacement);
-    };
-  }, [isMobile, open, triggerElement, viewportHeight]);
-
   return (
     <Dialog
       open={open}
       onOpenChange={(nextOpen) => {
         setOpen(nextOpen);
-        if (!nextOpen) setQuery("");
+        if (!nextOpen) {
+          setQuery("");
+        }
       }}
     >
       <DialogTrigger asChild>
@@ -159,62 +105,57 @@ export function SearchablePicker({
           <ChevronsUpDown className="ml-3 size-4 shrink-0 text-muted-foreground" />
         </button>
       </DialogTrigger>
-        <DialogContent
-          className={cn(
-            "max-h-[min(85vh,42rem)] max-w-[calc(100vw-1.5rem)] overflow-hidden p-0 sm:max-w-lg",
-            isMobile &&
-              "left-3 right-3 w-auto max-w-none translate-x-0 translate-y-0 rounded-[1.5rem]",
-          )}
-          style={
-            isMobile
-              ? {
-                  top: `${mobileTop}px`,
-                  height: `${mobileSheetHeight}px`,
-                  maxHeight: `${mobileSheetHeight}px`,
-                }
-              : undefined
-        }
+      <DialogContent
+        className={cn(
+          "max-h-[min(85vh,42rem)] max-w-[calc(100vw-1.5rem)] overflow-hidden p-0 sm:max-w-lg",
+          isMobile &&
+            "dialog-bottom-sheet left-0 right-0 top-auto bottom-0 h-[min(72dvh,36rem)] w-screen max-h-[calc(100dvh-env(safe-area-inset-top)-0.5rem)] max-w-none translate-x-0 translate-y-0 rounded-t-[1.75rem] rounded-b-none border-x-0 border-b-0 px-0 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-0",
+        )}
       >
-        <DialogHeader className="border-b border-border px-6 py-5">
-          <DialogTitle>{title}</DialogTitle>
-          {description ? <DialogDescription>{description}</DialogDescription> : null}
-        </DialogHeader>
-        <div className="border-b border-border px-6 py-4">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              autoFocus
-              className="pl-11"
-              placeholder={searchPlaceholder}
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-            />
-          </div>
-        </div>
-        <div
-          className="max-h-[50vh] overflow-y-auto px-3 py-3 md:max-h-[50vh]"
-          style={isMobile ? { maxHeight: `${Math.max(180, mobileSheetHeight - 148)}px` } : undefined}
-        >
-          {filteredOptions.length ? (
-            <div className="space-y-1">
-              {filteredOptions.map((option) => (
-                <button
-                  key={option}
-                  className="flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left text-sm transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  type="button"
-                  onClick={() => {
-                    onChange(option);
-                    setOpen(false);
-                  }}
-                >
-                  <span className="truncate">{option}</span>
-                  <Check className={cn("size-4 text-brand", value === option ? "opacity-100" : "opacity-0")} />
-                </button>
-              ))}
+        <div className="flex h-full min-h-0 flex-col">
+          <DialogHeader className="border-b border-border px-6 py-5 pr-14">
+            <DialogTitle>{title}</DialogTitle>
+            {description ? <DialogDescription>{description}</DialogDescription> : null}
+          </DialogHeader>
+          <div className="border-b border-border px-6 py-4">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                autoFocus
+                className="pl-11"
+                placeholder={searchPlaceholder}
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+              />
             </div>
-          ) : (
-            <p className="px-4 py-6 text-sm text-muted-foreground">{emptyMessage}</p>
-          )}
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
+            {filteredOptions.length ? (
+              <div className="space-y-1">
+                {filteredOptions.map((option) => (
+                  <button
+                    key={option}
+                    className="flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left text-sm transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    type="button"
+                    onClick={() => {
+                      onChange(option);
+                      setOpen(false);
+                    }}
+                  >
+                    <span className="truncate">{option}</span>
+                    <Check
+                      className={cn(
+                        "size-4 text-brand",
+                        value === option ? "opacity-100" : "opacity-0",
+                      )}
+                    />
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="px-4 py-6 text-sm text-muted-foreground">{emptyMessage}</p>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

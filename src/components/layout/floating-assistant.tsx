@@ -17,6 +17,7 @@ import { LanguageSelector } from "@/components/chatbot/language-selector";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { INDIAN_LANGUAGES } from "@/lib/constants";
+import { cn } from "@/lib/utils/cn";
 
 type AssistantMessage = { role: "assistant" | "user" | "system"; content: string };
 
@@ -194,7 +195,7 @@ export function FloatingAssistant() {
               </div>
 
               <form
-                className="flex shrink-0 items-center gap-3 border-t border-border bg-card px-4 py-4 max-[479px]:pb-[calc(env(safe-area-inset-bottom)+1rem)]"
+                className="grid shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-t border-border bg-card px-4 py-4 max-[479px]:pb-[calc(env(safe-area-inset-bottom)+1rem)]"
                 onSubmit={async (event) => {
                   event.preventDefault();
                   if (!value.trim() || isSending) return;
@@ -239,11 +240,12 @@ export function FloatingAssistant() {
               >
                 <Input
                   aria-label={tAssistant("title")}
+                  className="min-w-0"
                   placeholder={tAssistant("placeholder")}
                   value={value}
                   onChange={(event) => setValue(event.target.value)}
                 />
-                <Button disabled={isSending} type="submit">
+                <Button className="shrink-0 px-4" disabled={isSending} type="submit">
                   {tAssistant("send")}
                 </Button>
               </form>
@@ -254,7 +256,10 @@ export function FloatingAssistant() {
 
       <button
         aria-label={open ? "Close Donorix assistant" : "Open Donorix assistant"}
-        className="fixed bottom-[calc(env(safe-area-inset-bottom)+5.25rem)] right-4 z-[45] flex size-[52px] items-center justify-center rounded-full bg-brand text-brand-foreground shadow-glow transition hover:opacity-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:bottom-6"
+        className={cn(
+          "fixed bottom-[calc(env(safe-area-inset-bottom)+5.25rem)] right-4 z-[45] flex size-[52px] items-center justify-center rounded-full bg-brand text-brand-foreground shadow-glow transition hover:opacity-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:bottom-6",
+          open && "pointer-events-none invisible opacity-0",
+        )}
         type="button"
         onClick={() => {
           setOpen((current) => !current);

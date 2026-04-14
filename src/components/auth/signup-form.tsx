@@ -243,13 +243,6 @@ export function SignupForm() {
   return (
     <Card className="w-full max-w-2xl overflow-hidden">
       <CardHeader className="space-y-4">
-        {step === 0 ? (
-          <div>
-            <Link className="text-sm font-medium text-muted-foreground hover:text-brand" href="/">
-              ← Back to Home
-            </Link>
-          </div>
-        ) : null}
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-4 text-sm text-muted-foreground">
             <span>
@@ -257,7 +250,10 @@ export function SignupForm() {
             </span>
             <span>{currentStep.title}</span>
           </div>
-          <Progress aria-label={`Signup progress: step ${step + 1} of ${STEP_CONFIG.length}`} value={progress} />
+          <Progress
+            aria-label={`Signup progress: step ${step + 1} of ${STEP_CONFIG.length}`}
+            value={progress}
+          />
         </div>
         <div>
           <CardTitle>{currentStep.title}</CardTitle>
@@ -268,11 +264,7 @@ export function SignupForm() {
         <form className="space-y-6" onSubmit={onSubmit}>
           {step === 0 ? (
             <div className="grid gap-4 md:grid-cols-2">
-              <FieldShell
-                error={errors.full_name?.message}
-                htmlFor="full_name"
-                label="Full Name"
-              >
+              <FieldShell error={errors.full_name?.message} htmlFor="full_name" label="Full Name">
                 <Input
                   id="full_name"
                   placeholder="Enter your full name"
@@ -280,11 +272,7 @@ export function SignupForm() {
                   ref={assignFirstFieldRef<HTMLInputElement>(fullNameField.ref)}
                 />
               </FieldShell>
-              <FieldShell
-                error={errors.username?.message}
-                htmlFor="username"
-                label="Username"
-              >
+              <FieldShell error={errors.username?.message} htmlFor="username" label="Username">
                 <Input
                   id="username"
                   placeholder="Choose a unique username"
@@ -306,11 +294,7 @@ export function SignupForm() {
 
           {step === 1 ? (
             <div className="grid gap-4">
-              <FieldShell
-                error={errors.password?.message}
-                htmlFor="password"
-                label="Password"
-              >
+              <FieldShell error={errors.password?.message} htmlFor="password" label="Password">
                 <div className="relative">
                   <Input
                     id="password"

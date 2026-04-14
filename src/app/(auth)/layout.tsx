@@ -1,7 +1,12 @@
+import { SecondaryPageBackLink } from "@/components/layout/secondary-page-back-link";
+
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="hero-grid flex min-h-dvh items-start justify-center px-4 py-6 md:py-10 lg:px-8 2xl:px-10">
-      <div className="w-full max-w-[1900px] space-y-6">
+      <div className="w-full max-w-[1900px] space-y-8">
+        <div className="flex items-center justify-start">
+          <SecondaryPageBackLink />
+        </div>
         <div className="mx-auto max-w-xl text-center">
           <p className="text-sm font-semibold uppercase tracking-[0.24em] text-brand">Donorix access</p>
           <h1 className="mt-3 text-balance text-3xl font-semibold md:text-5xl">

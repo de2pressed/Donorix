@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { DEMO_ACCOUNTS } from "@/lib/demo-accounts";
 import { authenticatedFetch } from "@/lib/supabase/authenticated-fetch";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { syncSupabaseSessionToServer } from "@/lib/supabase/sync-session";
 import { loginSchema } from "@/lib/validations/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,6 +58,14 @@ export function LoginForm({ accountType = "donor" }: { accountType?: "donor" | "
     if (!supabase) {
       toast.error("Supabase auth is not configured yet.");
       return;
+    }
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (session) {
+      await syncSupabaseSessionToServer(session).catch(() => undefined);
     }
 
     for (const delay of [0, 250, 750]) {
@@ -197,12 +206,16 @@ export function LoginForm({ accountType = "donor" }: { accountType?: "donor" | "
         expectedAccountType === "hospital" ? "Hospital login successful" : "Donor login successful",
     };
 
-    const { error } = await supabase.auth.signInWithPassword(values);
+    const { data, error } = await supabase.auth.signInWithPassword(values);
 
     if (error) {
       pendingLoginRef.current = null;
       toast.error(error.message);
       return;
+    }
+
+    if (data.session) {
+      await syncSupabaseSessionToServer(data.session).catch(() => undefined);
     }
 
     window.setTimeout(() => {
@@ -219,7 +232,7 @@ export function LoginForm({ accountType = "donor" }: { accountType?: "donor" | "
   const onSubmit = form.handleSubmit(async (values) => {
     setIsSubmitting(true);
     try {
-      await loginWithCredentials(values, accountType, "/");
+      await loginWithCredentials(values, accountType, accountType === "hospital" ? "/" : "/find");
     } finally {
       setIsSubmitting(false);
     }

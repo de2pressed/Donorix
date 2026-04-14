@@ -1,16 +1,19 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { toast } from "sonner";
 
 import { SESSION_EXPIRED_EVENT, SESSION_EXPIRED_STORAGE_KEY } from "@/lib/supabase/authenticated-fetch";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { syncSupabaseSessionToServer } from "@/lib/supabase/sync-session";
 
 const AUTH_PATH_PREFIXES = ["/login", "/signup", "/forgot-password", "/reset-password"];
 
 export function AuthSessionBridge() {
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
@@ -18,24 +21,38 @@ export function AuthSessionBridge() {
 
     supabase.auth.startAutoRefresh();
 
+    void (async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      await syncSupabaseSessionToServer(session ?? null).catch(() => undefined);
+    })();
+
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_OUT") {
-        queryClient.setQueryData(["current-user"], null);
-        queryClient.removeQueries({ queryKey: ["notifications"] });
-        return;
-      }
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      void (async () => {
+        await syncSupabaseSessionToServer(session ?? null).catch(() => undefined);
 
-      queryClient.invalidateQueries({ queryKey: ["current-user"] });
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+        if (!session) {
+          queryClient.setQueryData(["current-user"], null);
+          queryClient.removeQueries({ queryKey: ["notifications"] });
+          router.refresh();
+          return;
+        }
+
+        queryClient.invalidateQueries({ queryKey: ["current-user"] });
+        queryClient.invalidateQueries({ queryKey: ["notifications"] });
+        router.refresh();
+      })();
     });
 
     return () => {
       subscription.unsubscribe();
       supabase.auth.stopAutoRefresh();
     };
-  }, [queryClient]);
+  }, [queryClient, router]);
 
   useEffect(() => {
     const message = window.sessionStorage.getItem(SESSION_EXPIRED_STORAGE_KEY);

@@ -110,6 +110,7 @@ export function useUser() {
 
         const response = await authenticatedFetch("/api/users/me", {
           cache: "no-store",
+          redirectOnAuthFailure: false,
         });
         if (response.ok) {
           return (await response.json()) as Profile;

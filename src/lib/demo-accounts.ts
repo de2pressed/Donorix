@@ -4,7 +4,7 @@ export const DEMO_ACCOUNTS = {
     password: "DemoDonor@2025",
     label: "Demo Donor Account",
     subtitle: "Auto-login into the donor workflow",
-    redirectTo: "/",
+    redirectTo: "/find",
     profile: {
       full_name: "Demo Donor",
       username: "demo_donor",

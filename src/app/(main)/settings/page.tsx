@@ -109,6 +109,7 @@ export default function SettingsPage() {
   const { locale, setLocalePreference } = useLocalePreference();
   const { resolvedTheme, setTheme } = useTheme();
   const { data: user } = useUser();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isUpdatingLanguage, setIsUpdatingLanguage] = useState(false);
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
@@ -294,6 +295,32 @@ export default function SettingsPage() {
       );
     } finally {
       setIsDeleting(false);
+    }
+  }
+
+  async function handleLogout() {
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) {
+      toast.error("Supabase auth is not configured yet.");
+      return;
+    }
+
+    setIsLoggingOut(true);
+
+    try {
+      const { error } = await supabase.auth.signOut();
+
+      if (error) {
+        throw error;
+      }
+
+      toast.success("Logged out");
+      router.replace("/");
+      router.refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to log out.");
+    } finally {
+      setIsLoggingOut(false);
     }
   }
 
@@ -583,6 +610,14 @@ export default function SettingsPage() {
             </div>
 
             <div className="flex flex-wrap gap-3">
+              <Button
+                disabled={isLoggingOut}
+                type="button"
+                variant="outline"
+                onClick={() => void handleLogout()}
+              >
+                {isLoggingOut ? "Logging out..." : "Log out"}
+              </Button>
               <Button
                 disabled={isUpdatingPassword}
                 type="button"

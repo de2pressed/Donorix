@@ -7,7 +7,6 @@ import { usePathname } from "next/navigation";
 import { useUser } from "@/lib/hooks/use-user";
 import { getSidebarNav, showRegisterHospitalButton } from "@/lib/navigation";
 import { cn } from "@/lib/utils/cn";
-import { Badge } from "@/components/ui/badge";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -19,22 +18,21 @@ export function Sidebar() {
     <aside className="glass sticky top-6 hidden h-[calc(100vh-3rem)] w-[15.5rem] shrink-0 flex-col justify-between overflow-hidden p-5 lg:flex">
       <div className="space-y-8">
         <div className="space-y-3">
-          <Badge className="w-fit" variant="danger">
-            India-first blood matching
-          </Badge>
-          <div className="flex items-center gap-3">
+          <Link className="inline-flex items-center gap-3" href="/">
             <div className="flex size-12 items-center justify-center rounded-2xl bg-brand text-brand-foreground shadow-glow">
               <HeartHandshake className="size-6" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold">Donorix</h1>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand">
+                {user?.account_type === "hospital" ? "Hospital workspace" : "Donor workspace"}
+              </p>
               <p className="text-sm text-muted-foreground">
                 {user?.account_type === "hospital"
-                  ? "Hospital operations and donor coordination"
-                  : "Emergency blood coordination across India"}
+                  ? "Patient posts, donors, and notification workflows"
+                  : "Explore requests, ranking, and response activity"}
               </p>
             </div>
-          </div>
+          </Link>
         </div>
         <nav className="space-y-2">
           {items.map((item) => {

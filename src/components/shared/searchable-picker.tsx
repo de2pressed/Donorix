@@ -2,7 +2,7 @@
 
 import { Check, ChevronsUpDown, Search } from "lucide-react";
 import type { Ref } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   Dialog,
@@ -46,6 +46,9 @@ export function SearchablePicker({
   const [query, setQuery] = useState("");
   const [isMobile, setIsMobile] = useState(false);
   const [viewportHeight, setViewportHeight] = useState(640);
+  const [triggerElement, setTriggerElement] = useState<HTMLButtonElement | null>(null);
+  const [mobileTop, setMobileTop] = useState(96);
+  const [mobileSheetHeight, setMobileSheetHeight] = useState(360);
 
   const filteredOptions = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -71,7 +74,66 @@ export function SearchablePicker({
     };
   }, []);
 
-  const mobileSheetHeight = Math.max(280, Math.min(viewportHeight - 24, 560));
+  const mergedTriggerRef = useCallback(
+    (node: HTMLButtonElement | null) => {
+      setTriggerElement(node);
+
+      if (!triggerRef) return;
+
+      if (typeof triggerRef === "function") {
+        triggerRef(node);
+        return;
+      }
+
+      (triggerRef as { current: HTMLButtonElement | null }).current = node;
+    },
+    [triggerRef],
+  );
+
+  useEffect(() => {
+    if (!open || !isMobile || !triggerElement) {
+      return;
+    }
+
+    function updateMobilePlacement() {
+      const anchor = triggerElement;
+      if (!anchor) {
+        return;
+      }
+
+      const visualViewport = window.visualViewport;
+      const viewportTop = Math.round(visualViewport?.offsetTop ?? 0);
+      const viewportBottom = viewportTop + Math.round(visualViewport?.height ?? window.innerHeight);
+      const rect = anchor.getBoundingClientRect();
+      const safeTop = viewportTop + 12;
+      const safeBottom = viewportBottom - 12;
+      const spaceBelow = safeBottom - rect.bottom - 8;
+      const spaceAbove = rect.top - safeTop - 8;
+      const renderAbove = spaceBelow < 260 && spaceAbove > spaceBelow;
+      const maxViewportHeight = Math.max(160, Math.min(safeBottom - safeTop, 420));
+      const preferredSpace = Math.max(220, Math.min(renderAbove ? spaceAbove : spaceBelow, 420));
+      const availableSpace = Math.min(preferredSpace, maxViewportHeight);
+
+      setMobileSheetHeight(availableSpace);
+      setMobileTop(
+        renderAbove
+          ? Math.max(safeTop, rect.top - availableSpace - 8)
+          : Math.min(rect.bottom + 8, safeBottom - availableSpace),
+      );
+    }
+
+    updateMobilePlacement();
+
+    window.addEventListener("resize", updateMobilePlacement);
+    window.visualViewport?.addEventListener("resize", updateMobilePlacement);
+    window.visualViewport?.addEventListener("scroll", updateMobilePlacement);
+
+    return () => {
+      window.removeEventListener("resize", updateMobilePlacement);
+      window.visualViewport?.removeEventListener("resize", updateMobilePlacement);
+      window.visualViewport?.removeEventListener("scroll", updateMobilePlacement);
+    };
+  }, [isMobile, open, triggerElement, viewportHeight]);
 
   return (
     <Dialog
@@ -83,7 +145,7 @@ export function SearchablePicker({
     >
       <DialogTrigger asChild>
         <button
-          ref={triggerRef}
+          ref={mergedTriggerRef}
           aria-expanded={open}
           className={cn(
             "flex h-11 w-full items-center justify-between rounded-2xl border border-border bg-card/80 px-4 py-2 text-left text-sm shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60",
@@ -97,19 +159,20 @@ export function SearchablePicker({
           <ChevronsUpDown className="ml-3 size-4 shrink-0 text-muted-foreground" />
         </button>
       </DialogTrigger>
-      <DialogContent
-        className={cn(
-          "max-h-[min(85vh,42rem)] max-w-[calc(100vw-1.5rem)] overflow-hidden p-0 sm:max-w-lg",
-          isMobile &&
-            "inset-x-0 bottom-0 top-auto w-screen max-w-none translate-x-0 translate-y-0 rounded-b-none rounded-t-[1.75rem]",
-        )}
-        style={
-          isMobile
-            ? {
-                height: `${mobileSheetHeight}px`,
-                maxHeight: "calc(100dvh - 0.75rem)",
-              }
-            : undefined
+        <DialogContent
+          className={cn(
+            "max-h-[min(85vh,42rem)] max-w-[calc(100vw-1.5rem)] overflow-hidden p-0 sm:max-w-lg",
+            isMobile &&
+              "left-3 right-3 w-auto max-w-none translate-x-0 translate-y-0 rounded-[1.5rem]",
+          )}
+          style={
+            isMobile
+              ? {
+                  top: `${mobileTop}px`,
+                  height: `${mobileSheetHeight}px`,
+                  maxHeight: `${mobileSheetHeight}px`,
+                }
+              : undefined
         }
       >
         <DialogHeader className="border-b border-border px-6 py-5">
@@ -128,7 +191,10 @@ export function SearchablePicker({
             />
           </div>
         </div>
-        <div className="max-h-[50vh] overflow-y-auto px-3 py-3 md:max-h-[50vh]" style={isMobile ? { maxHeight: `${Math.max(180, mobileSheetHeight - 148)}px` } : undefined}>
+        <div
+          className="max-h-[50vh] overflow-y-auto px-3 py-3 md:max-h-[50vh]"
+          style={isMobile ? { maxHeight: `${Math.max(180, mobileSheetHeight - 148)}px` } : undefined}
+        >
           {filteredOptions.length ? (
             <div className="space-y-1">
               {filteredOptions.map((option) => (

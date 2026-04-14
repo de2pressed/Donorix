@@ -11,6 +11,9 @@ export function useNotifications({ enabled = true }: { enabled?: boolean } = {})
     queryKey: ["notifications"],
     queryFn: async () => {
       const response = await authenticatedFetch("/api/notifications");
+      if (response.status === 401) {
+        return [];
+      }
       if (!response.ok) throw new Error("Unable to fetch notifications");
       const payload = await response.json();
       return payload.notifications as Notification[];

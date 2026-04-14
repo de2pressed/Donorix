@@ -25,7 +25,7 @@ export function MobileNav() {
     const supabase = getSupabaseBrowserClient();
     if (!supabase) return;
     await supabase.auth.signOut();
-    router.replace("/login");
+    router.replace("/");
     router.refresh();
   }
 

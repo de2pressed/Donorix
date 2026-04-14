@@ -6,6 +6,7 @@ import { PlusSquare, Settings } from "lucide-react";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { UserMenu } from "@/components/layout/user-menu";
+import { UserMenuErrorBoundary } from "@/components/layout/user-menu-error-boundary";
 import { Button } from "@/components/ui/button";
 import { useNotifications } from "@/lib/hooks/use-notifications";
 import { useUser } from "@/lib/hooks/use-user";
@@ -50,7 +51,9 @@ export function Header() {
         <div className="hidden md:block">
           <ThemeToggle />
         </div>
-        <UserMenu />
+        <UserMenuErrorBoundary isAuthenticated={Boolean(user)}>
+          <UserMenu />
+        </UserMenuErrorBoundary>
       </div>
     </header>
   );

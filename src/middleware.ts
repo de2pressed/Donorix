@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 import { updateSession } from "@/lib/supabase/middleware";
 
-const protectedPrefixes = ["/profile", "/notifications", "/settings", "/posts/new"];
+const protectedPrefixes = ["/profile", "/notifications", "/settings", "/posts/new", "/find", "/hospital"];
 const adminPrefixes = ["/admin"];
 const authPrefixes = ["/login", "/signup"];
 

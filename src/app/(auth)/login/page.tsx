@@ -13,8 +13,13 @@ export default async function LoginPage({
   const account = resolvedSearchParams.account === "hospital" ? "hospital" : "donor";
 
   return (
-    <div className="w-full max-w-4xl space-y-6">
-      <div className="grid gap-3 md:grid-cols-2">
+    <div className="w-full space-y-6">
+      <div>
+        <Link className="text-sm font-medium text-muted-foreground hover:text-brand" href="/">
+          ← Back to Home
+        </Link>
+      </div>
+      <div className="mx-auto grid max-w-4xl gap-3 md:grid-cols-2">
         <Link
           className={cn(
             "rounded-[1.75rem] border p-5 text-left transition",
@@ -55,7 +60,9 @@ export default async function LoginPage({
         </Link>
       </div>
 
-      <LoginForm accountType={account} />
+      <div className="flex justify-center">
+        <LoginForm accountType={account} />
+      </div>
       <p className="text-center text-sm text-muted-foreground">
         New to Donorix?{" "}
         <Link className="font-medium text-brand" href="/signup">

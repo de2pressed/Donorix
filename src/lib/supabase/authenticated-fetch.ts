@@ -2,6 +2,13 @@
 
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
+export const SESSION_EXPIRED_EVENT = "donorix:session-expired";
+export const SESSION_EXPIRED_STORAGE_KEY = "donorix-session-expired";
+
+const SESSION_EXPIRED_MESSAGE = "Your session has expired. Please log in again.";
+
+let sessionExpiredNotified = false;
+
 export async function getAuthenticatedHeaders(
   headers?: HeadersInit,
 ): Promise<Headers> {
@@ -27,12 +34,65 @@ export async function getAuthenticatedHeaders(
   return nextHeaders;
 }
 
+function notifySessionExpired() {
+  if (typeof window === "undefined" || sessionExpiredNotified) {
+    return;
+  }
+
+  sessionExpiredNotified = true;
+
+  try {
+    window.sessionStorage.setItem(SESSION_EXPIRED_STORAGE_KEY, SESSION_EXPIRED_MESSAGE);
+  } catch {
+    // Ignore storage failures and still redirect the user.
+  }
+
+  window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+
+  window.setTimeout(() => {
+    sessionExpiredNotified = false;
+  }, 2000);
+}
+
+type AuthenticatedFetchOptions = RequestInit & {
+  redirectOnAuthFailure?: boolean;
+};
+
 export async function authenticatedFetch(
   input: RequestInfo | URL,
-  init: RequestInit = {},
+  init: AuthenticatedFetchOptions = {},
 ) {
-  return fetch(input, {
-    ...init,
-    headers: await getAuthenticatedHeaders(init.headers),
-  });
+  const { redirectOnAuthFailure = true, ...requestInit } = init;
+  const performRequest = async () =>
+    fetch(input, {
+      ...requestInit,
+      headers: await getAuthenticatedHeaders(requestInit.headers),
+    });
+
+  let response = await performRequest();
+
+  if (response.status !== 401) {
+    return response;
+  }
+
+  const supabase = getSupabaseBrowserClient();
+  if (!supabase) {
+    return response;
+  }
+
+  const {
+    data: { session },
+    error,
+  } = await supabase.auth.refreshSession();
+
+  if (!error && session?.access_token && !(input instanceof Request)) {
+    response = await performRequest();
+  }
+
+  if (response.status === 401 && redirectOnAuthFailure) {
+    await supabase.auth.signOut();
+    notifySessionExpired();
+  }
+
+  return response;
 }

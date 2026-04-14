@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { Ref } from "react";
@@ -242,6 +243,13 @@ export function SignupForm() {
   return (
     <Card className="w-full max-w-2xl overflow-hidden">
       <CardHeader className="space-y-4">
+        {step === 0 ? (
+          <div>
+            <Link className="text-sm font-medium text-muted-foreground hover:text-brand" href="/">
+              ← Back to Home
+            </Link>
+          </div>
+        ) : null}
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-4 text-sm text-muted-foreground">
             <span>
@@ -618,6 +626,12 @@ export function SignupForm() {
               </Button>
             )}
           </div>
+          <p className="text-center text-sm text-muted-foreground">
+            Already have an account?{" "}
+            <Link className="font-medium text-brand hover:text-brand/80" href="/login">
+              Log in
+            </Link>
+          </p>
         </form>
       </CardContent>
     </Card>

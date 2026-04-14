@@ -2,6 +2,7 @@
 
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import {
+  ArrowLeft,
   BellRing,
   Building2,
   CheckCircle2,
@@ -93,6 +94,15 @@ export default function AboutPage() {
 
   return (
     <div className="space-y-8 pb-4">
+      <div>
+        <Button asChild className="rounded-full" type="button" variant="ghost">
+          <Link href="/">
+            <ArrowLeft className="size-4" />
+            Back to Donorix
+          </Link>
+        </Button>
+      </div>
+
       <section className="glass overflow-hidden rounded-[2rem] border border-border p-6 md:p-8">
         <div className="grid gap-8 xl:grid-cols-[1.1fr_0.9fr] xl:items-center">
           <div className="space-y-5">
@@ -107,14 +117,6 @@ export default function AboutPage() {
               patient requests, matched donors respond quickly, and the platform keeps privacy,
               consent, and trust visible at every step.
             </p>
-            <div className="flex flex-wrap gap-3">
-              <Button asChild>
-                <Link href="/signup?account=hospital">Register as Hospital</Link>
-              </Button>
-              <Button asChild type="button" variant="outline">
-                <Link href="/">View live requests</Link>
-              </Button>
-            </div>
           </div>
 
           <Card className="overflow-hidden border-border/80 bg-card/80">

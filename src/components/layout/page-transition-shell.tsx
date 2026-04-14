@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -11,7 +11,7 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
   const [progress, setProgress] = useState(0);
   const [loading, setLoading] = useState(false);
   const initialized = useRef(false);
-  const previousPath = useRef(pathname);
+  const failSafeTimeout = useRef<number | null>(null);
 
   const routeKey = useMemo(() => {
     const search = searchParams?.toString();
@@ -71,12 +71,25 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
 
       setLoading(true);
       setProgress(12);
+
+      if (failSafeTimeout.current) {
+        window.clearTimeout(failSafeTimeout.current);
+      }
+
+      failSafeTimeout.current = window.setTimeout(() => {
+        setProgress(100);
+        setLoading(false);
+        window.setTimeout(() => setProgress(0), 120);
+      }, 500);
     };
 
     document.addEventListener("click", handleClick, true);
 
     return () => {
       document.removeEventListener("click", handleClick, true);
+      if (failSafeTimeout.current) {
+        window.clearTimeout(failSafeTimeout.current);
+      }
     };
   }, []);
 
@@ -98,11 +111,14 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
   useEffect(() => {
     if (!initialized.current) {
       initialized.current = true;
-      previousPath.current = pathname;
       return;
     }
 
-    previousPath.current = pathname;
+    if (failSafeTimeout.current) {
+      window.clearTimeout(failSafeTimeout.current);
+      failSafeTimeout.current = null;
+    }
+
     setProgress(100);
 
     const timeoutId = window.setTimeout(() => {
@@ -115,9 +131,6 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
     };
   }, [pathname, searchParams]);
 
-  const isPolicyTransition =
-    pathname.startsWith("/policies") && previousPath.current.startsWith("/policies");
-
   return (
     <>
       <div className="pointer-events-none fixed inset-x-0 top-0 z-[95] h-1">
@@ -129,25 +142,14 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
         />
       </div>
 
-      <AnimatePresence initial={false} mode="wait">
-        <motion.div
-          animate={{ opacity: 1, x: 0, y: 0 }}
-          exit={
-            isPolicyTransition
-              ? { opacity: 0, x: reduceMotion ? 0 : -24 }
-              : { opacity: 0, y: reduceMotion ? 0 : -6 }
-          }
-          initial={
-            isPolicyTransition
-              ? { opacity: 0, x: reduceMotion ? 0 : 24 }
-              : { opacity: 0, y: reduceMotion ? 0 : 8 }
-          }
-          key={routeKey}
-          transition={{ duration: reduceMotion ? 0 : 0.22, ease: "easeOut" }}
-        >
-          {children}
-        </motion.div>
-      </AnimatePresence>
+      <motion.div
+        animate={{ opacity: 1, y: 0 }}
+        initial={reduceMotion ? false : { opacity: 0.96, y: 4 }}
+        key={routeKey}
+        transition={{ duration: reduceMotion ? 0 : 0.18, ease: "easeOut" }}
+      >
+        {children}
+      </motion.div>
     </>
   );
 }

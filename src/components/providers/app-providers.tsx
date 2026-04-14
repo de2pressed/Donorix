@@ -7,6 +7,8 @@ import { useState } from "react";
 import { Toaster } from "sonner";
 
 import { PageTransitionShell } from "@/components/layout/page-transition-shell";
+import { SiteFooter } from "@/components/layout/site-footer";
+import { AuthSessionBridge } from "@/components/providers/auth-session-bridge";
 import { LocalePreferenceProvider } from "@/components/providers/locale-provider";
 import { ScrollReset } from "@/components/layout/scroll-reset";
 import { AuthPromptProvider } from "@/components/shared/auth-prompt-modal";
@@ -39,13 +41,19 @@ export function AppProviders({ children, locale, messages }: AppProvidersProps) 
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
       <LocalePreferenceProvider initialLocale={locale} initialMessages={messages}>
         <QueryClientProvider client={queryClient}>
+          <AuthSessionBridge />
           <TooltipProvider delayDuration={150}>
             <AuthPromptProvider>
               <ScrollReset />
               <OfflineBanner />
               <DisclaimerModal />
               <CookieConsentBanner />
-              <PageTransitionShell>{children}</PageTransitionShell>
+              <div className="flex min-h-screen flex-col">
+                <div className="flex-1">
+                  <PageTransitionShell>{children}</PageTransitionShell>
+                </div>
+                <SiteFooter />
+              </div>
             </AuthPromptProvider>
           </TooltipProvider>
           <Toaster position="top-right" richColors />

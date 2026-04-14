@@ -20,15 +20,50 @@ type LoginValues = {
   password: string;
 };
 
+const DEMO_ACCOUNTS = {
+  donor: {
+    email: "demo.donor@donorix.in",
+    password: "DemoDonor@2025",
+    label: "Demo Donor Account",
+    subtitle: "Auto-login into the donor workflow",
+    redirectTo: "/find",
+  },
+  hospital: {
+    email: "demo.hospital@donorix.in",
+    password: "DemoHospital@2025",
+    label: "Demo Hospital Account",
+    subtitle: "City Lifeline Hospital demo dashboard",
+    redirectTo: "/",
+  },
+} as const;
+
 export function LoginForm({ accountType = "donor" }: { accountType?: "donor" | "hospital" }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
+  const [demoLoading, setDemoLoading] = useState<"donor" | "hospital" | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = form.handleSubmit(async (values) => {
+  function getRedirectDestination(fallback: string, useRedirectParam = true) {
+    if (!useRedirectParam) {
+      return fallback;
+    }
+
+    const redirectTo = searchParams.get("redirect");
+    return redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//")
+      ? redirectTo
+      : fallback;
+  }
+
+  async function loginWithCredentials(
+    values: LoginValues,
+    expectedAccountType: "donor" | "hospital",
+    redirectFallback: string,
+    options?: { useRedirectParam?: boolean },
+  ) {
     const supabase = getSupabaseBrowserClient();
 
     if (!supabase) {
@@ -48,22 +83,28 @@ export function LoginForm({ accountType = "donor" }: { accountType?: "donor" | "
     });
     const profile = (await profileResponse.json().catch(() => null)) as { account_type?: "donor" | "hospital" } | null;
 
-    if (profile?.account_type && profile.account_type !== accountType) {
+    if (profile?.account_type && profile.account_type !== expectedAccountType) {
       await supabase.auth.signOut();
       toast.error(
-        accountType === "hospital"
+        expectedAccountType === "hospital"
           ? "These credentials belong to a donor account. Use the donor login tab."
           : "These credentials belong to a hospital account. Use the hospital login tab.",
       );
       return;
     }
 
-    toast.success(accountType === "hospital" ? "Hospital login successful" : "Donor login successful");
-    const redirectTo = searchParams.get("redirect");
-    const destination =
-      redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//") ? redirectTo : "/";
-    router.replace(destination);
+    toast.success(expectedAccountType === "hospital" ? "Hospital login successful" : "Donor login successful");
+    router.replace(getRedirectDestination(redirectFallback, options?.useRedirectParam ?? true));
     router.refresh();
+  }
+
+  const onSubmit = form.handleSubmit(async (values) => {
+    setIsSubmitting(true);
+    try {
+      await loginWithCredentials(values, accountType, accountType === "hospital" ? "/" : "/");
+    } finally {
+      setIsSubmitting(false);
+    }
   });
 
   return (
@@ -113,56 +154,48 @@ export function LoginForm({ accountType = "donor" }: { accountType?: "donor" | "
               </Button>
             </div>
           </div>
-          <Button className="w-full" type="submit">
-            Continue
+          <Button className="w-full" disabled={isSubmitting || demoLoading !== null} type="submit">
+            {isSubmitting ? "Logging in..." : "Continue"}
           </Button>
         </form>
 
-        {accountType === "hospital" ? (
-          <div className="mt-6 rounded-[1.5rem] border border-border bg-muted/30 p-4 text-sm">
-            <p className="font-medium text-foreground">Demo Access</p>
-            <p className="mt-1 text-muted-foreground">
-              Demo hospital credentials for stakeholder walkthroughs.
-            </p>
-            <div className="mt-3 space-y-1 text-muted-foreground">
-              <p>Email: demo.hospital@donorix.in</p>
-              <p>Password: DemoHospital@2025</p>
-            </div>
-            <Button
-              className="mt-4 w-full"
-              type="button"
-              variant="outline"
-              onClick={() => {
-                form.setValue("email", "demo.hospital@donorix.in", { shouldDirty: true });
-                form.setValue("password", "DemoHospital@2025", { shouldDirty: true });
-              }}
-            >
-              Use Demo Hospital
-            </Button>
+        <div className="mt-6 rounded-[1.5rem] border border-border bg-muted/30 p-4 text-sm">
+          <p className="font-medium text-foreground">Demo Access</p>
+          <p className="mt-1 text-muted-foreground">
+            Use a pre-seeded account to jump straight into the donor or hospital demo.
+          </p>
+          <div className="mt-4 grid gap-3">
+            {(["donor", "hospital"] as const).map((demoType) => (
+              <button
+                key={demoType}
+                className="rounded-[1.25rem] border border-border bg-card/80 px-4 py-3 text-left transition hover:border-brand/30 hover:bg-brand-soft/20 disabled:opacity-60"
+                disabled={isSubmitting || demoLoading !== null}
+                type="button"
+                onClick={async () => {
+                  setDemoLoading(demoType);
+                  try {
+                    await loginWithCredentials(
+                      {
+                        email: DEMO_ACCOUNTS[demoType].email,
+                        password: DEMO_ACCOUNTS[demoType].password,
+                      },
+                      demoType,
+                      DEMO_ACCOUNTS[demoType].redirectTo,
+                      { useRedirectParam: false },
+                    );
+                  } finally {
+                    setDemoLoading(null);
+                  }
+                }}
+              >
+                <p className="font-medium text-foreground">
+                  {demoLoading === demoType ? "Logging in..." : DEMO_ACCOUNTS[demoType].label}
+                </p>
+                <p className="mt-1 text-muted-foreground">{DEMO_ACCOUNTS[demoType].subtitle}</p>
+              </button>
+            ))}
           </div>
-        ) : (
-          <div className="mt-6 rounded-[1.5rem] border border-border bg-muted/30 p-4 text-sm">
-            <p className="font-medium text-foreground">Demo Access</p>
-            <p className="mt-1 text-muted-foreground">
-              Demo donor credentials for end-to-end testing of the donor flow.
-            </p>
-            <div className="mt-3 space-y-1 text-muted-foreground">
-              <p>Email: demo.donor@donorix.in</p>
-              <p>Password: DemoDonor@2025</p>
-            </div>
-            <Button
-              className="mt-4 w-full"
-              type="button"
-              variant="outline"
-              onClick={() => {
-                form.setValue("email", "demo.donor@donorix.in", { shouldDirty: true });
-                form.setValue("password", "DemoDonor@2025", { shouldDirty: true });
-              }}
-            >
-              Use Demo Donor
-            </Button>
-          </div>
-        )}
+        </div>
       </CardContent>
     </Card>
   );

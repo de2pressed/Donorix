@@ -21,7 +21,7 @@ export default function PoliciesLayout({ children }: { children: React.ReactNode
   const router = useRouter();
 
   return (
-    <div className="mx-auto min-h-screen max-w-[1400px] px-4 py-4 lg:px-6">
+    <div className="mx-auto min-h-screen w-full max-w-[1900px] px-4 py-4 lg:px-8 2xl:px-10">
       <header className="glass sticky top-4 z-40 flex items-center justify-between gap-4 px-4 py-3">
         <div className="flex items-center gap-3">
           <Button
@@ -40,7 +40,7 @@ export default function PoliciesLayout({ children }: { children: React.ReactNode
         <ThemeToggle />
       </header>
 
-      <div className="mt-6 flex flex-col gap-6 lg:grid lg:grid-cols-[280px_minmax(0,720px)]">
+      <div className="mt-8 flex flex-col gap-6 lg:grid lg:grid-cols-[300px_minmax(0,1fr)]">
         <aside className="hidden rounded-[1.75rem] border border-border bg-card/80 p-4 lg:block lg:sticky lg:top-24 lg:h-[calc(100vh-7rem)]">
           <div className="space-y-2 px-2 pb-4">
             <h1 className="text-2xl font-semibold">Policies</h1>
@@ -96,7 +96,7 @@ export default function PoliciesLayout({ children }: { children: React.ReactNode
           </div>
 
           <div className="min-w-0 rounded-[1.75rem] border border-border bg-card/85 p-6 shadow-soft md:p-8">
-            <div className="mx-auto max-w-[720px]">{children}</div>
+            <div className="mx-auto max-w-[820px]">{children}</div>
           </div>
         </div>
       </div>

@@ -14,8 +14,8 @@ export default async function SignupPage({
   const account = resolvedSearchParams.account === "hospital" ? "hospital" : "donor";
 
   return (
-    <div className="w-full max-w-4xl space-y-6">
-      <div className="grid gap-3 md:grid-cols-2">
+    <div className="w-full space-y-6">
+      <div className="mx-auto grid max-w-4xl gap-3 md:grid-cols-2">
         <Link
           className={cn(
             "rounded-[1.75rem] border p-5 text-left transition",
@@ -56,7 +56,7 @@ export default async function SignupPage({
         </Link>
       </div>
 
-      {account === "hospital" ? <HospitalSignupForm /> : <SignupForm />}
+      <div className="flex justify-center">{account === "hospital" ? <HospitalSignupForm /> : <SignupForm />}</div>
     </div>
   );
 }

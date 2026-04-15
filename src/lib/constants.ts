@@ -21,6 +21,11 @@ export const INDIAN_LANGUAGES = [
   { code: "ur", label: "اردو" },
 ];
 
+export const SUPPORTED_LANGUAGE_CODES = ["en", "hi"] as const;
+export const SUPPORTED_LANGUAGES = INDIAN_LANGUAGES.filter((language) =>
+  SUPPORTED_LANGUAGE_CODES.includes(language.code as (typeof SUPPORTED_LANGUAGE_CODES)[number]),
+);
+
 export const COUNTRY_CODES = [
   { code: "+91", country: "India", flag: "🇮🇳", placeholder: "9876543210" },
   { code: "+61", country: "Australia", flag: "🇦🇺", placeholder: "412345678" },

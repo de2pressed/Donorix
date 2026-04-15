@@ -12,7 +12,7 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const search = request.nextUrl.search;
 
-  if (pathname.startsWith("/api/auth/callback")) {
+  if (pathname.startsWith("/api/auth/callback") || pathname === "/api/auth/session") {
     return response;
   }
 
@@ -24,6 +24,10 @@ export async function middleware(request: NextRequest) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", `${pathname}${search}`);
     return NextResponse.redirect(loginUrl);
+  }
+
+  if (pathname.startsWith("/hospital") && user?.user_metadata?.account_type !== "hospital") {
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   if (isAuthRoute && user) {

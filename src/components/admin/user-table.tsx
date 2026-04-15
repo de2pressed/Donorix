@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Profile } from "@/types/user";
 
@@ -10,8 +12,9 @@ export function UserTable({ users }: { users: Profile[] }) {
       <CardContent className="space-y-3">
         {users.length ? (
           users.map((user) => (
-            <div
+            <Link
               key={user.id}
+              href={`/admin/users/${user.id}`}
               className="grid gap-3 rounded-[1.5rem] border border-border p-4 md:grid-cols-[1.7fr_repeat(5,minmax(0,1fr))]"
             >
               <div className="min-w-0">
@@ -25,7 +28,7 @@ export function UserTable({ users }: { users: Profile[] }) {
               <div className="text-sm">{user.karma}</div>
               <div className="text-sm">{user.status}</div>
               <div className="truncate text-sm text-muted-foreground">{user.city}</div>
-            </div>
+            </Link>
           ))
         ) : (
           <div className="rounded-[1.5rem] border border-dashed border-border p-6 text-sm text-muted-foreground">

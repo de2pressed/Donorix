@@ -21,10 +21,14 @@ function createPasswordVerifierClient() {
 }
 
 export async function POST(request: Request) {
-  const { user } = await requireServerUser(request);
+  const { user, profile } = await requireServerUser(request);
 
   if (!user?.email) {
     return jsonError("Unauthorized", 401);
+  }
+
+  if (profile?.is_demo) {
+    return jsonError("Demo accounts cannot change passwords.", 403);
   }
 
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;

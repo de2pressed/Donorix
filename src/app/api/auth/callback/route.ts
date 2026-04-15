@@ -5,8 +5,10 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
+  const type = searchParams.get("type");
   const next = searchParams.get("next") ?? searchParams.get("redirect") ?? "/";
   const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/";
+  const redirectPath = type === "recovery" ? "/reset-password" : safeNext;
 
   if (code) {
     const supabase = await createServerSupabaseClient();
@@ -19,5 +21,5 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.redirect(new URL(safeNext, origin));
+  return NextResponse.redirect(new URL(redirectPath, origin));
 }

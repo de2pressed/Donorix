@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { PostDetail } from "@/components/posts/post-detail";
-import { getPostById } from "@/lib/data";
+import { getCurrentProfile, getDonorApplicationsForPost, getPostById } from "@/lib/data";
 
 export default async function PostPage({
   params,
@@ -9,11 +9,16 @@ export default async function PostPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const post = await getPostById(id);
+  const [post, profile] = await Promise.all([getPostById(id), getCurrentProfile()]);
 
   if (!post) {
     notFound();
   }
 
-  return <PostDetail donors={[]} post={post} />;
+  const canSeeDonors =
+    Boolean(profile?.is_admin) ||
+    (profile?.account_type === "hospital" && post.created_by === profile.id);
+  const donors = canSeeDonors ? await getDonorApplicationsForPost(id) : [];
+
+  return <PostDetail donors={donors} post={post} />;
 }

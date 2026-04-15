@@ -8,6 +8,15 @@ export const SESSION_EXPIRED_STORAGE_KEY = "donorix-session-expired";
 const SESSION_EXPIRED_MESSAGE = "Your session has expired. Please log in again.";
 
 let sessionExpiredNotified = false;
+let sessionSyncInProgress = false;
+
+export function markSessionSyncStart() {
+  sessionSyncInProgress = true;
+}
+
+export function markSessionSyncEnd() {
+  sessionSyncInProgress = false;
+}
 
 export async function getAuthenticatedHeaders(
   headers?: HeadersInit,
@@ -89,7 +98,7 @@ export async function authenticatedFetch(
     response = await performRequest();
   }
 
-  if (response.status === 401 && redirectOnAuthFailure) {
+  if (response.status === 401 && redirectOnAuthFailure && !sessionSyncInProgress) {
     await supabase.auth.signOut();
     notifySessionExpired();
   }

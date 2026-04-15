@@ -11,9 +11,15 @@ export default async function LoginPage({
 }) {
   const resolvedSearchParams = (await searchParams) ?? {};
   const account = resolvedSearchParams.account === "hospital" ? "hospital" : "donor";
+  const resetSuccess = resolvedSearchParams.reset === "success";
 
   return (
     <div className="w-full space-y-6">
+      {resetSuccess ? (
+        <div className="mx-auto max-w-lg rounded-2xl border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-100">
+          Password updated successfully. Please sign in with your new password.
+        </div>
+      ) : null}
       <div className="mx-auto grid max-w-4xl gap-3 md:grid-cols-2">
         <Link
           className={cn(

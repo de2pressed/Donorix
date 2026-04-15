@@ -1,4 +1,3 @@
-import { addHours } from "date-fns";
 import { z } from "zod";
 
 import { BLOOD_TYPES } from "@/lib/constants";
@@ -30,7 +29,7 @@ export const createPostSchema = z.object({
   required_by: z
     .string()
     .datetime()
-    .refine((value) => new Date(value) > addHours(new Date(), -1), "Required by must be in future"),
+    .refine((value) => new Date(value) > new Date(), "Required by must be in future"),
   initial_radius_km: z.coerce.number().int().min(1).max(35).default(7),
 });
 

@@ -32,7 +32,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { INDIAN_LANGUAGES } from "@/lib/constants";
+import { SUPPORTED_LANGUAGES } from "@/lib/constants";
 import { useUser } from "@/lib/hooks/use-user";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { authenticatedFetch } from "@/lib/supabase/authenticated-fetch";
@@ -61,9 +61,7 @@ const defaultSettings: SettingsState = {
   language: "en",
 };
 
-const languageOptions = INDIAN_LANGUAGES.filter(
-  ({ code }) => code === "en" || code === "hi",
-);
+const languageOptions = SUPPORTED_LANGUAGES;
 
 function buildSettingsState(user: Profile, locale: string): SettingsState {
   return {
@@ -74,7 +72,7 @@ function buildSettingsState(user: Profile, locale: string): SettingsState {
     directContact: user.allow_emergency_direct_contact,
     privateLeaderboard: user.hide_from_leaderboard,
     radius: user.notification_radius_km,
-    language: user.preferred_language || locale,
+    language: user.preferred_language === "hi" ? "hi" : locale === "hi" ? "hi" : "en",
   };
 }
 

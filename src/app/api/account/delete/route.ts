@@ -4,8 +4,6 @@ import { jsonError, requireServerUser } from "@/lib/http";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { deleteAccountSchema } from "@/lib/validations/auth";
 
-const DELETION_BAN_DURATION = "876000h";
-
 export async function POST(request: Request) {
   const { supabase, user, profile } = await requireServerUser(request);
 
@@ -57,21 +55,9 @@ export async function POST(request: Request) {
       .in("status", ["active", "fulfilled"]);
   }
 
-  const { error: authError } = await adminClient.auth.admin.updateUserById(user.id, {
-    ban_duration: DELETION_BAN_DURATION,
-    user_metadata: {
-      ...(user.user_metadata ?? {}),
-      deactivated: true,
-      deleted_at: deletedAt,
-    },
-    app_metadata: {
-      ...(user.app_metadata ?? {}),
-      status: "deleted",
-    },
-  });
-
+  const { error: authError } = await adminClient.auth.admin.deleteUser(user.id);
   if (authError) {
-    return jsonError(authError.message, 500);
+    console.error("[account-delete] Unable to delete auth user", authError);
   }
 
   return NextResponse.json({

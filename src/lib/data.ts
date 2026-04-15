@@ -3,10 +3,36 @@ import { startOfMonth, subDays } from "date-fns";
 import { adminUserIds } from "@/lib/env";
 import { HOSPITAL_ACCOUNT_SELECT, PROFILE_SELECT } from "@/lib/http";
 import { sortPostsByPriority } from "@/lib/utils/priority-score";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import type { FeedPost, Post } from "@/types/post";
+import type { TableRow } from "@/types/database";
 import type { Notification } from "@/types/notification";
+import type { DonorApplicationWithDonor, FeedPost, Post } from "@/types/post";
 import type { HospitalAccount, Profile } from "@/types/user";
+
+type AdminAction = TableRow<"admin_actions">;
+
+export type AdminUserApplication = TableRow<"donor_applications"> & {
+  post: Pick<Post, "id" | "patient_name" | "patient_id" | "blood_type_needed" | "city" | "status"> | null;
+};
+
+export type AdminUserDetail = {
+  profile: Profile | null;
+  hospitalAccount: HospitalAccount | null;
+  posts: Post[];
+  applications: AdminUserApplication[];
+  actions: AdminAction[];
+};
+
+type AdminPostRecord = Post & {
+  creator: Pick<Profile, "id" | "full_name" | "username" | "email"> | null;
+};
+
+export type AdminPostDetail = {
+  post: AdminPostRecord | null;
+  applications: DonorApplicationWithDonor[];
+  actions: AdminAction[];
+};
 
 export async function getCurrentProfile() {
   const supabase = await createServerSupabaseClient();
@@ -72,6 +98,37 @@ export async function getPostById(postId: string) {
   return (data as Post | null) ?? null;
 }
 
+export async function getDonorApplicationsForPost(postId: string) {
+  const supabase = getSupabaseAdminClient() ?? (await createServerSupabaseClient());
+  if (!supabase) return [] as DonorApplicationWithDonor[];
+
+  const { data, error } = await supabase
+    .from("donor_applications")
+    .select(
+      `
+        id, post_id, donor_id, status, eligibility_score, distance_km, note, created_at, updated_at,
+        donor:profiles!donor_id (
+          id,
+          full_name,
+          username,
+          blood_type,
+          total_donations,
+          karma,
+          is_verified
+        )
+      `,
+    )
+    .eq("post_id", postId)
+    .order("eligibility_score", { ascending: false })
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    return [] as DonorApplicationWithDonor[];
+  }
+
+  return (data as DonorApplicationWithDonor[] | null) ?? [];
+}
+
 export async function getProfileByUsername(username: string) {
   const supabase = await createServerSupabaseClient();
   if (!supabase) return null;
@@ -103,7 +160,7 @@ export async function getLeaderboard() {
 }
 
 export async function getAdminUsers() {
-  const supabase = await createServerSupabaseClient();
+  const supabase = getSupabaseAdminClient() ?? (await createServerSupabaseClient());
   if (!supabase) return [] as Profile[];
 
   const { data } = await supabase
@@ -113,6 +170,28 @@ export async function getAdminUsers() {
     .limit(200);
 
   return (data as Profile[] | null) ?? [];
+}
+
+export async function getAdminPosts() {
+  const supabase = getSupabaseAdminClient() ?? (await createServerSupabaseClient());
+  if (!supabase) return [] as FeedPost[];
+
+  const { data } = await supabase
+    .from("posts")
+    .select(
+      `
+        id, created_by, patient_name, blood_type_needed, units_needed, hospital_name,
+        patient_id,
+        hospital_address, city, state, latitude, longitude, contact_name, contact_phone,
+        contact_email, medical_condition, additional_notes, is_emergency, required_by,
+        initial_radius_km, current_radius_km, expires_at, status, priority_score,
+        upvote_count, donor_count, approved_donor_id, sms_sent_count, is_legacy, is_demo, created_at, updated_at
+      `,
+    )
+    .order("created_at", { ascending: false })
+    .limit(200);
+
+  return (data as FeedPost[] | null) ?? [];
 }
 
 export async function getHospitalAccountByProfileId(profileId: string) {
@@ -269,6 +348,133 @@ export async function getRecentDonations(userId: string) {
     .limit(10);
 
   return data ?? [];
+}
+
+export async function getAdminUserDetail(userId: string): Promise<AdminUserDetail> {
+  const supabase = getSupabaseAdminClient();
+
+  if (!supabase) {
+    return {
+      profile: null,
+      hospitalAccount: null,
+      posts: [],
+      applications: [],
+      actions: [],
+    };
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select(PROFILE_SELECT)
+    .eq("id", userId)
+    .maybeSingle();
+
+  const { data: hospitalAccount } = await supabase
+    .from("hospital_accounts")
+    .select(HOSPITAL_ACCOUNT_SELECT)
+    .eq("profile_id", userId)
+    .maybeSingle();
+
+  const { data: posts } = await supabase
+    .from("posts")
+    .select(
+      `
+        id, created_by, patient_name, patient_id, blood_type_needed, units_needed, hospital_name,
+        hospital_address, city, state, latitude, longitude, contact_name, contact_phone,
+        contact_email, medical_condition, additional_notes, is_emergency, required_by,
+        initial_radius_km, current_radius_km, expires_at, status, priority_score,
+        upvote_count, donor_count, approved_donor_id, sms_sent_count, is_legacy, is_demo, created_at, updated_at
+      `,
+    )
+    .eq("created_by", userId)
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  const { data: applicationRows } = await supabase
+    .from("donor_applications")
+    .select("id, post_id, donor_id, status, eligibility_score, distance_km, note, created_at, updated_at")
+    .eq("donor_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  const applicationPostIds = [...new Set((applicationRows ?? []).map((application) => application.post_id))];
+  const applicationPosts =
+    applicationPostIds.length > 0
+      ? await supabase
+          .from("posts")
+          .select("id, patient_name, patient_id, blood_type_needed, city, status")
+          .in("id", applicationPostIds)
+      : { data: [] };
+
+  const postLookup = new Map((applicationPosts.data ?? []).map((post) => [post.id, post]));
+
+  const { data: actions } = await supabase
+    .from("admin_actions")
+    .select("id, admin_id, action, target_type, target_id, reason, metadata, created_at")
+    .eq("target_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  return {
+    profile: (profile as Profile | null) ?? null,
+    hospitalAccount: (hospitalAccount as HospitalAccount | null) ?? null,
+    posts: (posts as Post[] | null) ?? [],
+    applications: ((applicationRows ?? []) as TableRow<"donor_applications">[]).map((application) => ({
+      ...application,
+      post: (postLookup.get(application.post_id) as AdminUserApplication["post"]) ?? null,
+    })),
+    actions: (actions as AdminAction[] | null) ?? [],
+  };
+}
+
+export async function getAdminPostDetail(postId: string): Promise<AdminPostDetail> {
+  const supabase = getSupabaseAdminClient();
+
+  if (!supabase) {
+    return {
+      post: null,
+      applications: [],
+      actions: [],
+    };
+  }
+
+  const { data: post } = await supabase
+    .from("posts")
+    .select(
+      `
+        id, created_by, patient_name, patient_id, blood_type_needed, units_needed, hospital_name,
+        hospital_address, city, state, latitude, longitude, contact_name, contact_phone,
+        contact_email, medical_condition, additional_notes, is_emergency, required_by,
+        initial_radius_km, current_radius_km, expires_at, status, priority_score,
+        upvote_count, donor_count, approved_donor_id, sms_sent_count, is_legacy, is_demo, created_at, updated_at
+      `,
+    )
+    .eq("id", postId)
+    .maybeSingle();
+
+  const creatorId = post?.created_by;
+  const { data: creator } = creatorId
+    ? await supabase
+        .from("profiles")
+        .select("id, full_name, username, email")
+        .eq("id", creatorId)
+        .maybeSingle()
+    : { data: null };
+
+  const applications = await getDonorApplicationsForPost(postId);
+
+  const { data: actions } = await supabase
+    .from("admin_actions")
+    .select("id, admin_id, action, target_type, target_id, reason, metadata, created_at")
+    .eq("target_id", postId)
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  return {
+    post: post ? ({ ...post, creator: (creator as AdminPostRecord["creator"]) ?? null } as AdminPostRecord) : null,
+    applications,
+    actions: (actions as AdminAction[] | null) ?? [],
+  };
 }
 
 export async function getAdminDashboard() {

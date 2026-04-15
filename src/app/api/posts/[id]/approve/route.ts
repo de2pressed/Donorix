@@ -4,7 +4,7 @@ import { jsonError, requireServerUser } from "@/lib/http";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { supabase, profile } = await requireServerUser();
+  const { supabase, profile } = await requireServerUser(request);
 
   if (!supabase || !profile) {
     return jsonError("Unauthorized", 401);

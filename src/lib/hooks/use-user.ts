@@ -84,13 +84,17 @@ export function useUser() {
         data: { session },
       } = await supabase.auth.getSession();
 
-      setSessionFallback(session?.user ? buildProfileFallback(session.user) : null);
+      const fallback = session?.user ? buildProfileFallback(session.user) : null;
+      setSessionFallback(fallback);
+      queryClient.setQueryData(["current-user"], fallback);
     })();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSessionFallback(session?.user ? buildProfileFallback(session.user) : null);
+      const fallback = session?.user ? buildProfileFallback(session.user) : null;
+      setSessionFallback(fallback);
+      queryClient.setQueryData(["current-user"], fallback);
       void queryClient.invalidateQueries({ queryKey: ["current-user"] });
     });
 
@@ -133,7 +137,10 @@ export function useUser() {
 
       return user ? buildProfileFallback(user) : null;
     },
-    staleTime: 0,
+    retry: 2,
+    retryDelay: 1000,
+    staleTime: 30_000,
+    refetchOnWindowFocus: true,
   });
 
   return {

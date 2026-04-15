@@ -138,3 +138,17 @@ export async function requireServerUser(request?: Request) {
 
   return { supabase, user, profile, hospitalAccount };
 }
+
+export async function requireAdminUser(request?: Request) {
+  const result = await requireServerUser(request);
+
+  if (!result.profile?.is_admin) {
+    return {
+      ...result,
+      profile: null,
+      hospitalAccount: null,
+    };
+  }
+
+  return result;
+}

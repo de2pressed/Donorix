@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -37,7 +37,6 @@ export function LoginForm({ accountType = "donor" }: { accountType?: "donor" | "
   const [demoStatus, setDemoStatus] = useState<"loading" | "ready" | "missing" | "error">("loading");
   const [isSettingUpDemo, setIsSettingUpDemo] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const pendingLoginRef = useRef<PendingLogin | null>(null);
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
   });
@@ -164,27 +163,6 @@ export function LoginForm({ accountType = "donor" }: { accountType?: "donor" | "
     };
   }, []);
 
-  useEffect(() => {
-    const supabase = getSupabaseBrowserClient();
-    if (!supabase) return;
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event) => {
-      if (event !== "SIGNED_IN" || !pendingLoginRef.current) {
-        return;
-      }
-
-      const attempt = pendingLoginRef.current;
-      pendingLoginRef.current = null;
-      void finalizeLogin(attempt);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [router, searchParams]);
-
   async function loginWithCredentials(
     values: LoginValues,
     expectedAccountType: "donor" | "hospital",
@@ -198,7 +176,7 @@ export function LoginForm({ accountType = "donor" }: { accountType?: "donor" | "
       return;
     }
 
-    pendingLoginRef.current = {
+    const attempt: PendingLogin = {
       expectedAccountType,
       redirectFallback,
       useRedirectParam: options?.useRedirectParam ?? true,
@@ -209,24 +187,17 @@ export function LoginForm({ accountType = "donor" }: { accountType?: "donor" | "
     const { data, error } = await supabase.auth.signInWithPassword(values);
 
     if (error) {
-      pendingLoginRef.current = null;
       toast.error(error.message);
       return;
     }
 
     if (data.session) {
       await syncSupabaseSessionToServer(data.session).catch(() => undefined);
+      await finalizeLogin(attempt);
+      return;
     }
 
-    window.setTimeout(() => {
-      if (!pendingLoginRef.current) {
-        return;
-      }
-
-      const attempt = pendingLoginRef.current;
-      pendingLoginRef.current = null;
-      void finalizeLogin(attempt);
-    }, 700);
+    await finalizeLogin(attempt);
   }
 
   const onSubmit = form.handleSubmit(async (values) => {

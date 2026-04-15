@@ -11,7 +11,7 @@ import { SearchablePicker } from "@/components/shared/searchable-picker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { INDIAN_LANGUAGES } from "@/lib/constants";
+import { SUPPORTED_LANGUAGES } from "@/lib/constants";
 import { getCitiesForRegion, INDIAN_REGION_NAMES } from "@/lib/india-locations";
 import { authenticatedFetch } from "@/lib/supabase/authenticated-fetch";
 import { profileSchema, type ProfileInput } from "@/lib/validations/profile";
@@ -30,7 +30,7 @@ export function EditProfileForm({ profile }: { profile: Profile }) {
       city: profile.city,
       state: profile.state,
       pincode: profile.pincode,
-      preferred_language: profile.preferred_language,
+      preferred_language: profile.preferred_language === "hi" ? "hi" : "en",
       is_available: profile.is_available,
       allow_sms_alerts: profile.allow_sms_alerts,
       allow_email_alerts: profile.allow_email_alerts,
@@ -144,7 +144,7 @@ export function EditProfileForm({ profile }: { profile: Profile }) {
               id="profile-language"
               {...form.register("preferred_language")}
             >
-              {INDIAN_LANGUAGES.map((language) => (
+              {SUPPORTED_LANGUAGES.map((language) => (
                 <option key={language.code} value={language.code}>
                   {language.label}
                 </option>

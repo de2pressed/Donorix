@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { env } from "@/lib/env";
 import { jsonError } from "@/lib/http";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { sanitizeText } from "@/lib/utils/sanitize";
+
+const SYSTEM_PROMPT = `You are Donorix Assistant, a guide for the Donorix blood donation platform in India.
+Help donors find requests, understand eligibility, and navigate the platform.
+Help hospitals create requests and manage donor applicants.
+Be concise, practical, and medically careful.
+Do not provide specific medical advice or replace emergency services.
+Reply in the same language as the user when possible.`;
 
 const LANGUAGE_NAMES = {
   en: "English",
@@ -179,6 +187,60 @@ function detectIntent(message: string): Intent {
   return "fallback";
 }
 
+function buildFallbackReply(message: string, language: SupportedLanguage) {
+  return RESPONSES[language][detectIntent(message)];
+}
+
+async function getOpenAIReply(message: string, language: SupportedLanguage) {
+  if (!env.OPENAI_API_KEY) {
+    return null;
+  }
+
+  try {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: SYSTEM_PROMPT,
+          },
+          {
+            role: "user",
+            content: `[language:${language}] ${message}`,
+          },
+        ],
+        max_tokens: 300,
+        temperature: 0.7,
+      }),
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const payload = (await response.json().catch(() => null)) as
+      | {
+          choices?: Array<{
+            message?: {
+              content?: string | null;
+            };
+          }>;
+        }
+      | null;
+
+    const reply = payload?.choices?.[0]?.message?.content?.trim();
+    return reply || null;
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(request: NextRequest) {
   const body = (await request.json().catch(() => null)) as { message?: string; language?: string } | null;
 
@@ -192,7 +254,8 @@ export async function POST(request: NextRequest) {
   }
 
   const language = resolveLanguage(body.language);
-  const reply = RESPONSES[language][detectIntent(body.message)];
+  const reply =
+    (await getOpenAIReply(body.message, language)) ?? buildFallbackReply(body.message, language);
 
   return NextResponse.json({
     language,

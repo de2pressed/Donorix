@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { PROFILE_SELECT, requireServerUser } from "@/lib/http";
-import { profileSchema } from "@/lib/validations/profile";
+import { updateProfileSchema } from "@/lib/validations/profile";
 
 export async function GET(request: Request) {
   const { profile } = await requireServerUser(request);
@@ -21,10 +21,24 @@ export async function PATCH(request: Request) {
   }
 
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
-  const parsed = profileSchema.partial().safeParse(body);
+  const parsed = updateProfileSchema.safeParse(body);
 
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid profile update payload" }, { status: 422 });
+    const flattened = parsed.error.flatten();
+    const firstError =
+      flattened.formErrors[0] ??
+      flattened.fieldErrors.full_name?.[0] ??
+      flattened.fieldErrors.username?.[0] ??
+      flattened.fieldErrors.phone?.[0] ??
+      flattened.fieldErrors.blood_type?.[0] ??
+      flattened.fieldErrors.city?.[0] ??
+      flattened.fieldErrors.state?.[0] ??
+      flattened.fieldErrors.pincode?.[0] ??
+      flattened.fieldErrors.preferred_language?.[0] ??
+      flattened.fieldErrors.notification_radius_km?.[0] ??
+      "Invalid profile update payload";
+
+    return NextResponse.json({ error: firstError, details: flattened }, { status: 422 });
   }
 
   const { data, error } = await supabase

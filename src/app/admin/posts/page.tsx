@@ -1,8 +1,8 @@
 import { PostTable } from "@/components/admin/post-table";
-import { getFeedPosts } from "@/lib/data";
+import { getAdminPosts } from "@/lib/data";
 
 export default async function AdminPostsPage() {
-  const posts = await getFeedPosts();
+  const posts = await getAdminPosts();
 
   return (
     <div className="space-y-4">

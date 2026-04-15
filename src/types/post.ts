@@ -3,6 +3,12 @@ import type { Profile } from "@/types/user";
 
 export type Post = TableRow<"posts">;
 export type DonorApplication = TableRow<"donor_applications">;
+export type DonorApplicationWithDonor = DonorApplication & {
+  donor: Pick<
+    Profile,
+    "id" | "full_name" | "username" | "blood_type" | "total_donations" | "karma" | "is_verified"
+  > | null;
+};
 
 export type FeedPost = Post & {
   patient_id?: string | null;

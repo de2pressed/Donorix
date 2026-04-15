@@ -1,15 +1,53 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { useEffect, useRef } from "react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { authenticatedFetch } from "@/lib/supabase/authenticated-fetch";
 import { formatRelativeTime } from "@/lib/utils/format";
 import type { Notification } from "@/types/notification";
 
 export function NotificationList({ notifications }: { notifications: Notification[] }) {
   const tNotifications = useTranslations("notifications");
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const markedRead = useRef(false);
+
+  useEffect(() => {
+    const unreadIds = notifications
+      .filter((notification) => !notification.read_at)
+      .map((notification) => notification.id);
+
+    if (!unreadIds.length || markedRead.current) {
+      return;
+    }
+
+    markedRead.current = true;
+    const timeout = window.setTimeout(() => {
+      void (async () => {
+        const response = await authenticatedFetch("/api/notifications", {
+          method: "PATCH",
+          body: JSON.stringify({ ids: unreadIds }),
+          redirectOnAuthFailure: false,
+        });
+
+        if (!response.ok) {
+          markedRead.current = false;
+          return;
+        }
+
+        await queryClient.invalidateQueries({ queryKey: ["notifications"] });
+        router.refresh();
+      })();
+    }, 2000);
+
+    return () => window.clearTimeout(timeout);
+  }, [notifications, queryClient, router]);
 
   return (
     <Card>

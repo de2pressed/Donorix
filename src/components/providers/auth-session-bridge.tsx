@@ -1,11 +1,17 @@
 "use client";
 
+import type { Session } from "@supabase/supabase-js";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { toast } from "sonner";
 
-import { SESSION_EXPIRED_EVENT, SESSION_EXPIRED_STORAGE_KEY } from "@/lib/supabase/authenticated-fetch";
+import {
+  markSessionSyncEnd,
+  markSessionSyncStart,
+  SESSION_EXPIRED_EVENT,
+  SESSION_EXPIRED_STORAGE_KEY,
+} from "@/lib/supabase/authenticated-fetch";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { syncSupabaseSessionToServer } from "@/lib/supabase/sync-session";
 
@@ -14,6 +20,15 @@ const AUTH_PATH_PREFIXES = ["/login", "/signup", "/forgot-password", "/reset-pas
 export function AuthSessionBridge() {
   const queryClient = useQueryClient();
   const router = useRouter();
+
+  async function syncSession(session: Pick<Session, "access_token" | "refresh_token"> | null) {
+    markSessionSyncStart();
+    try {
+      await syncSupabaseSessionToServer(session ?? null);
+    } finally {
+      markSessionSyncEnd();
+    }
+  }
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
@@ -26,22 +41,26 @@ export function AuthSessionBridge() {
         data: { session },
       } = await supabase.auth.getSession();
 
-      await syncSupabaseSessionToServer(session ?? null).catch(() => undefined);
+      await syncSession(session ?? null).catch(() => undefined);
+      if (session) {
+        queryClient.invalidateQueries({ queryKey: ["current-user"] });
+        queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      }
     })();
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       void (async () => {
-        await syncSupabaseSessionToServer(session ?? null).catch(() => undefined);
-
-        if (!session) {
+        if (event === "SIGNED_OUT" || !session) {
           queryClient.setQueryData(["current-user"], null);
-          queryClient.removeQueries({ queryKey: ["notifications"] });
+          queryClient.setQueryData(["notifications"], []);
+          await syncSession(null).catch(() => undefined);
           router.refresh();
           return;
         }
 
+        await syncSession(session).catch(() => undefined);
         queryClient.invalidateQueries({ queryKey: ["current-user"] });
         queryClient.invalidateQueries({ queryKey: ["notifications"] });
         router.refresh();

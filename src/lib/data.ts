@@ -34,6 +34,11 @@ export type AdminPostDetail = {
   actions: AdminAction[];
 };
 
+type DonorSummary = Pick<
+  Profile,
+  "id" | "full_name" | "username" | "blood_type" | "total_donations" | "karma" | "is_verified"
+>;
+
 export async function getCurrentProfile() {
   const supabase = await createServerSupabaseClient();
   if (!supabase) return null;
@@ -102,22 +107,9 @@ export async function getDonorApplicationsForPost(postId: string) {
   const supabase = getSupabaseAdminClient() ?? (await createServerSupabaseClient());
   if (!supabase) return [] as DonorApplicationWithDonor[];
 
-  const { data, error } = await supabase
+  const { data: applications, error } = await supabase
     .from("donor_applications")
-    .select(
-      `
-        id, post_id, donor_id, status, eligibility_score, distance_km, note, created_at, updated_at,
-        donor:profiles!donor_id (
-          id,
-          full_name,
-          username,
-          blood_type,
-          total_donations,
-          karma,
-          is_verified
-        )
-      `,
-    )
+    .select("id, post_id, donor_id, status, eligibility_score, distance_km, note, created_at, updated_at")
     .eq("post_id", postId)
     .order("eligibility_score", { ascending: false })
     .order("created_at", { ascending: false });
@@ -126,7 +118,26 @@ export async function getDonorApplicationsForPost(postId: string) {
     return [] as DonorApplicationWithDonor[];
   }
 
-  return (data as DonorApplicationWithDonor[] | null) ?? [];
+  const donorIds = [...new Set((applications ?? []).map((application) => application.donor_id))];
+  const donorLookup =
+    donorIds.length > 0
+      ? await supabase
+          .from("profiles")
+          .select("id, full_name, username, blood_type, total_donations, karma, is_verified")
+          .in("id", donorIds)
+      : { data: [] };
+
+  const donorMap = new Map(
+    ((donorLookup.data ?? []) as DonorSummary[]).map((donor) => [
+      donor.id,
+      donor,
+    ]),
+  );
+
+  return ((applications ?? []) as TableRow<"donor_applications">[]).map((application) => ({
+    ...application,
+    donor: donorMap.get(application.donor_id) ?? null,
+  }));
 }
 
 export async function getProfileByUsername(username: string) {

@@ -5,10 +5,16 @@ import { useQuery } from "@tanstack/react-query";
 import { authenticatedFetch } from "@/lib/supabase/authenticated-fetch";
 import type { Notification } from "@/types/notification";
 
-export function useNotifications({ enabled = true }: { enabled?: boolean } = {}) {
+export function useNotifications({
+  enabled = true,
+  userId,
+}: {
+  enabled?: boolean;
+  userId?: string;
+} = {}) {
   return useQuery<Notification[]>({
     enabled,
-    queryKey: ["notifications"],
+    queryKey: ["notifications", userId ?? "guest"],
     queryFn: async () => {
       const response = await authenticatedFetch("/api/notifications");
       if (response.status === 401) {

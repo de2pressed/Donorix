@@ -117,7 +117,7 @@ export default function AboutPage() {
               </p>
             </div>
 
-            <Card className="overflow-hidden border-border/80 bg-card/80">
+            <Card className="overflow-hidden border-border/80">
               <CardContent className="space-y-4 p-6">
                 <div className="flex items-center gap-3">
                   <div className="flex size-11 items-center justify-center rounded-2xl bg-brand text-brand-foreground shadow-glow">

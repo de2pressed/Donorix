@@ -15,6 +15,15 @@ const config: Config = {
         foreground: "hsl(var(--foreground))",
         muted: "hsl(var(--muted))",
         "muted-foreground": "hsl(var(--muted-foreground))",
+        surface: {
+          1: "var(--surface-1)",
+          2: "var(--surface-2)",
+          3: "var(--surface-3)",
+        },
+        content: {
+          primary: "var(--text-primary)",
+          secondary: "var(--text-secondary)",
+        },
         accent: "hsl(var(--accent))",
         "accent-foreground": "hsl(var(--accent-foreground))",
         border: "hsl(var(--border))",
@@ -68,11 +77,22 @@ const config: Config = {
           "0%": { opacity: "0", transform: "translateY(20px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        btnPress: {
+          "0%": { transform: "scale(1)" },
+          "40%": { transform: "scale(0.95)" },
+          "100%": { transform: "scale(1)" },
+        },
+        toastIn: {
+          from: { opacity: "0", transform: "translateX(100%) scale(0.95)" },
+          to: { opacity: "1", transform: "translateX(0) scale(1)" },
+        },
       },
       animation: {
         float: "float 6s ease-in-out infinite",
         shimmer: "shimmer 2.2s linear infinite",
         slideIn: "slideIn 0.6s ease-out both",
+        btnPress: "btnPress 180ms ease forwards",
+        toastIn: "toastIn 250ms cubic-bezier(0.16, 1, 0.3, 1) forwards",
       },
     },
   },

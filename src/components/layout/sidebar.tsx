@@ -5,6 +5,7 @@ import { Building2, HeartHandshake, Settings } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 
+import { useNotificationsContext } from "@/components/providers/notification-context";
 import { useUser } from "@/lib/hooks/use-user";
 import { getSidebarNav, showRegisterHospitalButton } from "@/lib/navigation";
 import { cn } from "@/lib/utils/cn";
@@ -43,6 +44,7 @@ function getSidebarLabel(
 export function Sidebar() {
   const pathname = usePathname();
   const { data: user } = useUser();
+  const { unreadCount } = useNotificationsContext();
   const tNav = useTranslations("nav");
   const tSidebar = useTranslations("sidebar");
   const items = getSidebarNav(user?.account_type).map((item) => ({
@@ -52,7 +54,7 @@ export function Sidebar() {
   const showRegisterHospital = showRegisterHospitalButton(user?.account_type);
 
   return (
-    <aside className="glass sticky top-6 hidden h-[calc(100vh-3rem)] w-[15.5rem] shrink-0 flex-col justify-between overflow-hidden p-5 lg:flex">
+    <aside className="glass-panel sticky top-6 hidden h-[calc(100vh-3rem)] w-[15.5rem] shrink-0 flex-col justify-between overflow-hidden rounded-[1.75rem] p-5 lg:flex">
       <div className="space-y-8">
         <div className="space-y-3">
           <Link className="inline-flex items-center gap-3" href="/">
@@ -78,18 +80,24 @@ export function Sidebar() {
               item.href === "/"
                 ? pathname === "/"
                 : pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const showUnreadBadge = item.href === "/notifications" && unreadCount > 0;
 
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-muted-foreground transition hover:bg-brand-soft hover:text-brand",
+                  "relative flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-muted-foreground transition hover:bg-brand-soft hover:text-brand",
                   active && "bg-brand-soft text-brand",
                 )}
               >
                 <Icon className="size-4" />
                 {item.label}
+                {showUnreadBadge ? (
+                  <span className="pointer-events-none absolute -right-1 -top-1 flex min-w-[18px] h-[18px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white shadow-[0_0_6px_rgba(220,38,38,0.5)]">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                ) : null}
               </Link>
             );
           })}

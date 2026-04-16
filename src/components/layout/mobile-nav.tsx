@@ -70,7 +70,7 @@ export function MobileNav() {
 
   return (
     <>
-      <nav className="glass fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-40 flex items-center justify-between px-4 py-2 lg:hidden">
+      <nav className="glass-panel fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-40 flex items-center justify-between rounded-[1.75rem] px-4 py-2 lg:hidden">
         {items.map((item) => {
           const Icon = item.icon;
           return item.href === "#more" ? (

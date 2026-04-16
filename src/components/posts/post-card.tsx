@@ -37,7 +37,7 @@ export function PostCard({
       <Card
         className={cn(
           "min-w-0 overflow-hidden",
-          post.is_emergency && "emergency-pulse border-danger/40 shadow-glow",
+          post.is_emergency && "emergency-card",
         )}
       >
         <CardContent className="space-y-5 p-0">

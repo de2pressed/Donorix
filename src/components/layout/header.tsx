@@ -8,19 +8,18 @@ import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { UserMenu } from "@/components/layout/user-menu";
 import { UserMenuErrorBoundary } from "@/components/layout/user-menu-error-boundary";
 import { Button } from "@/components/ui/button";
-import { useNotifications } from "@/lib/hooks/use-notifications";
+import { useNotificationsContext } from "@/components/providers/notification-context";
 import { useUser } from "@/lib/hooks/use-user";
 import { useTranslations } from "next-intl";
 
 export function Header() {
   const { data: user } = useUser();
-  const { data: notifications = [] } = useNotifications({ enabled: Boolean(user) });
+  const { unreadCount } = useNotificationsContext();
   const tNav = useTranslations("nav");
   const tHeader = useTranslations("header");
-  const unreadCount = notifications.filter((notification) => !notification.read_at).length;
 
   return (
-    <header className="glass sticky top-4 z-40 flex items-center justify-between gap-4 px-4 py-3">
+    <header className="glass-panel sticky top-4 z-40 flex items-center justify-between gap-4 rounded-[1.75rem] px-4 py-3">
       <div className="min-w-0 flex-1">
         <Link className="inline-flex min-w-0 items-center gap-3" href="/">
           <span className="shrink-0 text-lg font-semibold tracking-tight text-foreground">Donorix</span>

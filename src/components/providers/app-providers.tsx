@@ -10,6 +10,7 @@ import { PageTransitionShell } from "@/components/layout/page-transition-shell";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { AuthSessionBridge } from "@/components/providers/auth-session-bridge";
 import { LocalePreferenceProvider } from "@/components/providers/locale-provider";
+import { NotificationProvider } from "@/components/providers/notification-context";
 import { ScrollReset } from "@/components/layout/scroll-reset";
 import { AuthPromptProvider } from "@/components/shared/auth-prompt-modal";
 import { CookieConsentBanner } from "@/components/shared/cookie-consent-banner";
@@ -44,16 +45,18 @@ export function AppProviders({ children, locale, messages }: AppProvidersProps) 
           <AuthSessionBridge />
           <TooltipProvider delayDuration={150}>
             <AuthPromptProvider>
-              <ScrollReset />
-              <OfflineBanner />
-              <DisclaimerModal />
-              <CookieConsentBanner />
-              <div className="flex min-h-screen flex-col">
-                <div className="flex-1">
-                  <PageTransitionShell>{children}</PageTransitionShell>
+              <NotificationProvider>
+                <ScrollReset />
+                <OfflineBanner />
+                <DisclaimerModal />
+                <CookieConsentBanner />
+                <div className="flex min-h-screen flex-col">
+                  <div className="flex-1">
+                    <PageTransitionShell>{children}</PageTransitionShell>
+                  </div>
+                  <SiteFooter />
                 </div>
-                <SiteFooter />
-              </div>
+              </NotificationProvider>
             </AuthPromptProvider>
           </TooltipProvider>
           <Toaster position="top-right" richColors />

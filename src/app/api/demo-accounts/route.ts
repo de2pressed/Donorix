@@ -138,6 +138,15 @@ export async function POST() {
       });
     }
 
+    const { error: schemaCheckError } = await admin.from("profiles").select("account_type").limit(1);
+
+    if (schemaCheckError?.message?.includes("account_type")) {
+      return jsonError(
+        "Database schema is out of date. Run `npx supabase db push` to apply pending migrations before seeding demo accounts.",
+        503,
+      );
+    }
+
     const donorUser = await ensureDemoUser(
       DEMO_ACCOUNTS.donor.email,
       DEMO_ACCOUNTS.donor.password,

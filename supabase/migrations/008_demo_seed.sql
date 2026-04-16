@@ -1,3 +1,6 @@
+create extension if not exists "pgcrypto";
+set search_path = public, extensions, auth;
+
 do $$
 declare
   demo_hospital_user_id uuid := '11111111-1111-4111-8111-111111111111';
@@ -8,6 +11,10 @@ declare
 begin
   delete from auth.identities
   where user_id in (demo_hospital_user_id, demo_donor_user_id);
+
+  delete from auth.users
+  where id in (demo_hospital_user_id, demo_donor_user_id)
+    or email in (demo_hospital_email, demo_donor_email);
 
   insert into auth.users (
     instance_id,

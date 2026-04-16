@@ -54,7 +54,7 @@ html {
   color-scheme: light;
   overflow-x: hidden;
   scroll-behavior: smooth;
-  scrollbar-gutter: stable both-edges;
+  scrollbar-gutter: stable;
 }
 
 html.dark {

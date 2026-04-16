@@ -93,6 +93,7 @@ export function LoginForm({ accountType = "donor" }: { accountType?: "donor" | "
       }
 
       toast.success(attempt.successMessage);
+      router.refresh();
       router.replace(
         getRedirectDestination(
           attempt.useRedirectParam
@@ -103,7 +104,6 @@ export function LoginForm({ accountType = "donor" }: { accountType?: "donor" | "
           attempt.useRedirectParam,
         ),
       );
-      router.refresh();
       return;
     }
 
@@ -125,6 +125,7 @@ export function LoginForm({ accountType = "donor" }: { accountType?: "donor" | "
     }
 
     toast.success(attempt.successMessage);
+    router.refresh();
     router.replace(
       getRedirectDestination(
         attempt.useRedirectParam
@@ -135,7 +136,6 @@ export function LoginForm({ accountType = "donor" }: { accountType?: "donor" | "
         attempt.useRedirectParam,
       ),
     );
-    router.refresh();
   }
 
   useEffect(() => {
@@ -193,6 +193,7 @@ export function LoginForm({ accountType = "donor" }: { accountType?: "donor" | "
 
     if (data.session) {
       await syncSupabaseSessionToServer(data.session).catch(() => undefined);
+      await new Promise((resolve) => window.setTimeout(resolve, 100));
       await finalizeLogin(attempt);
       return;
     }

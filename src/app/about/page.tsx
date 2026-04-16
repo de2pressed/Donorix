@@ -9,7 +9,6 @@ import {
   HeartPulse,
   Users,
 } from "lucide-react";
-import Link from "next/link";
 import { useRef } from "react";
 
 import { SecondaryPageBackLink } from "@/components/layout/secondary-page-back-link";
@@ -93,7 +92,7 @@ export default function AboutPage() {
 
   return (
     <div className="space-y-8 pb-4">
-      <div>
+      <div className="pt-1">
         <SecondaryPageBackLink />
       </div>
 

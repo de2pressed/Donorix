@@ -20,5 +20,5 @@ export default async function PostPage({
     (profile?.account_type === "hospital" && post.created_by === profile.id);
   const donors = canSeeDonors ? await getDonorApplicationsForPost(id) : [];
 
-  return <PostDetail donors={donors} post={post} />;
+  return <PostDetail canAct={canSeeDonors} donors={donors} isAuthenticated={Boolean(profile)} post={post} />;
 }

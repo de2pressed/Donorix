@@ -109,6 +109,14 @@ export function useUser() {
       const supabase = getSupabaseBrowserClient();
       if (!supabase) return null;
 
+      const {
+        data: { session: initialSession },
+      } = await supabase.auth.getSession();
+
+      if (!initialSession) {
+        return null;
+      }
+
       for (const delay of [0, 250, 750]) {
         if (delay > 0) {
           await wait(delay);
@@ -137,7 +145,7 @@ export function useUser() {
 
       return user ? buildProfileFallback(user) : null;
     },
-    retry: 2,
+    retry: 0,
     retryDelay: 1000,
     staleTime: 30_000,
     refetchOnWindowFocus: true,

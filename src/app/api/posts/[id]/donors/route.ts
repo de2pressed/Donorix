@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { jsonError, requireServerUser } from "@/lib/http";
 import { enforceRateLimit } from "@/lib/rate-limit";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { isDonationEligible } from "@/lib/utils/donation-eligibility";
 import { sanitizeText } from "@/lib/utils/sanitize";
 
@@ -49,6 +50,30 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   if (error) {
     return jsonError(error.message, 500);
+  }
+
+  const admin = getSupabaseAdminClient();
+  if (admin) {
+    const { data: post, error: postError } = await admin
+      .from("posts")
+      .select("donor_count")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (postError || !post) {
+      await admin.from("donor_applications").delete().eq("post_id", id).eq("donor_id", profile.id);
+      return jsonError(postError?.message ?? "Post not found", 404);
+    }
+
+    const { error: countError } = await admin
+      .from("posts")
+      .update({ donor_count: (post.donor_count ?? 0) + 1 })
+      .eq("id", id);
+
+    if (countError) {
+      await admin.from("donor_applications").delete().eq("post_id", id).eq("donor_id", profile.id);
+      return jsonError(countError.message, 500);
+    }
   }
 
   return NextResponse.json({ ok: true }, { status: 201 });

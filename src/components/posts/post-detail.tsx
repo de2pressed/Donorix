@@ -5,14 +5,18 @@ import type { DonorApplicationWithDonor, FeedPost } from "@/types/post";
 export function PostDetail({
   post,
   donors,
+  canAct = false,
+  isAuthenticated = false,
 }: {
   post: FeedPost;
   donors: DonorApplicationWithDonor[];
+  canAct?: boolean;
+  isAuthenticated?: boolean;
 }) {
   return (
     <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
-      <PostCard post={post} />
-      <DonorList donors={donors} />
+      <PostCard isAuthenticated={isAuthenticated} post={post} />
+      <DonorList canAct={canAct} donors={donors} postId={post.id} />
     </div>
   );
 }

@@ -27,6 +27,7 @@ export function DonateButton({
   const { openPrompt } = useAuthPrompt();
   const { data: user } = useUser();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const nextEligibleDate = getNextEligibleDonationDate(user?.last_donated_at);
   const eligibleToDonate = isDonationEligible(user?.last_donated_at);
   const cooldownMessage = nextEligibleDate
@@ -61,26 +62,33 @@ export function DonateButton({
       }
 
       toast.success("Application submitted");
+      setSubmitted(true);
       router.refresh();
     } finally {
       setIsSubmitting(false);
     }
   }
 
+  const buttonLabel = submitted
+    ? "Request submitted"
+    : isSubmitting
+      ? "Submitting..."
+      : "I can donate";
+
   const button = (
     <Button
-      disabled={isSubmitting || (isAuthenticated && !eligibleToDonate)}
-      variant="secondary"
+      disabled={submitted || isSubmitting || (isAuthenticated && !eligibleToDonate)}
+      variant={submitted ? "outline" : "secondary"}
       onClick={() => {
         void handleDonate();
       }}
     >
       <HeartHandshake className="size-4" />
-      I can donate
+      {buttonLabel}
     </Button>
   );
 
-  if (isAuthenticated && !eligibleToDonate) {
+  if (isAuthenticated && !eligibleToDonate && !submitted) {
     return (
       <Tooltip>
         <TooltipTrigger asChild>{button}</TooltipTrigger>
@@ -89,7 +97,5 @@ export function DonateButton({
     );
   }
 
-  return (
-    button
-  );
+  return button;
 }

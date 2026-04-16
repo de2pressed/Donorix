@@ -44,5 +44,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     .update({ approved_donor_id: body.donorId })
     .eq("id", id);
 
+  await supabase
+    .from("donor_applications")
+    .update({ status: "rejected" })
+    .eq("post_id", id)
+    .neq("donor_id", body.donorId)
+    .eq("status", "pending");
+
   return NextResponse.json({ ok: true });
 }

@@ -4,6 +4,8 @@ import { DEMO_ACCOUNTS, DEMO_ACCOUNT_EMAILS } from "@/lib/demo-accounts";
 import { jsonError } from "@/lib/http";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
+const DEMO_POST_ID = "33333333-3333-4333-8333-333333333333";
+
 async function listUsersByEmail() {
   const admin = getSupabaseAdminClient();
   if (!admin) {
@@ -42,6 +44,7 @@ async function getDemoStatus() {
 
   const hospitalProfile = profiles?.find((profile) => profile.email === DEMO_ACCOUNTS.hospital.email);
   let hasHospitalAccount = false;
+  let hasDemoPost = false;
 
   if (hospitalProfile?.id) {
     const { data: hospitalAccount, error: hospitalError } = await admin
@@ -55,6 +58,18 @@ async function getDemoStatus() {
     }
 
     hasHospitalAccount = Boolean(hospitalAccount);
+
+    const { data: demoPost, error: demoPostError } = await admin
+      .from("posts")
+      .select("id, created_by, is_demo")
+      .eq("id", DEMO_POST_ID)
+      .maybeSingle();
+
+    if (demoPostError) {
+      throw new Error(demoPostError.message);
+    }
+
+    hasDemoPost = Boolean(demoPost && demoPost.created_by === hospitalProfile.id && demoPost.is_demo);
   }
 
   return {
@@ -63,7 +78,8 @@ async function getDemoStatus() {
       emailSet.has(DEMO_ACCOUNTS.hospital.email) &&
       Boolean(profiles?.some((profile) => profile.email === DEMO_ACCOUNTS.donor.email)) &&
       Boolean(hospitalProfile) &&
-      hasHospitalAccount,
+      hasHospitalAccount &&
+      hasDemoPost,
   };
 }
 
@@ -199,6 +215,42 @@ export async function POST() {
 
     if (hospitalAccountError) {
       throw new Error(hospitalAccountError.message);
+    }
+
+    const requiredBy = new Date(Date.now() + 48 * 60 * 60 * 1000);
+    const expiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000);
+
+    const { error: demoPostError } = await admin.from("posts").upsert({
+      id: DEMO_POST_ID,
+      created_by: hospitalUser.id,
+      patient_name: "Rahul Verma",
+      patient_id: "PATIENT-001",
+      blood_type_needed: "O-",
+      units_needed: 2,
+      hospital_name: "City Lifeline Hospital",
+      hospital_address: "12 Ring Road, New Delhi, Delhi 110001",
+      city: "New Delhi",
+      state: "Delhi",
+      contact_name: "Dr. Priya Sharma",
+      contact_phone: "+919876543210",
+      contact_email: DEMO_ACCOUNTS.hospital.email,
+      medical_condition: "Post-operative blood loss following emergency appendectomy",
+      additional_notes: "Emergency demo request created for stakeholder walkthroughs.",
+      is_emergency: true,
+      required_by: requiredBy.toISOString(),
+      initial_radius_km: 25,
+      current_radius_km: 25,
+      expires_at: expiresAt.toISOString(),
+      status: "active",
+      priority_score: 999,
+      upvote_count: 0,
+      donor_count: 0,
+      sms_sent_count: 0,
+      is_demo: true,
+    });
+
+    if (demoPostError) {
+      throw new Error(demoPostError.message);
     }
 
     return NextResponse.json({

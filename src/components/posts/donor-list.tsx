@@ -1,8 +1,52 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
+
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { authenticatedFetch } from "@/lib/supabase/authenticated-fetch";
 import { formatDistance } from "@/lib/utils/format";
 import type { DonorApplicationWithDonor } from "@/types/post";
 
-export function DonorList({ donors }: { donors: DonorApplicationWithDonor[] }) {
+export function DonorList({
+  donors,
+  canAct = false,
+  postId,
+}: {
+  donors: DonorApplicationWithDonor[];
+  canAct?: boolean;
+  postId?: string;
+}) {
+  const router = useRouter();
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  async function updateStatus(donorId: string, status: "approved" | "rejected") {
+    if (!postId) {
+      return;
+    }
+
+    setBusyId(donorId);
+    try {
+      const response = await authenticatedFetch(`/api/posts/${postId}/donors/${donorId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+      });
+      const body = (await response.json().catch(() => null)) as { error?: string } | null;
+
+      if (!response.ok) {
+        toast.error(body?.error ?? "Unable to update donor application");
+        return;
+      }
+
+      toast.success(status === "approved" ? "Donor approved" : "Application rejected");
+      router.refresh();
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -12,7 +56,7 @@ export function DonorList({ donors }: { donors: DonorApplicationWithDonor[] }) {
         {donors.length ? (
           donors.map((donor) => (
             <div key={donor.id} className="rounded-[1.5rem] border border-border p-4">
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="font-medium">
                     {donor.donor?.full_name ?? donor.donor?.username ?? "Donor application"}
@@ -27,8 +71,31 @@ export function DonorList({ donors }: { donors: DonorApplicationWithDonor[] }) {
                     </p>
                   ) : null}
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  {formatDistance(donor.distance_km)}
+                <div className="flex flex-col items-end gap-2 text-sm text-muted-foreground">
+                  <span>{formatDistance(donor.distance_km)}</span>
+                  {canAct && donor.status === "pending" && postId ? (
+                    <div className="flex flex-wrap justify-end gap-2">
+                      <Button
+                        disabled={busyId === donor.id}
+                        size="sm"
+                        onClick={() => {
+                          void updateStatus(donor.donor_id, "approved");
+                        }}
+                      >
+                        Accept
+                      </Button>
+                      <Button
+                        disabled={busyId === donor.id}
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          void updateStatus(donor.donor_id, "rejected");
+                        }}
+                      >
+                        Reject
+                      </Button>
+                    </div>
+                  ) : null}
                 </div>
               </div>
               {donor.note ? <p className="mt-2 text-sm text-muted-foreground">{donor.note}</p> : null}

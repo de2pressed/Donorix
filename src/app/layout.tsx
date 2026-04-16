@@ -59,7 +59,9 @@ const bootstrapScript = `
 
     if (window.sessionStorage.getItem('donorix_splash_v2_seen') !== 'true') {
       window.__donorixSplashStart = Date.now();
-      document.documentElement.classList.add('donorix-booting');
+      window.requestAnimationFrame(function() {
+        document.documentElement.classList.add('donorix-booting');
+      });
     }
   } catch (error) {}
 `;
@@ -76,8 +78,8 @@ export default async function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: bootstrapScript }} />
       </head>
-      <body className={cn(geistSans.variable, geistMono.variable, "min-h-screen")}>
-        <div aria-hidden="true" id="donorix-boot-splash">
+      <body suppressHydrationWarning className={cn(geistSans.variable, geistMono.variable, "min-h-screen")}>
+        <div aria-hidden="true" id="donorix-boot-splash" suppressHydrationWarning>
           <div className="donorix-boot-splash__content">
             <div className="donorix-boot-splash__brand">
               <div className="donorix-boot-splash__mark">D</div>

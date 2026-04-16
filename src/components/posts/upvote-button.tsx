@@ -14,24 +14,29 @@ export function UpvoteButton({
   postId,
   count,
   isAuthenticated = false,
+  hasVoted = false,
 }: {
   postId: string;
   count: number;
   isAuthenticated?: boolean;
+  hasVoted?: boolean;
 }) {
   const router = useRouter();
   const { openPrompt } = useAuthPrompt();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [voted, setVoted] = useState(hasVoted);
   const [displayCount, setDisplayCount] = useState(count);
   const [popped, setPopped] = useState(false);
 
   useEffect(() => {
     setDisplayCount(count);
-  }, [count]);
+    setVoted(hasVoted);
+  }, [count, hasVoted]);
 
   return (
     <Button
-      disabled={isSubmitting}
+      className={voted ? "text-brand" : ""}
+      disabled={isSubmitting || voted}
       variant="ghost"
       size="sm"
       onClick={async () => {
@@ -52,7 +57,7 @@ export function UpvoteButton({
             return;
           }
 
-          setDisplayCount((current) => current + 1);
+          setVoted(true);
           setPopped(true);
           window.setTimeout(() => setPopped(false), 220);
           toast.success("Vote recorded");

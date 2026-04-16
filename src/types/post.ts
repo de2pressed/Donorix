@@ -14,6 +14,7 @@ export type FeedPost = Post & {
   patient_id?: string | null;
   is_legacy?: boolean;
   is_demo?: boolean;
+  has_voted?: boolean;
   creator?: Pick<Profile, "id" | "full_name" | "username" | "city" | "state" | "karma"> | null;
   approved_donor?: Pick<Profile, "id" | "full_name" | "phone"> | null;
 };

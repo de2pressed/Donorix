@@ -107,8 +107,18 @@ function getRequestErrorMessage(payload: unknown) {
 export function PostForm({ hospital }: { hospital: HospitalAccount }) {
   const router = useRouter();
   const [step, setStep] = useState(0);
-  const [requiredDate, setRequiredDate] = useState("");
-  const [requiredTime, setRequiredTime] = useState("");
+  const [requiredDate, setRequiredDate] = useState(() => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  });
+  const [requiredTime, setRequiredTime] = useState(() => {
+    const now = new Date();
+    now.setHours(now.getHours() + 2, 0, 0, 0);
+    return now.toTimeString().slice(0, 5);
+  });
 
   const form = useForm<PostFormValues, unknown, CreatePostInput>({
     resolver: zodResolver(createPostSchema),
@@ -135,13 +145,15 @@ export function PostForm({ hospital }: { hospital: HospitalAccount }) {
 
   useEffect(() => {
     if (!requiredDate || !requiredTime) {
-      form.setValue("required_by", "", { shouldDirty: true });
+      form.setValue("required_by", "", { shouldDirty: false, shouldValidate: false });
       return;
     }
 
-    const localDate = `${requiredDate}T${requiredTime}`;
-    const isoDate = new Date(localDate).toISOString();
-    form.setValue("required_by", isoDate, { shouldDirty: true, shouldValidate: step === 2 });
+    const isoDate = new Date(`${requiredDate}T${requiredTime}`).toISOString();
+    form.setValue("required_by", isoDate, {
+      shouldDirty: true,
+      shouldValidate: step === 2 && Boolean(requiredDate) && Boolean(requiredTime),
+    });
   }, [form, requiredDate, requiredTime, step]);
 
   async function handleNext() {
@@ -174,6 +186,7 @@ export function PostForm({ hospital }: { hospital: HospitalAccount }) {
   });
 
   const errors = form.formState.errors;
+  const requiredBy = form.watch("required_by");
 
   return (
     <Card className="w-full max-w-4xl overflow-hidden">
@@ -338,19 +351,29 @@ export function PostForm({ hospital }: { hospital: HospitalAccount }) {
                   Required By
                 </label>
                 <div className="grid gap-3 sm:grid-cols-[1fr_170px]">
-                  <Input
-                    id="required_date"
-                    type="date"
-                    value={requiredDate}
-                    onChange={(event) => setRequiredDate(event.target.value)}
-                  />
-                  <Input
-                    id="required_time"
-                    placeholder="Select time"
-                    type="time"
-                    value={requiredTime}
-                    onChange={(event) => setRequiredTime(event.target.value)}
-                  />
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground" htmlFor="required_date">
+                      Date
+                    </label>
+                    <Input
+                      id="required_date"
+                      type="date"
+                      value={requiredDate}
+                      onChange={(event) => setRequiredDate(event.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground" htmlFor="required_time">
+                      Time
+                    </label>
+                    <Input
+                      id="required_time"
+                      placeholder="Select time"
+                      type="time"
+                      value={requiredTime}
+                      onChange={(event) => setRequiredTime(event.target.value)}
+                    />
+                  </div>
                 </div>
                 <FieldError message={errors.required_by?.message} />
               </div>
@@ -425,7 +448,15 @@ export function PostForm({ hospital }: { hospital: HospitalAccount }) {
                 <p><span className="font-medium text-foreground">Contact Person:</span> {form.watch("contact_name")}</p>
                 <p><span className="font-medium text-foreground">Contact Phone:</span> {form.watch("contact_phone")}</p>
                 <p><span className="font-medium text-foreground">Medical Condition:</span> {form.watch("medical_condition")}</p>
-                <p><span className="font-medium text-foreground">Required By:</span> {form.watch("required_by") || "Not set"}</p>
+                <p>
+                  <span className="font-medium text-foreground">Required By:</span>{" "}
+                  {requiredBy
+                    ? new Date(requiredBy).toLocaleString("en-IN", {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      })
+                    : "Not set"}
+                </p>
                 <p><span className="font-medium text-foreground">Radius:</span> {radius} km</p>
                 <p><span className="font-medium text-foreground">Emergency:</span> {emergency ? "Yes" : "No"}</p>
               </div>

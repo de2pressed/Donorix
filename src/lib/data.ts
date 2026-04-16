@@ -58,7 +58,7 @@ export async function getCurrentProfile() {
   return (data as Profile | null) ?? null;
 }
 
-export async function getFeedPosts() {
+export async function getFeedPosts(userId?: string) {
   const supabase = await createServerSupabaseClient();
   if (!supabase) return [] as FeedPost[];
 
@@ -78,10 +78,29 @@ export async function getFeedPosts() {
     .order("created_at", { ascending: false })
     .limit(20);
 
-  return sortPostsByPriority((data as FeedPost[] | null) ?? []);
+  const posts = (data as FeedPost[] | null) ?? [];
+  if (!userId || !posts.length) {
+    return sortPostsByPriority(posts);
+  }
+
+  const postIds = posts.map((post) => post.id);
+  const { data: votes } = await supabase
+    .from("upvotes")
+    .select("post_id")
+    .eq("user_id", userId)
+    .in("post_id", postIds);
+
+  const votedSet = new Set((votes ?? []).map((vote) => vote.post_id));
+
+  return sortPostsByPriority(
+    posts.map((post) => ({
+      ...post,
+      has_voted: votedSet.has(post.id),
+    })),
+  );
 }
 
-export async function getPostById(postId: string) {
+export async function getPostById(postId: string, userId?: string) {
   const supabase = await createServerSupabaseClient();
   if (!supabase) return null;
 
@@ -100,7 +119,23 @@ export async function getPostById(postId: string) {
     .eq("id", postId)
     .single();
 
-  return (data as Post | null) ?? null;
+  const post = (data as FeedPost | null) ?? null;
+
+  if (!post || !userId) {
+    return post;
+  }
+
+  const { data: vote } = await supabase
+    .from("upvotes")
+    .select("post_id")
+    .eq("user_id", userId)
+    .eq("post_id", postId)
+    .maybeSingle();
+
+  return {
+    ...post,
+    has_voted: Boolean(vote),
+  };
 }
 
 export async function getDonorApplicationsForPost(postId: string) {
@@ -260,6 +295,7 @@ export async function getHospitalDashboard(profileId: string) {
         distance_km: number | null;
         note: string | null;
         created_at: string;
+        updated_at: string;
         donor: Pick<Profile, "id" | "full_name" | "username" | "blood_type" | "city" | "state" | "karma"> | null;
         post: Pick<Post, "id" | "patient_name" | "patient_id" | "blood_type_needed" | "status"> | null;
       }>,
@@ -288,7 +324,7 @@ export async function getHospitalDashboard(profileId: string) {
   const donorApplicationsPromise = postIds.length
     ? supabase
         .from("donor_applications")
-        .select("id, post_id, donor_id, status, eligibility_score, distance_km, note, created_at")
+        .select("id, post_id, donor_id, status, eligibility_score, distance_km, note, created_at, updated_at")
         .in("post_id", postIds)
         .order("created_at", { ascending: false })
         .limit(20)

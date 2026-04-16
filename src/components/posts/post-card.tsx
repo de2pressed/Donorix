@@ -107,7 +107,7 @@ export function PostCard({
             <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
               <span className="flex items-center gap-2">
                 <Users className="size-4" />
-                {post.donor_count} donors
+                {post.donor_count ?? 0} donors
               </span>
               <span className="flex items-center gap-2">
                 <Clock3 className="size-4" />
@@ -115,7 +115,12 @@ export function PostCard({
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <UpvoteButton count={post.upvote_count} isAuthenticated={isAuthenticated} postId={post.id} />
+              <UpvoteButton
+                count={post.upvote_count}
+                hasVoted={Boolean(post.has_voted)}
+                isAuthenticated={isAuthenticated}
+                postId={post.id}
+              />
               <DonateButton isAuthenticated={isAuthenticated} postId={post.id} />
             </div>
           </div>

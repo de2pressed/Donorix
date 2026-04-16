@@ -9,7 +9,8 @@ export default async function PostPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [post, profile] = await Promise.all([getPostById(id), getCurrentProfile()]);
+  const profile = await getCurrentProfile();
+  const post = await getPostById(id, profile?.id);
 
   if (!post) {
     notFound();

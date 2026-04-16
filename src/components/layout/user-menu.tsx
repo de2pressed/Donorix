@@ -173,7 +173,7 @@ export function UserMenu() {
           </Avatar>
         </button>
         <Dialog open={mobileOpen} onOpenChange={setMobileOpen}>
-          <DialogContent className="dialog-bottom-sheet top-auto bottom-0 w-full max-w-none translate-x-[-50%] translate-y-0 rounded-b-none rounded-t-[1.75rem] px-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] pt-8 sm:max-w-none">
+          <DialogContent className="dialog-bottom-sheet inset-x-0 bottom-0 top-auto w-full max-w-none !translate-x-0 !translate-y-0 rounded-b-none rounded-t-[1.75rem] px-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] pt-8 sm:max-w-none">
             <DialogHeader>
               <DialogTitle>Profile actions</DialogTitle>
             </DialogHeader>

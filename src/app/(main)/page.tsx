@@ -9,11 +9,11 @@ import { getCurrentProfile, getFeedPosts, getHospitalAccountByProfileId, getHosp
 import { getRequestMessages, translate } from "@/lib/i18n";
 
 export default async function HomePage() {
-  const [{ messages }, posts, currentProfile] = await Promise.all([
+  const [{ messages }, currentProfile] = await Promise.all([
     getRequestMessages(),
-    getFeedPosts(),
     getCurrentProfile(),
   ]);
+  const posts = await getFeedPosts(currentProfile?.id);
   const t = (key: string) => translate(messages, key);
 
   if (currentProfile?.account_type === "hospital") {
@@ -114,7 +114,7 @@ export default async function HomePage() {
                       </Badge>
                     </div>
                     <p className="mt-3 text-sm text-muted-foreground">
-                      {post.donor_count} donors applied • {post.units_needed} units requested
+                      {post.donor_count ?? 0} donors applied • {post.units_needed} units requested
                     </p>
                   </div>
                 ))
@@ -146,7 +146,11 @@ export default async function HomePage() {
                       <div>
                         <p className="font-medium">{application.donor?.full_name ?? "Donor"}</p>
                         <p className="text-sm text-muted-foreground">
-                          {application.post?.patient_name ?? "Patient"} • {application.post?.blood_type_needed ?? "Blood"}
+                          {application.donor?.username ? application.donor.username : "Donor"}
+                          {application.donor?.blood_type ? ` • ${application.donor.blood_type}` : ""}
+                        </p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          For: {application.post?.patient_name ?? "Patient"} ({application.post?.blood_type_needed ?? "?"})
                         </p>
                       </div>
                       <Badge variant="secondary">{application.status}</Badge>

@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { jsonError, requireServerUser } from "@/lib/http";
 import { enforceRateLimit } from "@/lib/rate-limit";
-import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { isDonationEligible } from "@/lib/utils/donation-eligibility";
 import { sanitizeText } from "@/lib/utils/sanitize";
+import { computeEligibilityScore } from "@/lib/utils/blood-type";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -40,11 +40,31 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return jsonError("You have already applied to donate for this request.", 409);
   }
 
+  const { data: post, error: postError } = await supabase
+    .from("posts")
+    .select("blood_type_needed")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (postError) {
+    return jsonError(postError.message, 500);
+  }
+
+  if (!post) {
+    return jsonError("Post not found", 404);
+  }
+
+  const eligibilityScore = computeEligibilityScore(profile.blood_type, post.blood_type_needed);
+
+  if (eligibilityScore === 0) {
+    return jsonError("Your blood type is not compatible with this request.", 400);
+  }
+
   const { error } = await supabase.from("donor_applications").insert({
     post_id: id,
     donor_id: profile.id,
     status: "pending",
-    eligibility_score: 80,
+    eligibility_score: eligibilityScore,
     note: body.note ? sanitizeText(body.note) : null,
   });
 
@@ -52,28 +72,25 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return jsonError(error.message, 500);
   }
 
-  const admin = getSupabaseAdminClient();
-  if (admin) {
-    const { data: post, error: postError } = await admin
-      .from("posts")
-      .select("donor_count")
-      .eq("id", id)
-      .maybeSingle();
+  const { data: countPost, error: countReadError } = await supabase
+    .from("posts")
+    .select("donor_count")
+    .eq("id", id)
+    .maybeSingle();
 
-    if (postError || !post) {
-      await admin.from("donor_applications").delete().eq("post_id", id).eq("donor_id", profile.id);
-      return jsonError(postError?.message ?? "Post not found", 404);
-    }
+  if (countReadError || !countPost) {
+    await supabase.from("donor_applications").delete().eq("post_id", id).eq("donor_id", profile.id);
+    return jsonError(countReadError?.message ?? "Post not found", 404);
+  }
 
-    const { error: countError } = await admin
-      .from("posts")
-      .update({ donor_count: (post.donor_count ?? 0) + 1 })
-      .eq("id", id);
+  const { error: countError } = await supabase
+    .from("posts")
+    .update({ donor_count: (countPost.donor_count ?? 0) + 1 })
+    .eq("id", id);
 
-    if (countError) {
-      await admin.from("donor_applications").delete().eq("post_id", id).eq("donor_id", profile.id);
-      return jsonError(countError.message, 500);
-    }
+  if (countError) {
+    await supabase.from("donor_applications").delete().eq("post_id", id).eq("donor_id", profile.id);
+    return jsonError(countError.message, 500);
   }
 
   return NextResponse.json({ ok: true }, { status: 201 });

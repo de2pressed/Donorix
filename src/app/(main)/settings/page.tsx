@@ -172,6 +172,7 @@ export default function SettingsPage() {
       setSavedSettings((current) =>
         current ? { ...current, language: nextLanguage } : current,
       );
+      await new Promise((resolve) => window.setTimeout(resolve, 50));
       router.refresh();
     } catch (error) {
       setSettings((current) => ({ ...current, language: previousLanguage }));

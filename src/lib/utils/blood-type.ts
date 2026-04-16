@@ -21,6 +21,27 @@ export function getCompatibleDonors(recipientType: BloodType) {
   return compatibilityMatrix[recipientType];
 }
 
+export function canDonateToRecipient(donorType: BloodType, recipientType: BloodType) {
+  return getCompatibleDonors(recipientType).includes(donorType);
+}
+
 export function getCompatibilityLabel(donorType: BloodType, recipientType: BloodType) {
-  return getCompatibleDonors(recipientType).includes(donorType) ? "Compatible" : "Incompatible";
+  return canDonateToRecipient(donorType, recipientType) ? "Compatible" : "Incompatible";
+}
+
+export function computeEligibilityScore(
+  donorBloodType: string | null | undefined,
+  recipientBloodType: string | null | undefined,
+) {
+  if (!donorBloodType || !recipientBloodType) return 60;
+
+  if (!isBloodType(donorBloodType) || !isBloodType(recipientBloodType)) return 60;
+
+  if (!canDonateToRecipient(donorBloodType, recipientBloodType)) return 0;
+
+  let score = 80;
+  if (donorBloodType === "O-") score += 15;
+  if (donorBloodType === recipientBloodType) score += 10;
+
+  return Math.min(score, 100);
 }

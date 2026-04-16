@@ -7,18 +7,9 @@ import { PostFilter } from "@/components/posts/post-filter";
 import { PostSearch } from "@/components/posts/post-search";
 import { BloodTypeBadge } from "@/components/ui/blood-type-badge";
 import { Button } from "@/components/ui/button";
+import { BLOOD_TYPES } from "@/lib/constants";
 import type { FeedPost } from "@/types/post";
-
-const COMPATIBLE_RECIPIENTS: Record<string, string[]> = {
-  "O-": ["O-", "O+", "A-", "A+", "B-", "B+", "AB-", "AB+"],
-  "O+": ["O+", "A+", "B+", "AB+"],
-  "A-": ["A-", "A+", "AB-", "AB+"],
-  "A+": ["A+", "AB+"],
-  "B-": ["B-", "B+", "AB-", "AB+"],
-  "B+": ["B+", "AB+"],
-  "AB-": ["AB-", "AB+"],
-  "AB+": ["AB+"],
-};
+import { canDonateToRecipient, isBloodType } from "@/lib/utils/blood-type";
 
 export function FindDonateFeed({
   posts,
@@ -32,16 +23,22 @@ export function FindDonateFeed({
   const [compatibleOnly, setCompatibleOnly] = useState(Boolean(donorBloodType));
 
   const compatibleTypes = useMemo(() => {
-    if (!donorBloodType) return [];
-    return COMPATIBLE_RECIPIENTS[donorBloodType] ?? [donorBloodType];
+    if (!donorBloodType || !isBloodType(donorBloodType)) return [];
+    return BLOOD_TYPES.filter((bloodType) => canDonateToRecipient(donorBloodType, bloodType));
   }, [donorBloodType]);
 
   const filteredPosts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
     return posts.filter((post) => {
-      if (compatibleOnly && compatibleTypes.length && !compatibleTypes.includes(post.blood_type_needed)) {
-        return false;
+      if (compatibleOnly) {
+        if (!post.blood_type_needed || !isBloodType(post.blood_type_needed)) {
+          return false;
+        }
+
+        if (!compatibleTypes.includes(post.blood_type_needed)) {
+          return false;
+        }
       }
 
       if (emergencyOnly && !post.is_emergency) {

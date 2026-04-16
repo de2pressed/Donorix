@@ -48,7 +48,7 @@ export default async function HospitalPostsPage() {
                   </p>
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  {post.units_needed} units • {post.donor_count} donor applicants
+                  {post.units_needed} units • {post.donor_count ?? 0} donor applicants
                 </div>
                 <Badge variant={post.status === "active" ? "danger" : "secondary"}>{post.status}</Badge>
               </div>

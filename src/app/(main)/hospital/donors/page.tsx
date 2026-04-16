@@ -3,10 +3,12 @@ import { redirect } from "next/navigation";
 import { DonorList } from "@/components/posts/donor-list";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCurrentProfile, getHospitalDashboard } from "@/lib/data";
+import { getRequestMessages, translate } from "@/lib/i18n";
 import type { DonorApplicationWithDonor } from "@/types/post";
 
 export default async function HospitalDonorsPage() {
-  const profile = await getCurrentProfile();
+  const [{ messages }, profile] = await Promise.all([getRequestMessages(), getCurrentProfile()]);
+  const t = (key: string) => translate(messages, key);
 
   if (!profile) {
     redirect("/login?redirect=/hospital/donors");
@@ -28,29 +30,27 @@ export default async function HospitalDonorsPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-3xl font-semibold">Donor Applicants</h1>
-        <p className="text-sm text-muted-foreground">
-          Review donor interest across all active patient requests from your hospital account.
-        </p>
+        <h1 className="text-3xl font-semibold">{t("hospitalDonors.title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("hospitalDonors.subtitle")}</p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Recent donor applications</CardTitle>
+          <CardTitle>{t("hospitalDonors.recentApplications")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {byPost.size ? (
             [...byPost.entries()].map(([postId, apps]) => (
               <div key={postId} className="space-y-2">
                 <p className="px-1 text-sm font-medium text-muted-foreground">
-                  {apps[0]?.post?.patient_name ?? "Patient"} - {apps[0]?.post?.blood_type_needed ?? "Blood"}
+                  {apps[0]?.post?.patient_name ?? t("hospitalDonors.patient")} - {apps[0]?.post?.blood_type_needed ?? t("hospitalDonors.blood")}
                 </p>
                 <DonorList donors={apps as DonorApplicationWithDonor[]} canAct postId={postId} />
               </div>
             ))
           ) : (
             <div className="rounded-[1.25rem] border border-dashed border-border p-6 text-sm text-muted-foreground">
-              Donor applications will appear here after matched donors respond.
+              {t("hospitalDonors.empty")}
             </div>
           )}
         </CardContent>

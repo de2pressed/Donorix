@@ -13,6 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils/cn";
 import { formatDateTime, formatRelativeTime } from "@/lib/utils/format";
 import type { FeedPost } from "@/types/post";
+import { useTranslations } from "next-intl";
 
 export function PostCard({
   post,
@@ -24,6 +25,7 @@ export function PostCard({
   index?: number;
 }) {
   const reduceMotion = useReducedMotion();
+  const tRequest = useTranslations("request");
 
   return (
     <motion.div
@@ -60,13 +62,13 @@ export function PostCard({
                 </Link>
                 <p className="mt-2 truncate text-sm text-muted-foreground">
                   {post.patient_id ? `${post.patient_id} • ` : ""}
-                  Requested by {post.contact_name} | {formatRelativeTime(post.created_at)}
+                  {tRequest("requestedBy")} {post.contact_name} | {formatRelativeTime(post.created_at)}
                 </p>
               </div>
             </div>
 
             <div className="rounded-[1.5rem] border border-border bg-card/60 px-4 py-3 text-right max-sm:w-full">
-              <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Required by</p>
+              <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">{tRequest("requiredBy")}</p>
               <p className="mt-1 font-semibold">{formatDateTime(post.required_by)}</p>
             </div>
           </div>
@@ -75,14 +77,14 @@ export function PostCard({
             <div className="rounded-[1.5rem] border border-border p-4">
               <div className="flex items-center gap-2 text-sm font-medium">
                 <Hospital className="size-4 text-brand" />
-                Hospital
+                {tRequest("hospital")}
               </div>
               <p className="mt-2 truncate text-sm text-muted-foreground">{post.hospital_name}</p>
             </div>
             <div className="rounded-[1.5rem] border border-border p-4">
               <div className="flex items-center gap-2 text-sm font-medium">
                 <MapPin className="size-4 text-brand" />
-                Location
+                {tRequest("location")}
               </div>
               <p className="mt-2 truncate text-sm text-muted-foreground">
                 {post.city}, {post.state}
@@ -91,7 +93,7 @@ export function PostCard({
             <div className="rounded-[1.5rem] border border-border p-4">
               <div className="flex items-center gap-2 text-sm font-medium">
                 <Droplets className="size-4 text-brand" />
-                Units needed
+                {tRequest("unitsNeeded")}
               </div>
               <p className="mt-2 text-sm text-muted-foreground">{post.units_needed} units</p>
             </div>
@@ -111,7 +113,7 @@ export function PostCard({
               </span>
               <span className="flex items-center gap-2">
                 <Clock3 className="size-4" />
-                Expires {formatDateTime(post.expires_at)}
+                {tRequest("expires")} {formatDateTime(post.expires_at)}
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-2">

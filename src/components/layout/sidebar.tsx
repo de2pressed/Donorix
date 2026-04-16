@@ -3,15 +3,52 @@
 import Link from "next/link";
 import { Building2, HeartHandshake, Settings } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import { useUser } from "@/lib/hooks/use-user";
 import { getSidebarNav, showRegisterHospitalButton } from "@/lib/navigation";
 import { cn } from "@/lib/utils/cn";
 
+function getSidebarLabel(
+  href: string,
+  accountType: string | null | undefined,
+  t: (key: string) => string,
+) {
+  switch (href) {
+    case "/":
+      return accountType === "hospital" ? t("dashboard") : t("home");
+    case "/posts/new":
+      return t("newRequest");
+    case "/hospital/posts":
+      return t("patientPosts");
+    case "/hospital/donors":
+      return t("donors");
+    case "/notifications":
+      return t("notifications");
+    case "/policies/terms":
+      return t("policies");
+    case "/about":
+      return t("about");
+    case "/find":
+      return t("find");
+    case "/leaderboard":
+      return t("leaderboard");
+    case "/settings":
+      return t("settings");
+    default:
+      return href;
+  }
+}
+
 export function Sidebar() {
   const pathname = usePathname();
   const { data: user } = useUser();
-  const items = getSidebarNav(user?.account_type);
+  const tNav = useTranslations("nav");
+  const tSidebar = useTranslations("sidebar");
+  const items = getSidebarNav(user?.account_type).map((item) => ({
+    ...item,
+    label: getSidebarLabel(item.href, user?.account_type, tNav),
+  }));
   const showRegisterHospital = showRegisterHospitalButton(user?.account_type);
 
   return (
@@ -24,12 +61,12 @@ export function Sidebar() {
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand">
-                {user?.account_type === "hospital" ? "Hospital workspace" : "Donor workspace"}
+                {user?.account_type === "hospital" ? tSidebar("hospitalWorkspace") : tSidebar("donorWorkspace")}
               </p>
               <p className="text-sm text-muted-foreground">
                 {user?.account_type === "hospital"
-                  ? "Patient posts, donors, and notification workflows"
-                  : "Explore requests, ranking, and response activity"}
+                  ? tSidebar("hospitalWorkspaceDesc")
+                  : tSidebar("donorWorkspaceDesc")}
               </p>
             </div>
           </Link>
@@ -65,7 +102,7 @@ export function Sidebar() {
             href="/signup?account=hospital"
           >
             <Building2 className="size-4" />
-            Register as Hospital
+            {tNav("registerHospital")}
           </Link>
         ) : null}
         <Link
@@ -76,16 +113,18 @@ export function Sidebar() {
           href="/settings"
         >
           <Settings className="size-4" />
-          Settings
+          {tNav("settings")}
         </Link>
         <div className="rounded-[1.5rem] border border-border bg-card/60 p-4">
           <p className="text-sm font-medium">
-            {user?.account_type === "hospital" ? "Hospital operations" : "Emergency routing enabled"}
+            {user?.account_type === "hospital"
+              ? tSidebar("hospitalOperations")
+              : tSidebar("emergencyRouting")}
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
             {user?.account_type === "hospital"
-              ? "Track patient requests, donor applicants, and verification from one secure workspace."
-              : "Urgent requests rise to the top and continue expanding notification reach until help is found."}
+              ? tSidebar("hospitalOperationsDesc")
+              : tSidebar("emergencyRoutingDesc")}
           </p>
         </div>
       </div>

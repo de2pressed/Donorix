@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -9,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { authenticatedFetch } from "@/lib/supabase/authenticated-fetch";
 import { formatDistance } from "@/lib/utils/format";
 import type { DonorApplicationWithDonor } from "@/types/post";
+import { useTranslations } from "next-intl";
 
 export function DonorList({
   donors,
@@ -20,6 +22,7 @@ export function DonorList({
   postId?: string;
 }) {
   const router = useRouter();
+  const tRequest = useTranslations("request");
   const [busyId, setBusyId] = useState<string | null>(null);
 
   async function updateStatus(donorId: string, status: "approved" | "rejected") {
@@ -50,7 +53,7 @@ export function DonorList({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Donor applications</CardTitle>
+        <CardTitle>{tRequest("donorApplicationsTitle")}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         {donors.length ? (
@@ -58,16 +61,25 @@ export function DonorList({
             <div key={donor.id} className="rounded-[1.5rem] border border-border p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="font-medium">
-                    {donor.donor?.full_name ?? donor.donor?.username ?? "Donor application"}
-                  </p>
+                  {donor.donor?.username ? (
+                    <Link
+                      className="font-medium transition-colors hover:text-brand"
+                      href={`/profile/${donor.donor.username}`}
+                    >
+                      {donor.donor.full_name ?? donor.donor.username}
+                    </Link>
+                  ) : (
+                    <p className="font-medium">
+                      {donor.donor?.full_name ?? "Donor application"}
+                    </p>
+                  )}
                   <p className="text-sm text-muted-foreground">
-                    {donor.status.toUpperCase()} - Eligibility score: {donor.eligibility_score}
+                    {tRequest(`status.${donor.status}`)} - {tRequest("eligibilityScore")} {donor.eligibility_score}
                   </p>
                   {donor.donor ? (
                     <p className="text-sm text-muted-foreground">
-                      {donor.donor.blood_type ?? "Unknown blood type"} - {donor.donor.total_donations} donations -{" "}
-                      {donor.donor.karma} karma
+                      {donor.donor.blood_type ?? tRequest("unknownBloodType")} - {donor.donor.total_donations}{" "}
+                      {tRequest("donations")} - {donor.donor.karma} {tRequest("karma")}
                     </p>
                   ) : null}
                 </div>
@@ -82,7 +94,7 @@ export function DonorList({
                           void updateStatus(donor.donor_id, "approved");
                         }}
                       >
-                        Accept
+                        {tRequest("accept")}
                       </Button>
                       <Button
                         disabled={busyId === donor.id}
@@ -92,7 +104,7 @@ export function DonorList({
                           void updateStatus(donor.donor_id, "rejected");
                         }}
                       >
-                        Reject
+                        {tRequest("reject")}
                       </Button>
                     </div>
                   ) : null}
@@ -103,7 +115,7 @@ export function DonorList({
           ))
         ) : (
           <div className="rounded-[1.5rem] border border-dashed border-border p-6 text-sm text-muted-foreground">
-            Donor applications will appear here after volunteers respond.
+            {tRequest("donorApplicationsEmpty")}
           </div>
         )}
       </CardContent>

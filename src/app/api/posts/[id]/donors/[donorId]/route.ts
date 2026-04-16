@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { jsonError, requireServerUser } from "@/lib/http";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export async function PATCH(
   request: NextRequest,
@@ -19,7 +20,7 @@ export async function PATCH(
 
   const { data: post, error: postError } = await supabase
     .from("posts")
-    .select("created_by, approved_donor_id")
+    .select("created_by, approved_donor_id, patient_name, hospital_name")
     .eq("id", id)
     .maybeSingle();
 
@@ -52,6 +53,13 @@ export async function PATCH(
     return jsonError("Application not found", 404);
   }
 
+  const { data: pendingApplications } = await supabase
+    .from("donor_applications")
+    .select("donor_id")
+    .eq("post_id", id)
+    .eq("status", "pending")
+    .neq("donor_id", donorId);
+
   const { error } = await supabase
     .from("donor_applications")
     .update({ status: nextStatus })
@@ -72,6 +80,41 @@ export async function PATCH(
       .eq("status", "pending");
   } else if (post.approved_donor_id === donorId) {
     await supabase.from("posts").update({ approved_donor_id: null }).eq("id", id);
+  }
+
+  const admin = getSupabaseAdminClient();
+  if (admin) {
+    const notificationTitle =
+      nextStatus === "approved"
+        ? "Your donation offer was accepted"
+        : "Your donation offer was not selected";
+
+    const notificationBody =
+      nextStatus === "approved"
+        ? `${post.hospital_name ?? "The hospital"} has accepted your application for patient ${post.patient_name ?? "a patient"}. Please coordinate directly.`
+        : `Your application for patient ${post.patient_name ?? "a patient"} at ${post.hospital_name ?? "the hospital"} was not selected this time. Thank you for offering to help.`;
+
+    await admin.from("notifications").insert({
+      user_id: donorId,
+      type: nextStatus === "approved" ? "application_approved" : "application_rejected",
+      title: notificationTitle,
+      body: notificationBody,
+      post_id: id,
+      data: { status: nextStatus, post_id: id },
+    });
+
+    if (nextStatus === "approved" && pendingApplications?.length) {
+      await admin.from("notifications").insert(
+        pendingApplications.map((pending) => ({
+          user_id: pending.donor_id,
+          type: "application_rejected",
+          title: "Your donation offer was not selected",
+          body: `Your application for patient ${post.patient_name ?? "a patient"} at ${post.hospital_name ?? "the hospital"} was not selected this time. Thank you for offering to help.`,
+          post_id: id,
+          data: { status: "rejected", post_id: id },
+        })),
+      );
+    }
   }
 
   return NextResponse.json({ ok: true });

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export function PostFilter({
@@ -9,14 +10,16 @@ export function PostFilter({
   emergencyOnly: boolean;
   onEmergencyChange: (value: boolean) => void;
 }) {
+  const tFeed = useTranslations("feed");
+
   return (
     <Select value={emergencyOnly ? "emergency" : "all"} onValueChange={(value) => onEmergencyChange(value === "emergency")}>
-      <SelectTrigger aria-label="Filter feed" className="min-w-[220px]">
-        <SelectValue placeholder="Filter requests" />
+      <SelectTrigger aria-label={tFeed("filterLabel")} className="min-w-[220px]">
+        <SelectValue placeholder={tFeed("filterLabel")} />
       </SelectTrigger>
       <SelectContent className="min-w-[220px]">
-        <SelectItem value="all">All requests</SelectItem>
-        <SelectItem value="emergency">Emergency only</SelectItem>
+        <SelectItem value="all">{tFeed("filterAll")}</SelectItem>
+        <SelectItem value="emergency">{tFeed("filterEmergency")}</SelectItem>
       </SelectContent>
     </Select>
   );

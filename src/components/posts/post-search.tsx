@@ -1,6 +1,7 @@
 "use client";
 
 import { Search, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ export function PostSearch({
   onChange: (value: string) => void;
 }) {
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const tFeed = useTranslations("feed");
   const [collapsed, setCollapsed] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
@@ -62,9 +64,9 @@ export function PostSearch({
       <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
       <Input
         ref={inputRef}
-        aria-label="Search posts"
+        aria-label={tFeed("searchPlaceholder")}
         className="pl-11 pr-12"
-        placeholder="Search patient, blood type, hospital, city, state, or condition"
+        placeholder={tFeed("searchPlaceholder")}
         value={value}
         onBlur={() => {
           if (collapsed && !value) setExpanded(false);

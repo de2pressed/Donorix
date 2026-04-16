@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { DEMO_ACCOUNTS, DEMO_ACCOUNT_EMAILS } from "@/lib/demo-accounts";
 import { jsonError } from "@/lib/http";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+import { estimateDistanceKm } from "@/lib/utils/distance";
+import { computeEligibilityScore } from "@/lib/utils/blood-type";
 
 const DEMO_POST_ID = "33333333-3333-4333-8333-333333333333";
 
@@ -45,6 +47,7 @@ async function getDemoStatus() {
   const hospitalProfile = profiles?.find((profile) => profile.email === DEMO_ACCOUNTS.hospital.email);
   let hasHospitalAccount = false;
   let hasDemoPost = false;
+  let hasDemoApplication = false;
 
   if (hospitalProfile?.id) {
     const { data: hospitalAccount, error: hospitalError } = await admin
@@ -70,6 +73,18 @@ async function getDemoStatus() {
     }
 
     hasDemoPost = Boolean(demoPost && demoPost.created_by === hospitalProfile.id && demoPost.is_demo);
+
+    const { data: demoApplication, error: demoApplicationError } = await admin
+      .from("donor_applications")
+      .select("id")
+      .eq("post_id", DEMO_POST_ID)
+      .maybeSingle();
+
+    if (demoApplicationError) {
+      throw new Error(demoApplicationError.message);
+    }
+
+    hasDemoApplication = Boolean(demoApplication);
   }
 
   return {
@@ -79,7 +94,8 @@ async function getDemoStatus() {
       Boolean(profiles?.some((profile) => profile.email === DEMO_ACCOUNTS.donor.email)) &&
       Boolean(hospitalProfile) &&
       hasHospitalAccount &&
-      hasDemoPost,
+      hasDemoPost &&
+      hasDemoApplication,
   };
 }
 
@@ -225,7 +241,7 @@ export async function POST() {
       created_by: hospitalUser.id,
       patient_name: "Rahul Verma",
       patient_id: "PATIENT-001",
-      blood_type_needed: "O-",
+      blood_type_needed: "O+",
       units_needed: 2,
       hospital_name: "City Lifeline Hospital",
       hospital_address: "12 Ring Road, New Delhi, Delhi 110001",
@@ -251,6 +267,43 @@ export async function POST() {
 
     if (demoPostError) {
       throw new Error(demoPostError.message);
+    }
+
+    const { data: donorProfile, error: donorProfileLookupError } = await admin
+      .from("profiles")
+      .select("id, blood_type, city, state")
+      .eq("email", DEMO_ACCOUNTS.donor.email)
+      .maybeSingle();
+
+    if (donorProfileLookupError) {
+      throw new Error(donorProfileLookupError.message);
+    }
+
+    if (donorProfile?.id) {
+      const { error: demoApplicationError } = await admin.from("donor_applications").upsert(
+        {
+          post_id: DEMO_POST_ID,
+          donor_id: donorProfile.id,
+          status: "pending",
+          eligibility_score: computeEligibilityScore(donorProfile.blood_type, "O+"),
+          distance_km: estimateDistanceKm(donorProfile.city, donorProfile.state, "New Delhi", "Delhi"),
+          note: "Demo application for walkthrough purposes.",
+        },
+        { onConflict: "post_id,donor_id" },
+      );
+
+      if (demoApplicationError) {
+        throw new Error(demoApplicationError.message);
+      }
+
+      const { error: donorCountError } = await admin
+        .from("posts")
+        .update({ donor_count: 1 })
+        .eq("id", DEMO_POST_ID);
+
+      if (donorCountError) {
+        throw new Error(donorCountError.message);
+      }
     }
 
     return NextResponse.json({

@@ -22,7 +22,8 @@ export function formatCompactNumber(value: number) {
 }
 
 export function formatDistance(value?: number | null) {
-  if (value == null) return "Unknown distance";
+  if (value == null) return "Distance unavailable";
+  if (value === 0) return "0 km";
   if (value < 1) return `${Math.round(value * 1000)} m`;
   return `${value.toFixed(1)} km`;
 }

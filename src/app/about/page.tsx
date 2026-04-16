@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, useInView, useReducedMotion } from "framer-motion";
+import Link from "next/link";
 import {
   BellRing,
   Building2,
@@ -91,10 +92,13 @@ export default function AboutPage() {
   });
 
   return (
-    <div className="flex min-h-dvh flex-col px-4 py-6 lg:px-8 2xl:px-10">
-      <div className="w-full max-w-[1900px] self-start pb-4 pt-1">
+    <div className="mx-auto flex min-h-dvh w-full max-w-[1900px] flex-col px-4 py-4 lg:px-8 2xl:px-10">
+      <header className="glass sticky top-4 z-40 mb-6 flex items-center gap-4 px-4 py-3">
         <SecondaryPageBackLink />
-      </div>
+        <Link className="font-semibold tracking-tight" href="/">
+          Donorix
+        </Link>
+      </header>
 
       <div className="space-y-8">
         <section className="glass overflow-hidden rounded-[2rem] border border-border p-6 md:p-8">

@@ -10,10 +10,13 @@ import { UserMenuErrorBoundary } from "@/components/layout/user-menu-error-bound
 import { Button } from "@/components/ui/button";
 import { useNotifications } from "@/lib/hooks/use-notifications";
 import { useUser } from "@/lib/hooks/use-user";
+import { useTranslations } from "next-intl";
 
 export function Header() {
   const { data: user } = useUser();
   const { data: notifications = [] } = useNotifications({ enabled: Boolean(user) });
+  const tNav = useTranslations("nav");
+  const tHeader = useTranslations("header");
   const unreadCount = notifications.filter((notification) => !notification.read_at).length;
 
   return (
@@ -24,7 +27,7 @@ export function Header() {
           <span className="hidden max-w-[18rem] min-w-0 truncate text-[clamp(0.8rem,0.85vw,0.95rem)] text-muted-foreground md:inline">
             {user?.account_type === "hospital"
               ? user.full_name
-              : "Purpose-built blood donation matching for India"}
+              : tHeader("donorTagline")}
           </span>
         </Link>
       </div>
@@ -37,7 +40,7 @@ export function Header() {
               <Button asChild className="hidden sm:inline-flex">
                 <Link href="/posts/new">
                   <PlusSquare className="size-4" />
-                  New Request
+                  {tNav("newRequest")}
                 </Link>
               </Button>
             ) : null}

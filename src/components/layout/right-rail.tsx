@@ -4,9 +4,11 @@ import { ClipboardList, FileText, HeartHandshake, ShieldCheck, Trophy, Users } f
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCurrentProfile, getHospitalDashboard, getLeaderboard } from "@/lib/data";
 import { POLICY_NAV } from "@/lib/constants";
+import { getRequestMessages, translate } from "@/lib/i18n";
 
 export async function RightRail() {
-  const currentProfile = await getCurrentProfile();
+  const [{ messages }, currentProfile] = await Promise.all([getRequestMessages(), getCurrentProfile()]);
+  const t = (key: string) => translate(messages, key);
   const leaders = currentProfile?.account_type === "hospital" ? [] : (await getLeaderboard()).slice(0, 5);
   const hospitalDashboard =
     currentProfile?.account_type === "hospital" ? await getHospitalDashboard(currentProfile.id) : null;
@@ -19,20 +21,20 @@ export async function RightRail() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <ClipboardList className="size-5 text-brand" />
-                Hospital snapshot
+                {t("rightRail.hospitalSnapshot")}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div className="rounded-[1.25rem] border border-border px-4 py-3">
-                <p className="text-muted-foreground">Active requests</p>
+                <p className="text-muted-foreground">{t("rightRail.activeRequests")}</p>
                 <p className="mt-1 text-2xl font-semibold">{hospitalDashboard?.stats.activeRequests ?? 0}</p>
               </div>
               <div className="rounded-[1.25rem] border border-border px-4 py-3">
-                <p className="text-muted-foreground">Pending applicants</p>
+                <p className="text-muted-foreground">{t("rightRail.pendingApplicants")}</p>
                 <p className="mt-1 text-2xl font-semibold">{hospitalDashboard?.stats.pendingApplications ?? 0}</p>
               </div>
               <div className="rounded-[1.25rem] border border-border px-4 py-3">
-                <p className="text-muted-foreground">Fulfilled this month</p>
+                <p className="text-muted-foreground">{t("rightRail.fulfilledThisMonth")}</p>
                 <p className="mt-1 text-2xl font-semibold">{hospitalDashboard?.stats.fulfilledThisMonth ?? 0}</p>
               </div>
             </CardContent>
@@ -42,7 +44,7 @@ export async function RightRail() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Trophy className="size-5 text-brand" />
-                Top donors
+                {t("rightRail.topDonors")}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -50,7 +52,9 @@ export async function RightRail() {
                 leaders.map((leader, index) => (
                   <div key={leader.id} className="flex items-center justify-between gap-3 rounded-[1.25rem] border border-border px-4 py-3">
                     <div className="min-w-0">
-                      <p className="truncate font-medium">{leader.full_name}</p>
+                      <Link className="truncate font-medium transition-colors hover:text-brand" href={`/profile/${leader.username}`}>
+                        {leader.full_name}
+                      </Link>
                       <p className="truncate text-sm text-muted-foreground">
                         #{index + 1} @{leader.username}
                       </p>
@@ -60,7 +64,7 @@ export async function RightRail() {
                 ))
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  Leaderboard entries will appear once verified donations begin flowing.
+                  {t("rightRail.topDonorsEmpty")}
                 </p>
               )}
             </CardContent>
@@ -75,22 +79,22 @@ export async function RightRail() {
               ) : (
                 <HeartHandshake className="size-5 text-brand" />
               )}
-              {currentProfile?.account_type === "hospital" ? "Hospital guide" : "About Donorix"}
+              {currentProfile?.account_type === "hospital" ? t("rightRail.hospitalGuide") : t("rightRail.aboutDonorix")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-muted-foreground">
             {currentProfile?.account_type === "hospital" ? (
               <>
                 <p>
-                  Hospital accounts can post verified patient requests, review donor applicants, and manage fulfilment without entering the public karma system.
+                  {t("rightRail.hospitalGuideBody")}
                 </p>
                 <Link className="inline-flex items-center gap-2 text-brand hover:text-brand/80" href="/hospital/donors">
-                  Review donor applicants
+                  {t("rightRail.reviewDonorApplicants")}
                 </Link>
               </>
             ) : (
               <p>
-                Donorix is built for emergency blood coordination in India, with consent-aware onboarding, location-based matching, and trust signals that help urgent requests move faster.
+                {t("rightRail.aboutDonorixBody")}
               </p>
             )}
           </CardContent>
@@ -101,11 +105,11 @@ export async function RightRail() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <ShieldCheck className="size-5 text-brand" />
-                Verification
+                {t("rightRail.verification")}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm text-muted-foreground">
-              <p>Hospitals begin unverified and can be reviewed by Donorix admins before trust badges appear across requests.</p>
+              <p>{t("rightRail.verificationBody")}</p>
             </CardContent>
           </Card>
         ) : null}
@@ -114,7 +118,7 @@ export async function RightRail() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <FileText className="size-5 text-brand" />
-              Quick policy links
+              {t("rightRail.quickPolicyLinks")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">

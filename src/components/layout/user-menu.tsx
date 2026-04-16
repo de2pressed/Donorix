@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Building2, LogOut, MessageCircleMore, Settings, Shield, User2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { useUser } from "@/lib/hooks/use-user";
@@ -38,7 +39,7 @@ function getInitials(name?: string | null) {
 
 export function UserMenu() {
   const router = useRouter();
-  const assistantLabel = "Ask Assistant";
+  const tNav = useTranslations("nav");
   const [mobileOpen, setMobileOpen] = useState(false);
   const { data: user, isLoading } = useUser();
 
@@ -79,17 +80,17 @@ export function UserMenu() {
     return (
       <div className="flex items-center gap-2">
         <Button asChild size="sm" variant="ghost">
-          <Link href="/login">Login</Link>
+          <Link href="/login">{tNav("login")}</Link>
         </Button>
         <Button asChild size="sm">
-          <Link href="/signup">Sign Up</Link>
+          <Link href="/signup">{tNav("signup")}</Link>
         </Button>
       </div>
     );
   }
 
   const profileHref = user.account_type === "hospital" ? "/settings" : "/profile";
-  const profileLabel = user.account_type === "hospital" ? "Hospital Settings" : "View Profile";
+  const profileLabel = user.account_type === "hospital" ? tNav("hospitalSettings") : tNav("viewProfile");
   const showAdminControls = user.is_admin && user.account_type !== "hospital";
 
   return (
@@ -97,7 +98,7 @@ export function UserMenu() {
       <div className="hidden md:block">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button aria-label="Open profile menu" className={avatarButtonClassName} type="button">
+            <button aria-label={tNav("openProfileMenu")} className={avatarButtonClassName} type="button">
               <Avatar className="size-10">
                 <AvatarImage src={user?.avatar_url ?? undefined} alt={user?.full_name ?? "Donorix user"} />
                 <AvatarFallback>{getInitials(user?.full_name)}</AvatarFallback>
@@ -109,9 +110,9 @@ export function UserMenu() {
               <div className="space-y-1">
                 <p className="font-medium normal-case tracking-normal text-foreground">{user.full_name}</p>
                 <p className="normal-case tracking-normal text-muted-foreground">
-                  {user.account_type === "hospital" ? "Hospital account" : `@${user.username}`}
+                  {user.account_type === "hospital" ? tNav("hospitalAccount") : `@${user.username}`}
                 </p>
-                {showAdminControls ? <p className="text-xs font-semibold text-brand">Admin</p> : null}
+                {showAdminControls ? <p className="text-xs font-semibold text-brand">{tNav("adminPanel")}</p> : null}
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
@@ -119,7 +120,7 @@ export function UserMenu() {
               <DropdownMenuItem asChild>
                 <Link href="/admin" className="flex w-full items-center gap-2">
                   <Shield className="size-4" />
-                  Admin Panel
+                  {tNav("adminPanel")}
                 </Link>
               </DropdownMenuItem>
             ) : null}
@@ -137,12 +138,12 @@ export function UserMenu() {
               }}
             >
               <MessageCircleMore className="size-4" />
-              {assistantLabel}
+              {tNav("askAssistant")}
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href="/settings" className="flex w-full items-center gap-2">
                 <Settings className="size-4" />
-                Settings
+                {tNav("settings")}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
@@ -154,7 +155,7 @@ export function UserMenu() {
               }}
             >
               <LogOut className="size-4" />
-              Log Out
+              {tNav("logout")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -175,7 +176,7 @@ export function UserMenu() {
         <Dialog open={mobileOpen} onOpenChange={setMobileOpen}>
           <DialogContent className="dialog-bottom-sheet inset-x-0 bottom-0 top-auto w-full max-w-none !translate-x-0 !translate-y-0 rounded-b-none rounded-t-[1.75rem] px-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] pt-8 sm:max-w-none">
             <DialogHeader>
-              <DialogTitle>Profile actions</DialogTitle>
+              <DialogTitle>{tNav("profileActions")}</DialogTitle>
             </DialogHeader>
             <div className="space-y-2">
               {showAdminControls ? (
@@ -185,7 +186,7 @@ export function UserMenu() {
                   onClick={() => setMobileOpen(false)}
                 >
                   <Shield className="size-4" />
-                  Admin Panel
+                  {tNav("adminPanel")}
                 </Link>
               ) : null}
               <Link
@@ -206,7 +207,7 @@ export function UserMenu() {
                 }}
               >
                 <MessageCircleMore className="size-4" />
-                {assistantLabel}
+                {tNav("askAssistant")}
               </Button>
               <Link
                 className="flex items-center gap-3 rounded-2xl border border-border px-4 py-3 text-sm font-medium text-foreground transition hover:bg-brand-soft"
@@ -214,7 +215,7 @@ export function UserMenu() {
                 onClick={() => setMobileOpen(false)}
               >
                 <Settings className="size-4" />
-                Settings
+                {tNav("settings")}
               </Link>
               <Button
                 className="w-full justify-start"
@@ -226,7 +227,7 @@ export function UserMenu() {
                 }}
               >
                 <LogOut className="size-4" />
-                Log Out
+                {tNav("logout")}
               </Button>
             </div>
           </DialogContent>

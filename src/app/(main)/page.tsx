@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCurrentProfile, getFeedPosts, getHospitalAccountByProfileId, getHospitalDashboard } from "@/lib/data";
 import { getRequestMessages, translate } from "@/lib/i18n";
+import { formatDistance } from "@/lib/utils/format";
 
 export default async function HomePage() {
   const [{ messages }, currentProfile] = await Promise.all([
@@ -27,24 +28,24 @@ export default async function HomePage() {
         <section className="surface hero-grid overflow-hidden p-8 md:p-10">
           <div className="grid gap-8 xl:grid-cols-[1.15fr_0.85fr]">
             <div className="space-y-6">
-              <Badge variant="danger">Hospital operations workspace</Badge>
+              <Badge variant="danger">{t("home.hospitalBadge")}</Badge>
               <div className="space-y-4">
                 <h1 className="text-balance text-4xl font-semibold md:text-6xl">
-                  Manage urgent patient requests from one verified hospital dashboard.
+                  {t("home.hospitalTitle")}
                 </h1>
                 <p className="max-w-2xl text-balance text-base text-muted-foreground md:text-lg">
-                  Create blood requests, review donor applicants, and monitor fulfilment without exposing hospital coordination to the public donor leaderboard.
+                  {t("home.hospitalSubtitle")}
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
                 <Button asChild size="lg">
                   <Link href="/posts/new">
-                    New Request
+                    {t("home.newRequest")}
                     <ArrowRight className="size-4" />
                   </Link>
                 </Button>
                 <Button asChild size="lg" variant="outline">
-                  <Link href="/hospital/posts">View patient posts</Link>
+                  <Link href="/hospital/posts">{t("home.viewPatientPosts")}</Link>
                 </Button>
               </div>
             </div>
@@ -52,21 +53,24 @@ export default async function HomePage() {
               {[
                 {
                   icon: ClipboardList,
-                  title: "Active requests",
-                  description: `${dashboard.stats.activeRequests} live hospital requests`,
+                  title: t("home.activeRequests"),
+                  description: t("home.activeRequestsDescription").replace("{count}", String(dashboard.stats.activeRequests)),
                 },
                 {
                   icon: Users,
-                  title: "Pending donor applications",
-                  description: `${dashboard.stats.pendingApplications} donor responses awaiting review`,
+                  title: t("home.pendingDonorApplications"),
+                  description: t("home.pendingDonorApplicationsDescription").replace(
+                    "{count}",
+                    String(dashboard.stats.pendingApplications),
+                  ),
                 },
                 {
                   icon: ShieldCheck,
-                  title: "Verification status",
+                  title: t("home.verificationStatus"),
                   description:
                     hospital?.verification_status === "verified"
-                      ? "Verified hospital profile"
-                      : "Verification pending admin review",
+                      ? t("home.verificationVerified")
+                      : t("home.verificationPending"),
                 },
               ].map((item) => (
                 <Card key={item.title} className="bg-card/75">
@@ -89,13 +93,13 @@ export default async function HomePage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between gap-4">
               <div>
-                <CardTitle>Recent patient requests</CardTitle>
+                <CardTitle>{t("home.recentPatientRequestsTitle")}</CardTitle>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Active and recent requests sorted by patient name or case reference.
+                  {t("home.recentPatientRequestsSubtitle")}
                 </p>
               </div>
               <Button asChild size="sm" variant="outline">
-                <Link href="/hospital/posts">See all</Link>
+                <Link href="/hospital/posts">{t("home.seeAll")}</Link>
               </Button>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -104,9 +108,11 @@ export default async function HomePage() {
                   <div key={post.id} className="rounded-[1.25rem] border border-border p-4">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <p className="font-medium">{post.patient_name}</p>
+                        <Link className="font-medium transition-colors hover:text-brand" href={`/posts/${post.id}`}>
+                          {post.patient_name}
+                        </Link>
                         <p className="text-sm text-muted-foreground">
-                          {post.patient_id ?? "No patient ID"} • {post.blood_type_needed}
+                          {post.patient_id ?? t("home.noPatientId")} • {post.blood_type_needed}
                         </p>
                       </div>
                       <Badge variant={post.status === "active" ? "danger" : "secondary"}>
@@ -114,13 +120,13 @@ export default async function HomePage() {
                       </Badge>
                     </div>
                     <p className="mt-3 text-sm text-muted-foreground">
-                      {post.donor_count ?? 0} donors applied • {post.units_needed} units requested
+                      {post.donor_count ?? 0} {t("home.donorsApplied")} • {post.units_needed} {t("home.unitsRequested")}
                     </p>
                   </div>
                 ))
               ) : (
                 <div className="rounded-[1.25rem] border border-dashed border-border p-6 text-sm text-muted-foreground">
-                  No patient requests yet. Create your first request to start donor outreach.
+                  {t("home.noPatientRequests")}
                 </div>
               )}
             </CardContent>
@@ -129,13 +135,13 @@ export default async function HomePage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between gap-4">
               <div>
-                <CardTitle>Latest donor applicants</CardTitle>
+                <CardTitle>{t("home.latestDonorApplicantsTitle")}</CardTitle>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Recent donor responses across your hospital&apos;s active posts.
+                  {t("home.latestDonorApplicantsSubtitle")}
                 </p>
               </div>
               <Button asChild size="sm" variant="outline">
-                <Link href="/hospital/donors">Open donors</Link>
+                <Link href="/hospital/donors">{t("home.openDonors")}</Link>
               </Button>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -144,26 +150,35 @@ export default async function HomePage() {
                   <div key={application.id} className="rounded-[1.25rem] border border-border p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="font-medium">{application.donor?.full_name ?? "Donor"}</p>
+                        {application.donor?.username ? (
+                          <Link
+                            className="font-medium transition-colors hover:text-brand"
+                            href={`/profile/${application.donor.username}`}
+                          >
+                            {application.donor.full_name ?? application.donor.username}
+                          </Link>
+                        ) : (
+                          <p className="font-medium">{application.donor?.full_name ?? "Donor"}</p>
+                        )}
                         <p className="text-sm text-muted-foreground">
-                          {application.donor?.username ? application.donor.username : "Donor"}
+                          {application.donor?.username ? application.donor.username : t("home.donor")}
                           {application.donor?.blood_type ? ` • ${application.donor.blood_type}` : ""}
                         </p>
                         <p className="mt-0.5 text-xs text-muted-foreground">
-                          For: {application.post?.patient_name ?? "Patient"} ({application.post?.blood_type_needed ?? "?"})
+                          {t("home.forLabel")} {application.post?.patient_name ?? t("home.patient")} ({application.post?.blood_type_needed ?? "?"})
                         </p>
                       </div>
                       <Badge variant="secondary">{application.status}</Badge>
                     </div>
                     <p className="mt-3 text-sm text-muted-foreground">
-                      Eligibility score {application.eligibility_score}
-                      {application.distance_km ? ` • ${application.distance_km} km away` : ""}
+                      {t("home.eligibilityScore")} {application.eligibility_score}
+                      {application.distance_km != null ? ` • ${formatDistance(application.distance_km)}` : ""}
                     </p>
                   </div>
                 ))
               ) : (
                 <div className="rounded-[1.25rem] border border-dashed border-border p-6 text-sm text-muted-foreground">
-                  Donor applications will appear here after matched donors respond to your requests.
+                  {t("home.donorApplicationsEmpty")}
                 </div>
               )}
             </CardContent>
@@ -190,12 +205,12 @@ export default async function HomePage() {
             <div className="flex flex-wrap gap-3">
               <Button asChild size="lg">
                 <Link href="/find">
-                  Find to Donate
+                  {t("nav.find")}
                   <ArrowRight className="size-4" />
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline">
-                <Link href="/signup?account=hospital">Register as Hospital</Link>
+                <Link href="/signup?account=hospital">{t("nav.registerHospital")}</Link>
               </Button>
             </div>
           </div>

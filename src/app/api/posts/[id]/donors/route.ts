@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { jsonError, requireServerUser } from "@/lib/http";
 import { enforceRateLimit } from "@/lib/rate-limit";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { isDonationEligible } from "@/lib/utils/donation-eligibility";
+import { estimateDistanceKm } from "@/lib/utils/distance";
 import { sanitizeText } from "@/lib/utils/sanitize";
 import { computeEligibilityScore } from "@/lib/utils/blood-type";
 
@@ -42,7 +44,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const { data: post, error: postError } = await supabase
     .from("posts")
-    .select("blood_type_needed")
+    .select("created_by, patient_name, blood_type_needed, city, state")
     .eq("id", id)
     .maybeSingle();
 
@@ -60,11 +62,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return jsonError("Your blood type is not compatible with this request.", 400);
   }
 
+  const distanceKm = estimateDistanceKm(profile.city, profile.state, post.city, post.state);
+
   const { error } = await supabase.from("donor_applications").insert({
     post_id: id,
     donor_id: profile.id,
     status: "pending",
     eligibility_score: eligibilityScore,
+    distance_km: distanceKm,
     note: body.note ? sanitizeText(body.note) : null,
   });
 
@@ -91,6 +96,21 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   if (countError) {
     await supabase.from("donor_applications").delete().eq("post_id", id).eq("donor_id", profile.id);
     return jsonError(countError.message, 500);
+  }
+
+  const admin = getSupabaseAdminClient();
+  if (admin && post.created_by) {
+    await admin.from("notifications").insert({
+      user_id: post.created_by,
+      type: "donor_application",
+      title: "New donor application",
+      body: `${profile.full_name ?? "A donor"} has applied to donate ${post.blood_type_needed} for patient ${post.patient_name}.`,
+      post_id: id,
+      data: {
+        donor_id: profile.id,
+        donor_name: profile.full_name ?? profile.username,
+      },
+    });
   }
 
   return NextResponse.json({ ok: true }, { status: 201 });

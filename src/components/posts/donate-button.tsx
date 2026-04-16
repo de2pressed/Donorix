@@ -15,6 +15,7 @@ import {
   getNextEligibleDonationDate,
   isDonationEligible,
 } from "@/lib/utils/donation-eligibility";
+import { useTranslations } from "next-intl";
 
 export function DonateButton({
   postId,
@@ -25,14 +26,15 @@ export function DonateButton({
 }) {
   const router = useRouter();
   const { openPrompt } = useAuthPrompt();
+  const tRequest = useTranslations("request");
   const { data: user } = useUser();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const nextEligibleDate = getNextEligibleDonationDate(user?.last_donated_at);
   const eligibleToDonate = isDonationEligible(user?.last_donated_at);
   const cooldownMessage = nextEligibleDate
-    ? `You can donate again on ${format(nextEligibleDate, "d MMM yyyy")}.`
-    : "You are currently not eligible to donate.";
+    ? tRequest("eligibleAgainOn", { date: format(nextEligibleDate, "d MMM yyyy") })
+    : tRequest("currentlyNotEligible");
 
   if (isAuthenticated && user?.account_type === "hospital") {
     return null;
@@ -57,11 +59,11 @@ export function DonateButton({
       const body = (await response.json().catch(() => null)) as { error?: string } | null;
 
       if (!response.ok) {
-        toast.error(body?.error ?? "Unable to submit donor application");
+        toast.error(body?.error ?? tRequest("unableToSubmit"));
         return;
       }
 
-      toast.success("Application submitted");
+      toast.success(tRequest("applicationSubmitted"));
       setSubmitted(true);
       router.refresh();
     } finally {
@@ -70,10 +72,10 @@ export function DonateButton({
   }
 
   const buttonLabel = submitted
-    ? "Request submitted"
+    ? tRequest("requestSubmitted")
     : isSubmitting
-      ? "Submitting..."
-      : "I can donate";
+      ? tRequest("submitting")
+      : tRequest("iCanDonate");
 
   const button = (
     <Button

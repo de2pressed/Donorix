@@ -1,23 +1,27 @@
+"use client";
+
 import Link from "next/link";
 import { HeartHandshake } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { APP_NAME, GRIEVANCE_EMAIL } from "@/lib/constants";
 
-const quickLinks = [
-  { href: "/", label: "Home" },
-  { href: "/leaderboard", label: "Leaderboard" },
-  { href: "/find", label: "Find to Donate" },
-  { href: "/about", label: "About Us" },
-];
-
-const legalLinks = [
-  { href: "/policies", label: "Policies" },
-  { href: "/policies/terms", label: "Terms of Use" },
-  { href: "/policies/privacy", label: "Privacy Policy" },
-  { href: "/policies/grievance", label: "Contact / Grievance" },
-];
-
 export function SiteFooter() {
+  const t = useTranslations("footer");
+  const quickLinks = [
+    { href: "/", label: t("home") },
+    { href: "/leaderboard", label: t("leaderboard") },
+    { href: "/find", label: t("findToDonate") },
+    { href: "/about", label: t("aboutUs") },
+  ];
+
+  const legalLinks = [
+    { href: "/policies", label: t("policies") },
+    { href: "/policies/terms", label: t("termsOfUse") },
+    { href: "/policies/privacy", label: t("privacyPolicy") },
+    { href: "/policies/grievance", label: t("contactGrievance") },
+  ];
+
   return (
     <footer className="border-t border-border/70 bg-card">
       <div className="mx-auto w-full max-w-[1900px] px-4 pb-[calc(env(safe-area-inset-bottom)+6.75rem)] pt-10 lg:px-8 lg:pb-10 2xl:px-10">
@@ -29,21 +33,17 @@ export function SiteFooter() {
               </span>
               <div>
                 <p className="text-lg font-semibold tracking-tight">{APP_NAME}</p>
-                <p className="text-sm text-muted-foreground">
-                  The Modern Indian Blood Donation Platform
-                </p>
+                <p className="text-sm text-muted-foreground">{t("tagline")}</p>
               </div>
             </Link>
             <div className="space-y-1 text-sm text-muted-foreground">
-              <p>Aligned with SDG 3: Good Health and Well-being</p>
-              <p>Copyright 2025 Donorix. All rights reserved.</p>
+              <p>{t("sdg")}</p>
+              <p>{t("copyright")}</p>
             </div>
           </div>
 
           <div className="space-y-3">
-            <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-brand">
-              Quick Links
-            </h2>
+            <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-brand">{t("quickLinks")}</h2>
             <nav className="grid gap-2 text-sm">
               {quickLinks.map((link) => (
                 <Link key={link.href} className="text-muted-foreground hover:text-brand" href={link.href}>
@@ -54,9 +54,7 @@ export function SiteFooter() {
           </div>
 
           <div className="space-y-3">
-            <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-brand">
-              Legal & Support
-            </h2>
+            <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-brand">{t("legalSupport")}</h2>
             <div className="grid gap-2 text-sm">
               {legalLinks.map((link) => (
                 <Link key={link.href} className="text-muted-foreground hover:text-brand" href={link.href}>

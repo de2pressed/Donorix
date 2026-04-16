@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { LogOut } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -17,9 +18,47 @@ export function MobileNav() {
   const pathname = usePathname();
   const router = useRouter();
   const { data: user } = useUser();
+  const tNav = useTranslations("nav");
   const [moreOpen, setMoreOpen] = useState(false);
   const items = getBottomNav(user?.account_type, Boolean(user));
   const moreItems = getMoreNav(user?.account_type, Boolean(user));
+
+  function getLabel(href: string) {
+    switch (href) {
+      case "/":
+        return user?.account_type === "hospital" ? tNav("dashboard") : tNav("home");
+      case "/posts/new":
+        return tNav("newRequest");
+      case "/hospital/posts":
+        return tNav("patientPosts");
+      case "/hospital/donors":
+        return tNav("donors");
+      case "/notifications":
+        return tNav("notifications");
+      case "/policies/terms":
+        return tNav("policies");
+      case "/about":
+        return tNav("about");
+      case "/find":
+        return tNav("find");
+      case "/leaderboard":
+        return tNav("leaderboard");
+      case "/settings":
+        return tNav("settings");
+      case "/profile":
+        return tNav("profile");
+      case "/login":
+        return tNav("login");
+      case "/signup":
+        return tNav("signup");
+      case "/signup?account=hospital":
+        return tNav("registerHospital");
+      case "#more":
+        return tNav("more");
+      default:
+        return href;
+    }
+  }
 
   async function handleLogout() {
     const supabase = getSupabaseBrowserClient();
@@ -33,9 +72,8 @@ export function MobileNav() {
     <>
       <nav className="glass fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-40 flex items-center justify-between px-4 py-2 lg:hidden">
         {items.map((item) => {
-        const Icon = item.icon;
-        return (
-          item.href === "#more" ? (
+          const Icon = item.icon;
+          return item.href === "#more" ? (
             <button
               key={item.label}
               className="flex min-w-0 flex-col items-center gap-1 rounded-2xl px-3 py-2 text-[11px] font-medium text-muted-foreground transition hover:text-brand"
@@ -43,7 +81,7 @@ export function MobileNav() {
               onClick={() => setMoreOpen(true)}
             >
               <Icon className="size-4" />
-              {item.label}
+              {getLabel(item.href)}
             </button>
           ) : (
             <Link
@@ -56,17 +94,16 @@ export function MobileNav() {
               )}
             >
               <Icon className="size-4" />
-              {item.label}
+              {getLabel(item.href)}
             </Link>
-          )
-        );
+          );
         })}
       </nav>
 
       <Dialog open={moreOpen} onOpenChange={setMoreOpen}>
         <DialogContent className="dialog-bottom-sheet inset-x-0 bottom-0 top-auto w-full max-w-none !translate-x-0 !translate-y-0 rounded-b-none rounded-t-[1.75rem] px-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] pt-8 sm:max-w-none lg:hidden">
           <DialogHeader>
-            <DialogTitle>More</DialogTitle>
+            <DialogTitle>{tNav("more")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-2">
             {moreItems.map((item) => (
@@ -91,7 +128,7 @@ export function MobileNav() {
                 }}
               >
                 <LogOut className="size-4" />
-                Log Out
+                {tNav("logout")}
               </Button>
             ) : null}
           </div>

@@ -2,6 +2,7 @@ import { startOfMonth, subDays } from "date-fns";
 
 import { adminUserIds } from "@/lib/env";
 import { HOSPITAL_ACCOUNT_SELECT, PROFILE_SELECT } from "@/lib/http";
+import { estimateDistanceKm } from "@/lib/utils/distance";
 import { sortPostsByPriority } from "@/lib/utils/priority-score";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -36,7 +37,7 @@ export type AdminPostDetail = {
 
 type DonorSummary = Pick<
   Profile,
-  "id" | "full_name" | "username" | "blood_type" | "total_donations" | "karma" | "is_verified"
+  "id" | "full_name" | "username" | "blood_type" | "total_donations" | "karma" | "is_verified" | "city" | "state"
 >;
 
 export async function getCurrentProfile() {
@@ -79,11 +80,31 @@ export async function getFeedPosts(userId?: string) {
     .limit(20);
 
   const posts = (data as FeedPost[] | null) ?? [];
-  if (!userId || !posts.length) {
-    return sortPostsByPriority(posts);
+  const postIds = posts.map((post) => post.id);
+  const countClient = getSupabaseAdminClient() ?? supabase;
+  let donorCountMap = new Map<string, number>();
+
+  if (postIds.length && countClient) {
+    const { data: applicationRows } = await countClient
+      .from("donor_applications")
+      .select("post_id")
+      .in("post_id", postIds);
+
+    donorCountMap = new Map();
+    for (const row of applicationRows ?? []) {
+      donorCountMap.set(row.post_id, (donorCountMap.get(row.post_id) ?? 0) + 1);
+    }
   }
 
-  const postIds = posts.map((post) => post.id);
+  const postsWithCounts = posts.map((post) => ({
+    ...post,
+    donor_count: donorCountMap.get(post.id) ?? post.donor_count ?? 0,
+  }));
+
+  if (!userId || !postsWithCounts.length) {
+    return sortPostsByPriority(postsWithCounts);
+  }
+
   const { data: votes } = await supabase
     .from("upvotes")
     .select("post_id")
@@ -93,7 +114,7 @@ export async function getFeedPosts(userId?: string) {
   const votedSet = new Set((votes ?? []).map((vote) => vote.post_id));
 
   return sortPostsByPriority(
-    posts.map((post) => ({
+    postsWithCounts.map((post) => ({
       ...post,
       has_voted: votedSet.has(post.id),
     })),
@@ -142,6 +163,12 @@ export async function getDonorApplicationsForPost(postId: string) {
   const supabase = getSupabaseAdminClient() ?? (await createServerSupabaseClient());
   if (!supabase) return [] as DonorApplicationWithDonor[];
 
+  const { data: post } = await supabase
+    .from("posts")
+    .select("id, city, state")
+    .eq("id", postId)
+    .maybeSingle();
+
   const { data: applications, error } = await supabase
     .from("donor_applications")
     .select("id, post_id, donor_id, status, eligibility_score, distance_km, note, created_at, updated_at")
@@ -158,7 +185,7 @@ export async function getDonorApplicationsForPost(postId: string) {
     donorIds.length > 0
       ? await supabase
           .from("profiles")
-          .select("id, full_name, username, blood_type, total_donations, karma, is_verified")
+          .select("id, full_name, username, blood_type, total_donations, karma, is_verified, city, state")
           .in("id", donorIds)
       : { data: [] };
 
@@ -171,6 +198,14 @@ export async function getDonorApplicationsForPost(postId: string) {
 
   return ((applications ?? []) as TableRow<"donor_applications">[]).map((application) => ({
     ...application,
+    distance_km:
+      application.distance_km ??
+      estimateDistanceKm(
+        donorMap.get(application.donor_id)?.city,
+        donorMap.get(application.donor_id)?.state,
+        post?.city,
+        post?.state,
+      ),
     donor: donorMap.get(application.donor_id) ?? null,
   }));
 }
@@ -272,7 +307,27 @@ export async function getHospitalPosts(profileId: string, sortBy: "patient_name"
     .order(sortBy, { ascending: true })
     .order("created_at", { ascending: false });
 
-  return (data as Post[] | null) ?? [];
+  const posts = (data as Post[] | null) ?? [];
+  const postIds = posts.map((post) => post.id);
+  const countClient = getSupabaseAdminClient() ?? supabase;
+  let donorCountMap = new Map<string, number>();
+
+  if (postIds.length && countClient) {
+    const { data: applicationRows } = await countClient
+      .from("donor_applications")
+      .select("post_id")
+      .in("post_id", postIds);
+
+    donorCountMap = new Map();
+    for (const row of applicationRows ?? []) {
+      donorCountMap.set(row.post_id, (donorCountMap.get(row.post_id) ?? 0) + 1);
+    }
+  }
+
+  return posts.map((post) => ({
+    ...post,
+    donor_count: donorCountMap.get(post.id) ?? post.donor_count ?? 0,
+  }));
 }
 
 export async function getHospitalDashboard(profileId: string) {
@@ -354,6 +409,14 @@ export async function getHospitalDashboard(profileId: string) {
     posts,
     applicants: (donorApplications ?? []).map((application) => ({
       ...application,
+      distance_km:
+        application.distance_km ??
+        estimateDistanceKm(
+          donorMap.get(application.donor_id)?.city,
+          donorMap.get(application.donor_id)?.state,
+          postMap.get(application.post_id)?.city,
+          postMap.get(application.post_id)?.state,
+        ),
       donor: donorMap.get(application.donor_id) ?? null,
       post: postMap.get(application.post_id)
         ? {

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { Trophy } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -39,13 +40,16 @@ export function LeaderboardTable({ leaders }: { leaders: Profile[] }) {
                     <AvatarImage src={leader.avatar_url ?? undefined} alt={leader.full_name} />
                     <AvatarFallback>{leader.full_name.slice(0, 1)}</AvatarFallback>
                   </Avatar>
-                  <div className="min-w-0">
+                  <Link
+                    className="min-w-0 transition-colors hover:text-brand"
+                    href={`/profile/${leader.username}`}
+                  >
                     <p className="truncate font-medium">{leader.full_name}</p>
                     <p className="truncate text-sm text-muted-foreground">@{leader.username}</p>
                     <p className="truncate text-sm text-muted-foreground">
                       {leader.city}, {leader.state}
                     </p>
-                  </div>
+                  </Link>
                 </div>
                 <div className="flex flex-wrap items-center gap-3 sm:justify-end">
                   <Badge className="max-w-full shrink-0 px-2.5 text-[11px]" variant="secondary">

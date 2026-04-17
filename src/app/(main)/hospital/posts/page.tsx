@@ -46,11 +46,11 @@ export default async function HospitalPostsPage() {
                     {post.patient_name}
                   </Link>
                   <p className="text-sm text-muted-foreground">
-                    {post.patient_id ?? t("hospitalPosts.noPatientId")} â€¢ {post.blood_type_needed}
+                    {post.patient_id ?? t("hospitalPosts.noPatientId")} - {post.blood_type_needed}
                   </p>
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  {post.units_needed} {t("hospitalPosts.units")} â€¢ {post.donor_count ?? 0} {t("hospitalPosts.donorApplicants")}
+                  {post.units_needed} {t("hospitalPosts.units")} - {post.donor_count ?? 0} {t("hospitalPosts.donorApplicants")}
                 </div>
                 <Badge variant={post.status === "active" ? "danger" : "secondary"}>{post.status}</Badge>
               </div>

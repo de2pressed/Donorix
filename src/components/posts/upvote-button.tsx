@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowBigUp } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -27,10 +27,13 @@ export function UpvoteButton({
   const [voted, setVoted] = useState(hasVoted);
   const [displayCount, setDisplayCount] = useState(count);
   const [popped, setPopped] = useState(false);
+  const hasLocallyVoted = useRef(false);
 
   useEffect(() => {
-    setDisplayCount(count);
-    setVoted(hasVoted);
+    if (!hasLocallyVoted.current) {
+      setDisplayCount(count);
+      setVoted(hasVoted);
+    }
   }, [count, hasVoted]);
 
   return (
@@ -57,7 +60,9 @@ export function UpvoteButton({
             return;
           }
 
+          hasLocallyVoted.current = true;
           setVoted(true);
+          setDisplayCount((current) => current + 1);
           setPopped(true);
           window.setTimeout(() => setPopped(false), 220);
           toast.success("Vote recorded");

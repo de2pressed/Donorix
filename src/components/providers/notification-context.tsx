@@ -163,3 +163,7 @@ export function useNotificationsContext() {
 
   return context;
 }
+
+export function useNotificationsContextSafe() {
+  return useContext(NotificationContext);
+}

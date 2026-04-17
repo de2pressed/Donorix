@@ -7,10 +7,10 @@ import { Sidebar } from "@/components/layout/sidebar";
 
 export async function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="bg-grid-red mx-auto min-h-screen w-full max-w-[1900px] px-4 pb-[calc(env(safe-area-inset-bottom)+6rem)] pt-4 lg:px-8 lg:pb-8 2xl:px-10">
-      <div className="grid min-h-screen gap-6 xl:grid-cols-[16rem_minmax(0,1fr)_20rem]">
+    <div className="mx-auto min-h-screen w-full max-w-screen-2xl px-4 pb-[calc(env(safe-area-inset-bottom)+6rem)] pt-4 lg:px-8 2xl:px-12">
+      <div className="grid min-h-screen gap-6 xl:grid-cols-[16rem_minmax(0,1fr)_20rem] 2xl:grid-cols-[17rem_minmax(0,1fr)_22rem]">
         <Sidebar />
-        <div className="min-w-0 flex-1">
+        <div className="mx-auto min-w-0 max-w-3xl flex-1 xl:mx-0 2xl:max-w-4xl">
           <Header />
           <main className="min-w-0 pt-10 md:pt-12">{children}</main>
         </div>

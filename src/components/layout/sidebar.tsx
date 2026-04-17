@@ -94,7 +94,7 @@ export function Sidebar() {
                 <Icon className="size-4" />
                 {item.label}
                 {showUnreadBadge ? (
-                  <span className="pointer-events-none absolute -right-1 -top-1 flex min-w-[18px] h-[18px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white shadow-[0_0_6px_rgba(220,38,38,0.5)]">
+                  <span className="ml-auto flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white shadow-[0_0_6px_rgba(220,38,38,0.5)]">
                     {unreadCount > 99 ? "99+" : unreadCount}
                   </span>
                 ) : null}

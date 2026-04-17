@@ -8,13 +8,14 @@ import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { UserMenu } from "@/components/layout/user-menu";
 import { UserMenuErrorBoundary } from "@/components/layout/user-menu-error-boundary";
 import { Button } from "@/components/ui/button";
-import { useNotificationsContext } from "@/components/providers/notification-context";
+import { useNotificationsContextSafe } from "@/components/providers/notification-context";
 import { useUser } from "@/lib/hooks/use-user";
 import { useTranslations } from "next-intl";
 
 export function Header() {
   const { data: user } = useUser();
-  const { unreadCount } = useNotificationsContext();
+  const notifContext = useNotificationsContextSafe();
+  const unreadCount = notifContext?.unreadCount ?? 0;
   const tNav = useTranslations("nav");
   const tHeader = useTranslations("header");
 

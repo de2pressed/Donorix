@@ -61,8 +61,8 @@ export function getBottomNav(accountType?: AccountType | null, isAuthenticated =
   if (isAuthenticated) {
     return [
       { href: "/", label: "Home", icon: Home },
-      { href: "/find", label: "Find", icon: HeartHandshake },
-      { href: "/leaderboard", label: "Leaders", icon: Trophy },
+      { href: "/find", label: "Donate", icon: HeartHandshake },
+      { href: "/leaderboard", label: "Top", icon: Trophy },
       { href: "/notifications", label: "Alerts", icon: Bell },
       { href: "#more", label: "More", icon: MoreHorizontal },
     ] satisfies NavItem[];

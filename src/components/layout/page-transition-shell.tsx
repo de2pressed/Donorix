@@ -70,7 +70,7 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
       if (currentUrl === nextPath) return;
 
       setLoading(true);
-      setProgress(12);
+      setProgress(0);
 
       if (failSafeTimeout.current) {
         window.clearTimeout(failSafeTimeout.current);
@@ -138,15 +138,18 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
           animate={{ opacity: progress > 0 ? 1 : 0, scaleX: progress / 100 }}
           className="h-full origin-left bg-brand shadow-[0_0_18px_rgba(179,12,49,0.45)]"
           initial={false}
-          transition={{ duration: reduceMotion ? 0 : 0.2, ease: "easeOut" }}
+          transition={{
+            scaleX: { duration: reduceMotion ? 0 : 0.35, ease: "easeOut" },
+            opacity: { duration: 0.15 },
+          }}
         />
       </div>
 
       <motion.div
-        animate={{ opacity: 1, y: 0 }}
-        initial={reduceMotion ? false : { opacity: 0.96, y: 4 }}
+        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+        initial={reduceMotion ? false : { opacity: 0, y: 10, filter: "blur(2px)" }}
         key={routeKey}
-        transition={{ duration: reduceMotion ? 0 : 0.18, ease: "easeOut" }}
+        transition={{ duration: reduceMotion ? 0 : 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}
       >
         {children}
       </motion.div>

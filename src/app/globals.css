@@ -91,6 +91,28 @@ html.dark {
     linear-gradient(90deg, rgba(200, 30, 40, 0.07) 1px, transparent 1px);
 }
 
+body {
+  background-color: #faf7f8;
+  background-image:
+    radial-gradient(ellipse 80% 40% at 50% 0%, rgba(180, 20, 30, 0.13) 0%, transparent 70%),
+    linear-gradient(rgba(200, 30, 40, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(200, 30, 40, 0.07) 1px, transparent 1px);
+  background-position: center top, center center, center center;
+  background-size: auto, 40px 40px, 40px 40px;
+  background-attachment: fixed;
+}
+
+html.dark body {
+  background-color: #0a0608;
+  background-image:
+    radial-gradient(ellipse 80% 40% at 50% 0%, rgba(180, 20, 30, 0.18) 0%, transparent 70%),
+    linear-gradient(rgba(200, 30, 40, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(200, 30, 40, 0.07) 1px, transparent 1px);
+  background-position: center top, center center, center center;
+  background-size: auto, 40px 40px, 40px 40px;
+  background-attachment: fixed;
+}
+
 #donorix-boot-splash {
   position: fixed;
   inset: 0;
@@ -104,7 +126,7 @@ html.dark {
     linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 248, 244, 0.98));
   opacity: 0;
   pointer-events: none;
-  transition: opacity 280ms ease, visibility 280ms ease;
+  transition: opacity 380ms ease, visibility 380ms ease;
   visibility: hidden;
 }
 
@@ -147,6 +169,7 @@ html.donorix-booting #donorix-boot-splash {
   box-shadow: 0 16px 40px rgba(179, 12, 49, 0.28);
   font-size: 1.4rem;
   font-weight: 700;
+  animation: donorix-mark-in 400ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
 .donorix-boot-splash__eyebrow {
@@ -165,27 +188,24 @@ html.donorix-booting #donorix-boot-splash {
 }
 
 .donorix-boot-splash__meter {
-  height: 4.3rem;
-  width: 2rem;
+  height: 4px;
+  width: 10rem;
   overflow: hidden;
   border-radius: 999px;
-  border: 1px solid hsl(var(--brand) / 0.16);
-  background: hsl(var(--brand-soft) / 0.75);
-  padding: 0.25rem;
+  background: hsl(var(--brand-soft) / 0.5);
 }
 
 .donorix-boot-splash__meter-fill {
   height: 100%;
   width: 100%;
-  transform-origin: bottom;
-  animation: donorix-boot-fill 720ms ease-in-out both;
+  transform-origin: left;
+  animation: donorix-boot-fill 700ms cubic-bezier(0.4, 0, 0.2, 1) both;
   border-radius: 999px;
-  background: linear-gradient(180deg, #ff7a59 0%, hsl(var(--brand)) 100%);
+  background: linear-gradient(90deg, hsl(var(--brand)), #ff7a59);
 }
 
 body {
-  @apply min-h-screen overflow-x-hidden bg-background font-sans text-foreground antialiased;
-  background-image: none;
+  @apply min-h-screen overflow-x-hidden font-sans text-foreground antialiased;
 }
 
 .theme-transition,
@@ -201,10 +221,6 @@ body {
     stroke !important;
   transition-duration: 280ms !important;
   transition-timing-function: ease !important;
-}
-
-.dark body {
-  background-image: none;
 }
 
 a {
@@ -308,30 +324,33 @@ button {
 }
 
 .emergency-pulse {
-  animation: emergency-pulse 2.6s ease-in-out infinite;
+  animation: emergency-pulse 1.8s ease-in-out infinite;
 }
 
 .btn-interactive {
   transition:
-    transform 120ms ease,
+    transform 100ms cubic-bezier(0.34, 1.56, 0.64, 1),
     box-shadow 120ms ease,
-    background-color 150ms ease,
-    opacity 150ms ease;
+    background-color 140ms ease,
+    border-color 140ms ease,
+    opacity 120ms ease;
   will-change: transform;
 }
 
 .btn-interactive:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px) scale(1.015);
 }
 
 .btn-interactive:active {
-  animation: btn-press 180ms ease forwards;
-  box-shadow: none;
+  transform: translateY(0px) scale(0.96);
+  transition:
+    transform 80ms ease,
+    box-shadow 80ms ease;
+  box-shadow: none !important;
 }
 
 .dark .btn-interactive:hover {
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
 }
 
 .chat-scroll::-webkit-scrollbar {
@@ -357,20 +376,22 @@ button {
 }
 
 .emergency-card {
-  animation: emergency-pulse 2.4s ease-in-out infinite;
+  animation: emergency-pulse 1.8s ease-in-out infinite;
+  transform-origin: center;
   background: rgba(220, 38, 38, 0.06) !important;
   border-left: 3px solid #dc2626 !important;
   border-color: rgba(220, 38, 38, 0.2) !important;
-  will-change: transform;
+  isolation: isolate;
 }
 
 .dark .emergency-card {
-  background: rgba(220, 38, 38, 0.1) !important;
+  background: rgba(220, 38, 38, 0.11) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .emergency-card {
     animation: none;
+    box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.4), inset 3px 0 0 #dc2626;
   }
 }
 
@@ -399,10 +420,21 @@ button {
 
 @keyframes donorix-boot-fill {
   from {
-    transform: scaleY(0.12);
+    transform: scaleX(0);
   }
   to {
-    transform: scaleY(1);
+    transform: scaleX(1);
+  }
+}
+
+@keyframes donorix-mark-in {
+  from {
+    opacity: 0;
+    transform: scale(0.72);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
@@ -442,12 +474,23 @@ button {
   100% {
     box-shadow:
       0 0 0 0 rgba(220, 38, 38, 0),
+      0 0 0 0 rgba(220, 38, 38, 0),
       inset 3px 0 0 #dc2626;
+    transform: scale(1);
   }
-  50% {
+  30% {
     box-shadow:
-      0 0 16px 4px rgba(220, 38, 38, 0.25),
-      inset 3px 0 0 #ef4444;
+      0 0 18px 4px rgba(220, 38, 38, 0.28),
+      0 0 40px 8px rgba(220, 38, 38, 0.1),
+      inset 3px 0 0 #ff3333;
+    transform: scale(1.008);
+  }
+  60% {
+    box-shadow:
+      0 0 8px 2px rgba(220, 38, 38, 0.12),
+      0 0 0 0 rgba(220, 38, 38, 0),
+      inset 3px 0 0 #dc2626;
+    transform: scale(1);
   }
 }
 
@@ -472,6 +515,54 @@ button {
     opacity: 1;
     transform: translateX(0) scale(1);
   }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes zoom-in-95 {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes zoom-out-95 {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+[data-state="open"].animate-in {
+  animation: zoom-in-95 180ms ease both;
+}
+
+[data-state="closed"].animate-out {
+  animation: zoom-out-95 140ms ease both;
 }
 
 @keyframes dialog-sheet-in {

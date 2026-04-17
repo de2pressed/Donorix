@@ -36,7 +36,6 @@ export async function RightRail() {
               <Link
                 className="block rounded-[1.25rem] border border-border px-4 py-3 transition hover:border-brand/30 hover:bg-brand-soft/60"
                 href="/hospital/posts"
-                onClick={(event) => event.stopPropagation()}
               >
                 <p className="text-muted-foreground">{t("rightRail.activeRequests")}</p>
                 <p className="mt-1 font-mono text-2xl font-semibold">
@@ -46,7 +45,6 @@ export async function RightRail() {
               <Link
                 className="block rounded-[1.25rem] border border-border px-4 py-3 transition hover:border-brand/30 hover:bg-brand-soft/60"
                 href="/hospital/donors"
-                onClick={(event) => event.stopPropagation()}
               >
                 <p className="text-muted-foreground">{t("rightRail.pendingApplicants")}</p>
                 <p className="mt-1 font-mono text-2xl font-semibold">
@@ -56,7 +54,6 @@ export async function RightRail() {
               <Link
                 className="block rounded-[1.25rem] border border-border px-4 py-3 transition hover:border-brand/30 hover:bg-brand-soft/60"
                 href="/hospital/posts"
-                onClick={(event) => event.stopPropagation()}
               >
                 <p className="text-muted-foreground">{t("rightRail.fulfilledThisMonth")}</p>
                 <p className="mt-1 font-mono text-2xl font-semibold">
@@ -84,7 +81,6 @@ export async function RightRail() {
                       <Link
                         className="truncate font-medium transition-colors hover:text-brand"
                         href={`/profile/${leader.username}`}
-                        onClick={(event) => event.stopPropagation()}
                       >
                         {leader.full_name}
                       </Link>
@@ -125,7 +121,6 @@ export async function RightRail() {
                 <Link
                   className="inline-flex items-center gap-2 text-brand hover:text-brand/80"
                   href="/hospital/donors"
-                  onClick={(event) => event.stopPropagation()}
                 >
                   {t("rightRail.reviewDonorApplicants")}
                 </Link>
@@ -163,7 +158,6 @@ export async function RightRail() {
                 key={item.href}
                 href={item.href}
                 className="block rounded-2xl px-4 py-3 text-sm text-muted-foreground transition hover:bg-brand-soft hover:text-brand"
-                onClick={(event) => event.stopPropagation()}
               >
                 {item.label}
               </Link>

@@ -19,6 +19,14 @@ export function InteractivePanel({
 }) {
   const router = useRouter();
 
+  function shouldIgnorePanelNavigation(target: EventTarget | null) {
+    if (!(target instanceof HTMLElement)) {
+      return false;
+    }
+
+    return Boolean(target.closest("a, button, input, select, textarea, [role='button']"));
+  }
+
   function handleNavigate() {
     router.push(href);
   }
@@ -32,8 +40,17 @@ export function InteractivePanel({
       )}
       role="link"
       tabIndex={0}
-      onClick={handleNavigate}
+      onClick={(event) => {
+        if (shouldIgnorePanelNavigation(event.target)) {
+          return;
+        }
+        handleNavigate();
+      }}
       onKeyDown={(event) => {
+        if (event.target !== event.currentTarget) {
+          return;
+        }
+
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
           handleNavigate();

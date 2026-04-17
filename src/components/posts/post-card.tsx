@@ -139,7 +139,7 @@ export function PostCard({
             <div className="rounded-[1.35rem] border border-border/80 bg-card/45 p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">Request timeline</p>
               <p className="mt-2 text-sm text-muted-foreground">
-                Posted -> donor applications -> approval -> completion tracking in one thread.
+                Posted &rarr; donor applications &rarr; approval &rarr; completion tracking in one thread.
               </p>
             </div>
           </div>

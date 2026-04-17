@@ -27,15 +27,21 @@ export async function RightRail() {
             <CardContent className="space-y-3 text-sm">
               <div className="rounded-[1.25rem] border border-border px-4 py-3">
                 <p className="text-muted-foreground">{t("rightRail.activeRequests")}</p>
-                <p className="mt-1 text-2xl font-semibold">{hospitalDashboard?.stats.activeRequests ?? 0}</p>
+                <p className="mt-1 font-mono text-2xl font-semibold">
+                  {hospitalDashboard?.stats.activeRequests ?? 0}
+                </p>
               </div>
               <div className="rounded-[1.25rem] border border-border px-4 py-3">
                 <p className="text-muted-foreground">{t("rightRail.pendingApplicants")}</p>
-                <p className="mt-1 text-2xl font-semibold">{hospitalDashboard?.stats.pendingApplications ?? 0}</p>
+                <p className="mt-1 font-mono text-2xl font-semibold">
+                  {hospitalDashboard?.stats.pendingApplications ?? 0}
+                </p>
               </div>
               <div className="rounded-[1.25rem] border border-border px-4 py-3">
                 <p className="text-muted-foreground">{t("rightRail.fulfilledThisMonth")}</p>
-                <p className="mt-1 text-2xl font-semibold">{hospitalDashboard?.stats.fulfilledThisMonth ?? 0}</p>
+                <p className="mt-1 font-mono text-2xl font-semibold">
+                  {hospitalDashboard?.stats.fulfilledThisMonth ?? 0}
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -56,10 +62,10 @@ export async function RightRail() {
                         {leader.full_name}
                       </Link>
                       <p className="truncate text-sm text-muted-foreground">
-                        #{index + 1} @{leader.username}
+                        <span className="font-mono">#{index + 1}</span> @{leader.username}
                       </p>
                     </div>
-                    <span className="text-sm font-semibold text-brand">{leader.karma}</span>
+                    <span className="font-mono text-sm font-semibold text-brand">{leader.karma}</span>
                   </div>
                 ))
               ) : (

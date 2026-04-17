@@ -68,10 +68,10 @@ export function PostCard({
                 ) : null}
               </div>
               <div className="min-w-0">
-                <Link className="block truncate text-2xl font-semibold hover:text-brand" href={`/posts/${post.id}`}>
+                <Link className="font-display block truncate text-2xl font-bold hover:text-brand" href={`/posts/${post.id}`}>
                   {post.patient_name}
                 </Link>
-                <p className="mt-2 truncate text-sm text-muted-foreground">
+                <p className="mt-2 truncate font-mono text-sm text-muted-foreground">
                   {post.patient_id ? `${post.patient_id} • ` : ""}
                   {tRequest("requestedBy")} {post.contact_name} | {formatRelativeTime(post.created_at)}
                 </p>
@@ -80,7 +80,7 @@ export function PostCard({
 
             <div className="rounded-[1.5rem] border border-border bg-card/60 px-4 py-3 text-right max-sm:w-full">
               <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">{tRequest("requiredBy")}</p>
-              <p className="mt-1 font-semibold">{formatDateTime(post.required_by)}</p>
+              <p className="mt-1 font-mono font-semibold">{formatDateTime(post.required_by)}</p>
             </div>
           </div>
 
@@ -119,7 +119,7 @@ export function PostCard({
                 <Droplets className="size-4 text-brand" />
                 {tRequest("unitsNeeded")}
               </div>
-              <p className="mt-2 text-sm text-muted-foreground">{post.units_needed} units</p>
+              <p className="mt-2 text-sm text-muted-foreground"><span className="font-mono">{post.units_needed}</span> units</p>
             </div>
           </div>
 
@@ -148,11 +148,11 @@ export function PostCard({
             <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
               <span className="flex items-center gap-2">
                 <Users className="size-4" />
-                {post.donor_count ?? 0} donors
+                <span className="font-mono">{post.donor_count ?? 0}</span> donors
               </span>
               <span className="flex items-center gap-2">
                 <Clock3 className="size-4" />
-                {tRequest("expires")} {formatDateTime(post.expires_at)}
+                {tRequest("expires")} <span className="font-mono">{formatDateTime(post.expires_at)}</span>
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-2">

@@ -1,5 +1,36 @@
 ## Donorix Brain (change log)
 
+### 2026-04-18 — Changelog 13 (typography + shell polish execution)
+
+#### Typography
+- Added a 4-font system with `Syne` for display headings and `Playfair Display` for brand moments, alongside the existing Geist Sans / Geist Mono stack.
+- Registered `font-display` and `font-brand` in Tailwind, and applied the new typography rules across shared primitives and major screens.
+- Updated the logo wordmark, footer tagline, boot splash title, policy brand link, page titles, section headings, card titles, dialogs, and request/list cards to use the new font roles.
+
+#### Shell + footer
+- Reworked the main app shell bottom spacing so the center column keeps footer clearance without relying on the old oversized outer padding.
+- Removed the footer stacking offset that could visually sit above sticky content.
+
+#### Light mode
+- Increased the light-mode background, radial glow, and grid visibility so the page no longer reads washed out.
+- Strengthened light-mode glass/surface contrast with warmer fills, visible borders, and deeper shadows while leaving dark mode unchanged.
+
+#### Data emphasis
+- Applied monospace treatment to blood types, IDs, counts, karma, ranks, and timestamp-like metadata in feed cards, right-rail stats, leaderboard rows, donor lists, profile badges, and chat inbox rows.
+
+#### Pages touched
+- Main home/feed page
+- Find-to-donate feed
+- Leaderboard
+- Settings
+- About
+- Policies layout and document headings
+- Hospital posts, donors, and chats
+- Donor chats
+- Profile header/history/badge components
+- Shared card/dialog/blood-type components
+- Footer, sidebar, right rail, root shell, and app logo
+
 ### 2026-04-17 — Changelog 12 (final refinement execution)
 
 #### Build + stability
@@ -75,4 +106,3 @@
 - Slowed and de-rectangled emergency card animation; reduced clipping and improved premium feel:
   - `donorix/src/app/globals.css`
   - `donorix/src/components/posts/post-card.tsx`
-

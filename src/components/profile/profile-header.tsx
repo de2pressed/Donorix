@@ -30,7 +30,7 @@ export function ProfileHeader({ profile }: { profile: Profile }) {
       </Avatar>
       <div className="space-y-3">
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-3xl font-semibold">{fullName}</h1>
+          <h1 className="font-display text-3xl font-bold">{fullName}</h1>
           <Badge
             variant={profile.account_type === "hospital" ? "secondary" : profile.is_available ? "success" : "secondary"}
           >

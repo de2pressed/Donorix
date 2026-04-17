@@ -81,7 +81,7 @@ function FlowCard({
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-brand">
           Stage {index + 1}
         </p>
-        <h2 className="text-xl font-semibold">{title}</h2>
+        <h2 className="font-display text-xl font-semibold">{title}</h2>
         <p className="text-sm leading-6 text-muted-foreground">{description}</p>
       </div>
     </motion.div>
@@ -110,7 +110,7 @@ export default function AboutPage() {
               <p className="text-sm font-semibold uppercase tracking-[0.24em] text-brand">
                 About Donorix
               </p>
-              <h1 className="max-w-4xl text-balance text-4xl font-semibold leading-[1.02] md:text-6xl">
+              <h1 className="font-display max-w-4xl text-balance text-4xl font-semibold leading-[1.02] md:text-6xl">
                 A faster, safer path from hospital request to donor response.
               </h1>
               <p className="max-w-3xl text-base text-muted-foreground md:text-lg">
@@ -167,7 +167,7 @@ export default function AboutPage() {
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-brand">
               How it works
             </p>
-            <h2 className="fluid-title font-semibold">
+            <h2 className="font-display fluid-title font-semibold">
               The donor-to-patient flow, shown step by step.
             </h2>
             <p className="text-sm leading-6 text-muted-foreground md:text-base">

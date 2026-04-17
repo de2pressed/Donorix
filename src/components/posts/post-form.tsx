@@ -429,7 +429,7 @@ export function PostForm({ hospital }: { hospital: HospitalAccount }) {
           {step === 4 ? (
             <div className="space-y-4 rounded-[1.5rem] border border-border bg-muted/30 p-5">
               <div>
-                <h3 className="text-lg font-semibold">Review request summary</h3>
+                <h3 className="font-display text-lg font-semibold">Review request summary</h3>
                 <p className="text-sm text-muted-foreground">
                   Confirm the details below before sending this request live.
                 </p>

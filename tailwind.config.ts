@@ -51,6 +51,8 @@ const config: Config = {
       fontFamily: {
         sans: ["var(--font-app-sans)", "system-ui", "sans-serif"],
         mono: ["var(--font-geist-mono)", "monospace"],
+        display: ["var(--font-syne)", "system-ui", "sans-serif"],
+        brand: ["var(--font-playfair)", "Georgia", "serif"],
       },
       borderRadius: {
         xl: "1.5rem",
@@ -58,7 +60,7 @@ const config: Config = {
       },
       boxShadow: {
         glow: "0 12px 48px rgba(179, 12, 49, 0.18)",
-        soft: "0 20px 60px rgba(19, 25, 37, 0.08)",
+        soft: "0 8px 32px rgba(19, 25, 37, 0.1), 0 2px 8px rgba(179, 12, 49, 0.06)",
       },
       backgroundImage: {
         "hero-radial":

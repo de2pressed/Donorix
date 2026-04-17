@@ -100,7 +100,12 @@ export function AppLogo({
     <Link className={cn("inline-flex min-w-0 items-center gap-3", className)} href={href}>
       <LogoMark compact={compact} />
       <div className="min-w-0">
-        <p className={cn("truncate font-semibold tracking-tight text-foreground", compact ? "text-base" : "text-lg")}>
+        <p
+          className={cn(
+            "truncate font-brand font-semibold italic tracking-tight text-foreground",
+            compact ? "text-base" : "text-lg",
+          )}
+        >
           {APP_NAME}
         </p>
         {showTagline ? (

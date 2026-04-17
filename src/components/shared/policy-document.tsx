@@ -11,7 +11,7 @@ export function PolicyDocument({ policy }: { policy: PolicyEntry }) {
       <CardContent className="space-y-8 p-8">
         {policy.sections.map((section) => (
           <section key={section.heading} className="space-y-3">
-            <h2 className="text-xl font-semibold">{section.heading}</h2>
+            <h2 className="font-display text-xl font-semibold">{section.heading}</h2>
             {section.paragraphs.map((paragraph) => (
               <p key={paragraph} className="text-sm leading-7 text-muted-foreground">
                 {paragraph}

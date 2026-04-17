@@ -13,7 +13,7 @@ export function KarmaBadge({ karma }: { karma: number }) {
         <TooltipTrigger asChild>
           <div
             className={cn(
-              "inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold",
+              "inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 font-mono text-sm font-semibold",
               karma >= 320 && "rank-shimmer",
             )}
           >

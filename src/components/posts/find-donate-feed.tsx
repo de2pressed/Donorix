@@ -74,7 +74,9 @@ export function FindDonateFeed({
               {donorBloodType ? <BloodTypeBadge bloodType={donorBloodType} /> : null}
             </div>
             <div className="space-y-2">
-              <h1 className="text-balance text-3xl font-semibold md:text-4xl">{tFeed("title")}</h1>
+              <h1 className="font-display text-balance text-3xl font-semibold md:text-4xl">
+                {tFeed("title")}
+              </h1>
               <p className="max-w-3xl text-sm text-muted-foreground md:text-base">{tFeed("subtitle")}</p>
             </div>
           </div>
@@ -111,7 +113,7 @@ export function FindDonateFeed({
         </div>
       ) : (
         <div className="surface p-8 text-center">
-          <h2 className="text-xl font-semibold">{tFeed("noMatchesTitle")}</h2>
+          <h2 className="font-display text-xl font-semibold">{tFeed("noMatchesTitle")}</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             {compatibleOnly && donorBloodType
               ? tFeed("noMatchesCompatible", { bloodType: donorBloodType })

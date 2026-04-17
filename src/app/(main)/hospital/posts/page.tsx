@@ -26,7 +26,7 @@ export default async function HospitalPostsPage() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-semibold">{t("hospitalPosts.title")}</h1>
+          <h1 className="font-display text-3xl font-bold">{t("hospitalPosts.title")}</h1>
           <p className="text-sm text-muted-foreground">{t("hospitalPosts.subtitle")}</p>
         </div>
         <Button asChild>
@@ -46,15 +46,16 @@ export default async function HospitalPostsPage() {
                 className="grid gap-3 rounded-[1.25rem] border border-border p-4 md:grid-cols-[1.2fr_1fr_auto] md:items-center"
               >
                 <div>
-                  <Link className="font-medium transition-colors hover:text-brand" href={`/posts/${post.id}`}>
+                  <Link className="font-display font-semibold transition-colors hover:text-brand" href={`/posts/${post.id}`}>
                     {post.patient_name}
                   </Link>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="font-mono text-sm text-muted-foreground">
                     {post.patient_id ?? t("hospitalPosts.noPatientId")} - {post.blood_type_needed}
                   </p>
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  {post.units_needed} {t("hospitalPosts.units")} - {post.donor_count ?? 0} {t("hospitalPosts.donorApplicants")}
+                  <span className="font-mono">{post.units_needed}</span> {t("hospitalPosts.units")} -{" "}
+                  <span className="font-mono">{post.donor_count ?? 0}</span> {t("hospitalPosts.donorApplicants")}
                 </div>
                 <div className="flex flex-wrap items-center gap-2 md:justify-end">
                   <Badge

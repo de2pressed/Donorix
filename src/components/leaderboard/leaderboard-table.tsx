@@ -34,7 +34,7 @@ export function LeaderboardTable({ leaders }: { leaders: Profile[] }) {
               >
                 <div className="flex min-w-0 items-start gap-3 sm:items-center sm:gap-4">
                   <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-soft font-semibold text-brand">
-                    {index + 1}
+                    <span className="font-mono">{index + 1}</span>
                   </div>
                   <Avatar className="shrink-0">
                     <AvatarImage src={leader.avatar_url ?? undefined} alt={leader.full_name} />
@@ -58,7 +58,7 @@ export function LeaderboardTable({ leaders }: { leaders: Profile[] }) {
                   <div className="sm:text-right">
                     <div className="flex items-center gap-2 font-semibold">
                       <Trophy className="size-4 text-brand" />
-                      <span className="tabular-nums">{leader.karma}</span>
+                      <span className="font-mono tabular-nums">{leader.karma}</span>
                     </div>
                     <p className="text-xs text-muted-foreground">
                       {tLeaderboard("donations", { count: leader.total_donations })}

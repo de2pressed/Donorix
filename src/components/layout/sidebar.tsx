@@ -122,7 +122,7 @@ export function Sidebar() {
           <Settings className="size-4" />
           {tNav("settings")}
         </Link>
-        <div className="rounded-[1.5rem] border border-border bg-card/60 p-4">
+        <div className="rounded-[1.5rem] border border-border bg-card p-4 shadow-soft">
           <p className="text-sm font-medium">
             {user?.account_type === "hospital"
               ? tSidebar("hospitalOperations")

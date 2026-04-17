@@ -327,7 +327,7 @@ export default function SettingsPage() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-semibold">{t("title")}</h1>
+          <h1 className="font-display text-3xl font-bold">{t("title")}</h1>
           <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
         </div>
         {hasPreferenceChanges ? (

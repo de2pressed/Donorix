@@ -24,7 +24,7 @@ export default async function DonorChatsPage() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-semibold">Chats</h1>
+          <h1 className="font-display text-3xl font-bold">Chats</h1>
           <p className="text-sm text-muted-foreground">
             Accepted donation request conversations with hospital contacts.
           </p>
@@ -52,23 +52,23 @@ export default async function DonorChatsPage() {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0 space-y-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-medium text-foreground">{chat.post.patient_name}</p>
+                      <p className="font-display font-semibold text-foreground">{chat.post.patient_name}</p>
                       <span className="rounded-full border border-border px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                         {chat.post.status}
                       </span>
                     </div>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="font-mono text-sm text-muted-foreground">
                       {chat.post.patient_id ?? "No case reference"} - {chat.post.blood_type_needed}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {chat.hospital?.full_name ?? chat.post.hospital_name}{" "}
                       {chat.hospital?.username ? `@${chat.hospital.username}` : ""} -{" "}
                       {chat.hospital?.phone ?? "No phone"} - {chat.hospital?.email ?? "No email"} -{" "}
-                      {chat.messageCount} messages
+                      <span className="font-mono">{chat.messageCount}</span> messages
                     </p>
                   </div>
                   <div className="text-right text-sm text-muted-foreground">
-                    <p>{chat.lastMessage ? formatRelativeTime(chat.lastMessage.created_at) : "No messages yet"}</p>
+                    <p className="font-mono">{chat.lastMessage ? formatRelativeTime(chat.lastMessage.created_at) : "No messages yet"}</p>
                   </div>
                 </div>
               </Link>

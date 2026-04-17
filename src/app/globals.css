@@ -3,32 +3,34 @@
 @tailwind utilities;
 
 :root {
-  --background: 32 60% 98%;
-  --foreground: 220 26% 14%;
-  --muted: 24 30% 94%;
-  --muted-foreground: 220 12% 42%;
-  --card: 0 0% 100%;
-  --card-foreground: 220 26% 14%;
-  --accent: 0 0% 100%;
-  --accent-foreground: 220 26% 14%;
-  --border: 18 22% 88%;
+  --background: 347 45% 97%;
+  --foreground: 220 28% 12%;
+  --muted: 347 25% 92%;
+  --muted-foreground: 220 14% 38%;
+  --card: 0 0% 99%;
+  --card-foreground: 220 28% 12%;
+  --accent: 347 30% 96%;
+  --accent-foreground: 220 28% 12%;
+  --border: 347 18% 82%;
   --ring: 347 89% 43%;
   --brand: 347 89% 43%;
   --brand-foreground: 0 0% 100%;
-  --brand-soft: 347 78% 95%;
+  --brand-soft: 347 72% 92%;
   --success: 158 63% 37%;
   --success-foreground: 0 0% 100%;
   --warning: 40 93% 52%;
   --warning-foreground: 220 26% 14%;
   --danger: 0 78% 55%;
   --danger-foreground: 0 0% 100%;
-  --surface-1: #ffffff;
-  --surface-2: #f5f5f7;
-  --surface-3: #ebebed;
+  --surface-1: #fffbfc;
+  --surface-2: #f8f0f2;
+  --surface-3: #f0e5e8;
   --text-primary: #0f0f10;
-  --text-secondary: #4a4a52;
-  --border-subtle: rgba(0, 0, 0, 0.08);
+  --text-secondary: #4a4050;
+  --border-subtle: rgba(179, 12, 49, 0.08);
   --font-app-sans: var(--font-geist-sans);
+  --font-display: var(--font-syne);
+  --font-brand: var(--font-playfair);
 }
 
 .dark {
@@ -78,11 +80,11 @@ html.dark {
 }
 
 .bg-grid-red {
-  background-color: #faf7f8;
+  background-color: #fdf5f6;
   background-image:
-    radial-gradient(ellipse 80% 40% at 50% 0%, rgba(180, 20, 30, 0.09) 0%, transparent 70%),
-    linear-gradient(rgba(200, 30, 40, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(200, 30, 40, 0.04) 1px, transparent 1px);
+    radial-gradient(ellipse 80% 40% at 50% 0%, rgba(179, 12, 49, 0.22) 0%, transparent 70%),
+    linear-gradient(rgba(180, 20, 30, 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(180, 20, 30, 0.09) 1px, transparent 1px);
   background-position: center top, center center, center center;
   background-size: auto, 24px 24px, 24px 24px;
 }
@@ -97,11 +99,11 @@ html.dark {
 }
 
 body {
-  background-color: #faf7f8;
+  background-color: #fdf5f6;
   background-image:
-    radial-gradient(ellipse 80% 40% at 50% 0%, rgba(180, 20, 30, 0.18) 0%, transparent 70%),
-    linear-gradient(rgba(200, 30, 40, 0.065) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(200, 30, 40, 0.065) 1px, transparent 1px);
+    radial-gradient(ellipse 80% 45% at 50% 0%, rgba(179, 12, 49, 0.28) 0%, transparent 68%),
+    linear-gradient(rgba(180, 20, 30, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(180, 20, 30, 0.1) 1px, transparent 1px);
   background-position: center top, center center, center center;
   background-size: auto, 24px 24px, 24px 24px;
   background-attachment: fixed;
@@ -194,9 +196,11 @@ html.donorix-booting #donorix-boot-splash {
 }
 
 .donorix-boot-splash__title {
+  font-family: var(--font-playfair), Georgia, serif;
+  font-style: italic;
+  font-weight: 700;
   color: hsl(var(--foreground));
   font-size: clamp(2rem, 4vw, 2.6rem);
-  font-weight: 650;
   line-height: 1;
 }
 
@@ -228,9 +232,9 @@ body::before {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(circle at 18% 22%, rgba(255, 255, 255, 0.65), transparent 36%),
-    radial-gradient(circle at 82% 14%, rgba(179, 12, 49, 0.2), transparent 38%),
-    radial-gradient(circle at 48% 80%, rgba(255, 122, 89, 0.18), transparent 39%);
+    radial-gradient(circle at 18% 22%, rgba(255, 245, 246, 0.8), transparent 36%),
+    radial-gradient(circle at 82% 14%, rgba(179, 12, 49, 0.32), transparent 38%),
+    radial-gradient(circle at 48% 80%, rgba(255, 122, 89, 0.28), transparent 39%);
   animation: ambient-shift 18s ease-in-out infinite alternate;
 }
 
@@ -250,13 +254,13 @@ body::after {
   background:
     conic-gradient(
       from 180deg at 50% 50%,
-      rgba(179, 12, 49, 0.06),
-      rgba(255, 122, 89, 0.08),
-      rgba(255, 255, 255, 0.04),
-      rgba(179, 12, 49, 0.06)
+      rgba(179, 12, 49, 0.1),
+      rgba(255, 122, 89, 0.13),
+      rgba(255, 245, 246, 0.06),
+      rgba(179, 12, 49, 0.1)
     );
-  filter: blur(30px) saturate(115%);
-  opacity: 0.8;
+  filter: blur(30px) saturate(130%);
+  opacity: 0.92;
   animation: ambient-orbit 24s linear infinite;
 }
 
@@ -303,24 +307,27 @@ button {
 }
 
 .glass-panel {
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.74));
-  border: 1px solid rgba(255, 255, 255, 0.58);
+  background: linear-gradient(145deg, rgba(255, 250, 251, 0.96), rgba(255, 244, 246, 0.88));
+  border: 1px solid rgba(179, 12, 49, 0.14);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.58),
-    0 16px 42px rgba(17, 24, 39, 0.14);
-  backdrop-filter: blur(16px) saturate(155%);
-  -webkit-backdrop-filter: blur(16px) saturate(155%);
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 1px 0 rgba(179, 12, 49, 0.06),
+    0 20px 52px rgba(17, 24, 39, 0.12),
+    0 4px 12px rgba(179, 12, 49, 0.06);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
 }
 
 .surface,
 .glass {
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.72));
-  border: 1px solid rgba(255, 255, 255, 0.52);
+  background: linear-gradient(145deg, rgba(255, 250, 251, 0.94), rgba(255, 244, 246, 0.84));
+  border: 1px solid rgba(179, 12, 49, 0.12);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.5),
-    0 14px 36px rgba(17, 24, 39, 0.12);
-  backdrop-filter: blur(16px) saturate(155%);
-  -webkit-backdrop-filter: blur(16px) saturate(155%);
+    inset 0 1px 0 rgba(255, 255, 255, 0.88),
+    0 18px 46px rgba(17, 24, 39, 0.1),
+    0 4px 10px rgba(179, 12, 49, 0.05);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
   border-radius: 1.75rem;
 }
 

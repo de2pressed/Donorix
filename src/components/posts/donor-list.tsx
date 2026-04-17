@@ -67,7 +67,7 @@ export function DonorList({
                 <div>
                   {donor.donor?.username ? (
                     <Link
-                      className="font-medium transition-colors hover:text-brand"
+                      className="font-display font-semibold transition-colors hover:text-brand"
                       href={`/profile/${donor.donor.username}`}
                     >
                       {donor.donor.full_name ?? donor.donor.username}
@@ -78,17 +78,19 @@ export function DonorList({
                     </p>
                   )}
                   <p className="text-sm text-muted-foreground">
-                    {tRequest(`status.${donor.status}`)} - {tRequest("eligibilityScore")} {donor.eligibility_score}
+                    {tRequest(`status.${donor.status}`)} - {tRequest("eligibilityScore")}{" "}
+                    <span className="font-mono">{donor.eligibility_score}</span>
                   </p>
                   {donor.donor ? (
                     <p className="text-sm text-muted-foreground">
-                      {donor.donor.blood_type ?? tRequest("unknownBloodType")} - {donor.donor.total_donations}{" "}
-                      {tRequest("donations")} - {donor.donor.karma} {tRequest("karma")}
+                      <span className="font-mono">{donor.donor.blood_type ?? tRequest("unknownBloodType")}</span>{" "}
+                      - <span className="font-mono">{donor.donor.total_donations}</span> {tRequest("donations")} -{" "}
+                      <span className="font-mono">{donor.donor.karma}</span> {tRequest("karma")}
                     </p>
                   ) : null}
                 </div>
                 <div className="flex flex-col items-end gap-2 text-sm text-muted-foreground">
-                  <span>{formatDistance(donor.distance_km)}</span>
+                  <span className="font-mono">{formatDistance(donor.distance_km)}</span>
                   {canAct && donor.status === "pending" && postId ? (
                     <div className="flex flex-wrap justify-end gap-2">
                       <Button

@@ -30,7 +30,7 @@ export default async function HomePage() {
             <div className="space-y-6">
               <Badge variant="danger">{t("home.hospitalBadge")}</Badge>
               <div className="space-y-4">
-                <h1 className="text-balance text-4xl font-semibold md:text-6xl">
+                <h1 className="font-display text-balance text-4xl font-semibold md:text-6xl">
                   {t("home.hospitalTitle")}
                 </h1>
                 <p className="max-w-2xl text-balance text-base text-muted-foreground md:text-lg">
@@ -79,7 +79,7 @@ export default async function HomePage() {
                       <item.icon className="size-5" />
                     </div>
                     <div className="min-w-0">
-                      <h2 className="font-semibold">{item.title}</h2>
+                      <h2 className="font-display font-semibold">{item.title}</h2>
                       <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
                     </div>
                   </CardContent>
@@ -108,10 +108,10 @@ export default async function HomePage() {
                   <div key={post.id} className="rounded-[1.25rem] border border-border p-4">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <Link className="font-medium transition-colors hover:text-brand" href={`/posts/${post.id}`}>
+                        <Link className="font-display font-bold transition-colors hover:text-brand" href={`/posts/${post.id}`}>
                           {post.patient_name}
                         </Link>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="font-mono text-sm text-muted-foreground">
                           {post.patient_id ?? t("home.noPatientId")} • {post.blood_type_needed}
                         </p>
                       </div>
@@ -119,7 +119,7 @@ export default async function HomePage() {
                         {post.status}
                       </Badge>
                     </div>
-                    <p className="mt-3 text-sm text-muted-foreground">
+                    <p className="mt-3 font-mono text-sm text-muted-foreground">
                       {post.donor_count ?? 0} {t("home.donorsApplied")} • {post.units_needed} {t("home.unitsRequested")}
                     </p>
                   </div>
@@ -152,7 +152,7 @@ export default async function HomePage() {
                       <div>
                         {application.donor?.username ? (
                           <Link
-                            className="font-medium transition-colors hover:text-brand"
+                            className="font-display font-semibold transition-colors hover:text-brand"
                             href={`/profile/${application.donor.username}`}
                           >
                             {application.donor.full_name ?? application.donor.username}
@@ -160,7 +160,7 @@ export default async function HomePage() {
                         ) : (
                           <p className="font-medium">{application.donor?.full_name ?? "Donor"}</p>
                         )}
-                        <p className="text-sm text-muted-foreground">
+                        <p className="font-mono text-sm text-muted-foreground">
                           {application.donor?.username ? application.donor.username : t("home.donor")}
                           {application.donor?.blood_type ? ` • ${application.donor.blood_type}` : ""}
                         </p>
@@ -170,7 +170,7 @@ export default async function HomePage() {
                       </div>
                       <Badge variant="secondary">{application.status}</Badge>
                     </div>
-                    <p className="mt-3 text-sm text-muted-foreground">
+                    <p className="mt-3 font-mono text-sm text-muted-foreground">
                       {t("home.eligibilityScore")} {application.eligibility_score}
                       {application.distance_km != null ? ` • ${formatDistance(application.distance_km)}` : ""}
                     </p>
@@ -195,7 +195,7 @@ export default async function HomePage() {
           <div className="space-y-6">
             <Badge variant="danger">{t("hero.badge")}</Badge>
             <div className="space-y-4">
-              <h1 className="max-w-4xl text-balance text-4xl font-semibold md:text-6xl">
+              <h1 className="font-display max-w-4xl text-balance text-4xl font-semibold md:text-6xl">
                 {t("hero.title")}
               </h1>
               <p className="max-w-3xl text-balance text-base text-muted-foreground md:text-lg">
@@ -238,7 +238,7 @@ export default async function HomePage() {
                     <item.icon className="size-5" />
                   </div>
                   <div className="min-w-0">
-                    <h2 className="font-semibold">{item.title}</h2>
+                    <h2 className="font-display font-semibold">{item.title}</h2>
                     <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
                   </div>
                 </CardContent>
@@ -251,7 +251,7 @@ export default async function HomePage() {
       <section className="space-y-4" id="feed">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-semibold">{t("hero.feedTitle")}</h2>
+            <h2 className="font-display text-2xl font-semibold">{t("hero.feedTitle")}</h2>
             <p className="text-sm text-muted-foreground">
               {t("hero.feedSubtitle")}
             </p>

@@ -10,7 +10,7 @@ export default async function NotificationsPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-3xl font-semibold">{t("notifications.title")}</h1>
+        <h1 className="font-display text-3xl font-bold">{t("notifications.title")}</h1>
         <p className="text-sm text-muted-foreground">
           {t("notifications.subtitle")}
         </p>

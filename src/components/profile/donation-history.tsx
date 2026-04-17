@@ -25,8 +25,8 @@ export function DonationHistory({ donations }: { donations: DonationHistoryItem[
                   <p className="text-sm text-muted-foreground">{donation.city}</p>
                 </div>
                 <div className="text-right text-sm">
-                  <p>{donation.units} units</p>
-                  <p className="text-muted-foreground">{formatDateTime(donation.donated_at)}</p>
+                  <p className="font-mono">{donation.units} units</p>
+                  <p className="font-mono text-muted-foreground">{formatDateTime(donation.donated_at)}</p>
                 </div>
               </div>
             </div>

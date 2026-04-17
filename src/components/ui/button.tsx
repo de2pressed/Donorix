@@ -11,7 +11,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-brand text-brand-foreground shadow-glow hover:bg-brand/90 hover:shadow-[0_8px_24px_rgba(179,12,49,0.35)]",
+        default: "bg-brand text-brand-foreground shadow-glow hover:bg-brand/90 hover:shadow-[0_4px_14px_rgba(179,12,49,0.25)]",
         secondary: "bg-card text-foreground border border-border hover:bg-muted hover:border-brand/30",
         ghost: "text-foreground hover:bg-muted/80 hover:text-brand",
         outline: "border border-border bg-transparent hover:bg-brand-soft hover:border-brand/40 hover:text-brand",

@@ -9,7 +9,7 @@ function SearchParamsKey({
   pathname,
   reduceMotion,
 }: {
-  children: (routeKey: string) => React.ReactNode;
+  children: React.ReactNode;
   pathname: string;
   reduceMotion: boolean;
 }) {
@@ -24,7 +24,7 @@ function SearchParamsKey({
       key={routeKey}
       transition={{ duration: reduceMotion ? 0 : 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}
     >
-      {children(routeKey)}
+      {children}
     </motion.div>
   );
 }
@@ -177,7 +177,7 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
         }
       >
         <SearchParamsKey pathname={pathname} reduceMotion={reduceMotion}>
-          {() => children}
+          {children}
         </SearchParamsKey>
       </Suspense>
     </>

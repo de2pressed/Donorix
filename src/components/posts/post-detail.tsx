@@ -14,7 +14,7 @@ export function PostDetail({
   isAuthenticated?: boolean;
 }) {
   return (
-    <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
+    <div className="grid gap-6 2xl:grid-cols-[1fr_360px]">
       <PostCard isAuthenticated={isAuthenticated} post={post} />
       <DonorList canAct={canAct} donors={donors} postId={post.id} />
     </div>

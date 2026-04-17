@@ -26,6 +26,8 @@ export function PostCard({
 }) {
   const reduceMotion = useReducedMotion();
   const tRequest = useTranslations("request");
+  const isActive = post.status === "active";
+  const isFulfilled = post.status === "fulfilled";
 
   return (
     <motion.div
@@ -41,6 +43,14 @@ export function PostCard({
         )}
       >
         <CardContent className="space-y-5 p-5">
+          {!isActive ? (
+            <div className="flex items-center gap-2 rounded-t-[1.5rem] bg-muted px-5 py-3 text-sm text-muted-foreground">
+              <span className="size-2 rounded-full bg-border" />
+              {isFulfilled
+                ? "This request has been fulfilled - a donor has been found."
+                : "This blood request is no longer active."}
+            </div>
+          ) : null}
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0 space-y-3">
               <div className="flex flex-wrap items-center gap-3">
@@ -121,9 +131,10 @@ export function PostCard({
                 count={post.upvote_count}
                 hasVoted={Boolean(post.has_voted)}
                 isAuthenticated={isAuthenticated}
+                disabled={!isActive}
                 postId={post.id}
               />
-              <DonateButton isAuthenticated={isAuthenticated} postId={post.id} />
+              <DonateButton disabled={!isActive} isAuthenticated={isAuthenticated} postId={post.id} />
             </div>
           </div>
         </CardContent>

@@ -15,11 +15,13 @@ export function UpvoteButton({
   count,
   isAuthenticated = false,
   hasVoted = false,
+  disabled = false,
 }: {
   postId: string;
   count: number;
   isAuthenticated?: boolean;
   hasVoted?: boolean;
+  disabled?: boolean;
 }) {
   const router = useRouter();
   const { openPrompt } = useAuthPrompt();
@@ -39,10 +41,14 @@ export function UpvoteButton({
   return (
     <Button
       className={voted ? "text-brand" : ""}
-      disabled={isSubmitting || voted}
+      disabled={disabled || isSubmitting || voted}
       variant="ghost"
       size="sm"
       onClick={async () => {
+        if (disabled) {
+          return;
+        }
+
         if (!isAuthenticated) {
           openPrompt();
           return;

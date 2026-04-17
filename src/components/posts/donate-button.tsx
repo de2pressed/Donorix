@@ -20,9 +20,11 @@ import { useTranslations } from "next-intl";
 export function DonateButton({
   postId,
   isAuthenticated = false,
+  disabled = false,
 }: {
   postId: string;
   isAuthenticated?: boolean;
+  disabled?: boolean;
 }) {
   const router = useRouter();
   const { openPrompt } = useAuthPrompt();
@@ -41,6 +43,10 @@ export function DonateButton({
   }
 
   async function handleDonate() {
+    if (disabled) {
+      return;
+    }
+
     if (!isAuthenticated) {
       openPrompt();
       return;
@@ -79,7 +85,7 @@ export function DonateButton({
 
   const button = (
     <Button
-      disabled={submitted || isSubmitting || (isAuthenticated && !eligibleToDonate)}
+      disabled={disabled || submitted || isSubmitting || (isAuthenticated && !eligibleToDonate)}
       variant={submitted ? "outline" : "secondary"}
       onClick={() => {
         void handleDonate();
@@ -90,7 +96,7 @@ export function DonateButton({
     </Button>
   );
 
-  if (isAuthenticated && !eligibleToDonate && !submitted) {
+  if (!disabled && isAuthenticated && !eligibleToDonate && !submitted) {
     return (
       <Tooltip>
         <TooltipTrigger asChild>{button}</TooltipTrigger>

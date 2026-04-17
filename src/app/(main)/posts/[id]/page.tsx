@@ -1,6 +1,7 @@
-import { notFound } from "next/navigation";
+import Link from "next/link";
 
 import { PostDetail } from "@/components/posts/post-detail";
+import { Button } from "@/components/ui/button";
 import { getCurrentProfile, getDonorApplicationsForPost, getPostById } from "@/lib/data";
 
 export default async function PostPage({
@@ -13,7 +14,18 @@ export default async function PostPage({
   const post = await getPostById(id, profile?.id);
 
   if (!post) {
-    notFound();
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-4 text-center">
+        <p className="text-sm font-semibold uppercase tracking-[0.24em] text-brand">Request unavailable</p>
+        <h1 className="text-3xl font-semibold">This blood request is no longer available.</h1>
+        <p className="max-w-md text-muted-foreground">
+          The request may have been fulfilled, expired, or removed. Return to the live feed to find active requests.
+        </p>
+        <Button asChild>
+          <Link href="/">Back to feed</Link>
+        </Button>
+      </div>
+    );
   }
 
   const canSeeDonors =

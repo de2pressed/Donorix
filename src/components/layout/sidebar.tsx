@@ -5,7 +5,7 @@ import { Building2, Settings } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 
-import { useNotificationsContext } from "@/components/providers/notification-context";
+import { useNotificationsContextSafe } from "@/components/providers/notification-context";
 import { AppLogo } from "@/components/layout/app-logo";
 import { useUser } from "@/lib/hooks/use-user";
 import { getSidebarNav, showRegisterHospitalButton } from "@/lib/navigation";
@@ -48,7 +48,8 @@ function getSidebarLabel(
 export function Sidebar() {
   const pathname = usePathname();
   const { data: user } = useUser();
-  const { unreadCount } = useNotificationsContext();
+  const notifContext = useNotificationsContextSafe();
+  const unreadCount = notifContext?.unreadCount ?? 0;
   const tNav = useTranslations("nav");
   const tSidebar = useTranslations("sidebar");
   const items = getSidebarNav(user?.account_type).map((item) => ({

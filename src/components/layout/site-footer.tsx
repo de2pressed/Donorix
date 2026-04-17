@@ -25,7 +25,7 @@ export function SiteFooter() {
   return (
     <footer
       id="site-footer"
-      className="border-t border-border/70 bg-card pb-[calc(env(safe-area-inset-bottom)+6.5rem)] pt-10 lg:pb-10"
+      className="border-t border-border/70 bg-card pb-[calc(env(safe-area-inset-bottom)+9rem)] pt-10 lg:pb-10"
     >
       <div className="mx-auto w-full max-w-[1900px] px-4 pt-6 lg:px-8 2xl:px-10">
         <div className="glass-panel rounded-[2rem] p-6 md:p-8">

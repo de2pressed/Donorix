@@ -43,8 +43,8 @@ export function ThemeToggle({ className }: { className?: string }) {
           window.setTimeout(() => {
             overlay?.classList.remove("theme-fade-in");
             overlay?.classList.add("theme-fade-out");
-          }, 60);
-        }, 160);
+          }, 80);
+        }, 320);
       }}
     >
       <motion.span

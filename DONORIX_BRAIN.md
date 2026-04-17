@@ -1,5 +1,31 @@
 ## Donorix Brain (change log)
 
+### 2026-04-18 - Changelog 15b (iteration 2 execution)
+
+#### Hero and cards
+- Updated the hospital dashboard hero headline weight and size to match the guest hero treatment.
+- Added glass styling to the hospital and guest hero stat cards so they blend with the light theme glass surfaces.
+
+#### Mobile sheets and footer
+- Moved the profile actions logout control to the top of the mobile sheet and increased the bottom clearance.
+- Added extra mobile footer bottom padding so the final links clear the fixed nav and floating actions.
+
+#### Theme and splash polish
+- Slowed the theme toggle overlay into a premium glass sweep with a longer fade-in, hold, and fade-out.
+- Upgraded the boot splash to a layered glass background with a richer brand glow.
+
+#### Header surfaces
+- Swapped the logo mark and notification bell backgrounds to the glass-panel surface so they match the header bar in light mode.
+
+#### Files touched
+- `donorix/src/app/(main)/page.tsx`
+- `donorix/src/app/globals.css`
+- `donorix/src/components/layout/app-logo.tsx`
+- `donorix/src/components/layout/site-footer.tsx`
+- `donorix/src/components/layout/theme-toggle.tsx`
+- `donorix/src/components/layout/user-menu.tsx`
+- `donorix/src/components/notifications/notification-bell.tsx`
+
 ### 2026-04-18 - Changelog 15 (theme fade, toast theming, feed cards, mobile nav)
 
 #### Theme switch

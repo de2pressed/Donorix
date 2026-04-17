@@ -18,7 +18,7 @@ export function NotificationBell({ unreadCount = 0 }: { unreadCount?: number }) 
   return (
     <Link
       href="/notifications"
-      className="relative flex size-11 items-center justify-center rounded-full border border-border bg-card/80 text-foreground"
+      className="glass-chip relative flex size-11 items-center justify-center rounded-full border border-border text-foreground"
       aria-label={tNav("notifications")}
     >
       <motion.span

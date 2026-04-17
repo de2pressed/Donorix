@@ -30,7 +30,7 @@ export default async function HomePage() {
             <div className="space-y-6">
               <Badge variant="danger">{t("home.hospitalBadge")}</Badge>
               <div className="space-y-4">
-                <h1 className="font-display text-balance text-4xl font-extrabold md:text-6xl">
+                <h1 className="font-display text-balance text-4xl font-bold md:text-5xl">
                   {t("home.hospitalTitle")}
                 </h1>
                 <p className="max-w-2xl text-balance text-base text-muted-foreground md:text-lg">
@@ -73,7 +73,7 @@ export default async function HomePage() {
                       : t("home.verificationPending"),
                 },
               ].map((item) => (
-                <Card key={item.title}>
+                <Card key={item.title} className="glass">
                   <CardContent className="flex items-start gap-4 p-5">
                     <div className="flex size-11 items-center justify-center rounded-2xl bg-brand-soft text-brand">
                       <item.icon className="size-5" />
@@ -234,7 +234,7 @@ export default async function HomePage() {
                 description: t("hero.featureThreeBody"),
               },
             ].map((item) => (
-              <Card key={item.title}>
+              <Card key={item.title} className="glass">
                 <CardContent className="flex items-start gap-4 p-5">
                   <div className="flex size-11 items-center justify-center rounded-2xl bg-brand-soft text-brand">
                     <item.icon className="size-5" />

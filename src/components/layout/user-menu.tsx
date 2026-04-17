@@ -175,7 +175,7 @@ export function UserMenu() {
           </Avatar>
         </button>
         <Dialog open={mobileOpen} onOpenChange={setMobileOpen}>
-          <DialogContent className="dialog-bottom-sheet inset-x-0 bottom-0 top-auto w-full max-w-none !translate-x-0 !translate-y-0 rounded-b-none rounded-t-[1.75rem] px-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] pt-8 sm:max-w-none">
+          <DialogContent className="dialog-bottom-sheet inset-x-0 bottom-0 top-auto w-full max-w-none !translate-x-0 !translate-y-0 rounded-b-none rounded-t-[1.75rem] px-5 pb-[calc(env(safe-area-inset-bottom)+5.5rem)] pt-8 sm:max-w-none">
             <DialogHeader>
               <DialogTitle>{tNav("profileActions")}</DialogTitle>
               <DialogDescription className="sr-only">
@@ -183,6 +183,18 @@ export function UserMenu() {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-2">
+              <Button
+                className="w-full justify-start rounded-2xl border border-border px-4 py-3 text-sm font-medium text-danger hover:bg-danger/10 hover:text-danger"
+                type="button"
+                variant="ghost"
+                onClick={async () => {
+                  setMobileOpen(false);
+                  await handleLogout();
+                }}
+              >
+                <LogOut className="size-4" />
+                {tNav("logout")}
+              </Button>
               {showAdminControls ? (
                 <Link
                   className="flex items-center gap-3 rounded-2xl border border-border px-4 py-3 text-sm font-medium text-foreground transition hover:bg-brand-soft"
@@ -221,18 +233,6 @@ export function UserMenu() {
                 <Settings className="size-4" />
                 {tNav("settings")}
               </Link>
-              <Button
-                className="w-full justify-start"
-                type="button"
-                variant="ghost"
-                onClick={async () => {
-                  setMobileOpen(false);
-                  await handleLogout();
-                }}
-              >
-                <LogOut className="size-4" />
-                {tNav("logout")}
-              </Button>
             </div>
           </DialogContent>
         </Dialog>

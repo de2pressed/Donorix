@@ -77,7 +77,7 @@ function LogoMark({ compact = false }: { compact?: boolean }) {
   return (
     <span
       className={cn(
-        "relative flex shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-border/70 bg-card/80 shadow-sm",
+        "glass-chip relative flex shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-border/70 shadow-sm",
         compact ? "size-10" : "size-11",
       )}
     >

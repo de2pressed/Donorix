@@ -39,6 +39,8 @@ export function MobileNav() {
         return tNav("patientPosts");
       case "/hospital/donors":
         return tNav("donors");
+      case "/hospital/chats":
+        return tNav("chats");
       case "/notifications":
         return tNav("notifications");
       case "/policies/terms":
@@ -76,13 +78,13 @@ export function MobileNav() {
 
   return (
     <>
-      <nav className="glass-panel fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-40 flex items-center justify-between rounded-[1.75rem] px-4 py-2 lg:hidden">
+      <nav className="glass-panel fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-[60] flex items-center justify-between rounded-[1.75rem] px-4 py-2 lg:hidden">
         {items.map((item) => {
           const Icon = item.icon;
           return item.href === "#more" ? (
             <button
               key={item.label}
-              className="flex flex-1 min-w-0 flex-col items-center justify-center gap-1 rounded-2xl px-1 py-2 text-center text-[10px] font-medium leading-none text-muted-foreground transition hover:text-brand"
+              className="flex flex-1 min-w-0 flex-col items-center justify-center gap-1 rounded-2xl px-1 py-2 text-center text-[10px] font-medium leading-tight text-muted-foreground transition hover:text-brand max-[380px]:text-[9px]"
               type="button"
               onClick={() => setMoreOpen(true)}
             >
@@ -94,7 +96,7 @@ export function MobileNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-1 min-w-0 flex-col items-center justify-center gap-1 rounded-2xl px-1 py-2 text-center text-[10px] font-medium leading-none text-muted-foreground transition hover:text-brand",
+                "flex flex-1 min-w-0 flex-col items-center justify-center gap-1 rounded-2xl px-1 py-2 text-center text-[10px] font-medium leading-tight text-muted-foreground transition hover:text-brand max-[380px]:text-[9px]",
                 (item.href === "/" ? pathname === "/" : pathname === item.href || pathname.startsWith(`${item.href}/`)) &&
                   "bg-brand-soft text-brand",
               )}

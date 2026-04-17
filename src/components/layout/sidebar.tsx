@@ -24,6 +24,8 @@ function getSidebarLabel(
       return t("patientPosts");
     case "/hospital/donors":
       return t("donors");
+    case "/hospital/chats":
+      return t("chats");
     case "/notifications":
       return t("notifications");
     case "/policies/terms":

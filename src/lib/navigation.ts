@@ -14,6 +14,7 @@ import {
   ClipboardList,
   MoreHorizontal,
   LogIn,
+  MessagesSquare,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -32,6 +33,7 @@ export function getSidebarNav(accountType?: AccountType | null) {
       { href: "/posts/new", label: "New Request", icon: PlusSquare },
       { href: "/hospital/posts", label: "Patient Posts", icon: ClipboardList },
       { href: "/hospital/donors", label: "Donors", icon: Users },
+      { href: "/hospital/chats", label: "Chats", icon: MessagesSquare },
       { href: "/notifications", label: "Notifications", icon: Bell },
       { href: "/policies/terms", label: "Policies", icon: FileText },
       { href: "/about", label: "About Us", icon: Info },
@@ -81,6 +83,7 @@ export function getMoreNav(accountType?: AccountType | null, isAuthenticated = f
     return [
       { href: "/hospital/posts", label: "Patient Posts", icon: ClipboardList },
       { href: "/hospital/donors", label: "Donors", icon: Users },
+      { href: "/hospital/chats", label: "Chats", icon: MessagesSquare },
       { href: "/policies/terms", label: "Policies", icon: FileText },
       { href: "/about", label: "About Us", icon: Info },
       { href: "/settings", label: "Settings", icon: Settings },

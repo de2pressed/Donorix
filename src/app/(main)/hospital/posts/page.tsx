@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DeletePostButton } from "@/components/posts/delete-post-button";
 import { getCurrentProfile, getHospitalPosts } from "@/lib/data";
 import { getRequestMessages, translate } from "@/lib/i18n";
 
@@ -40,7 +41,10 @@ export default async function HospitalPostsPage() {
         <CardContent className="space-y-3">
           {posts.length ? (
             posts.map((post) => (
-              <div key={post.id} className="grid gap-3 rounded-[1.25rem] border border-border p-4 md:grid-cols-[1.2fr_1fr_auto] md:items-center">
+              <div
+                key={post.id}
+                className="grid gap-3 rounded-[1.25rem] border border-border p-4 md:grid-cols-[1.2fr_1fr_auto] md:items-center"
+              >
                 <div>
                   <Link className="font-medium transition-colors hover:text-brand" href={`/posts/${post.id}`}>
                     {post.patient_name}
@@ -52,7 +56,14 @@ export default async function HospitalPostsPage() {
                 <div className="text-sm text-muted-foreground">
                   {post.units_needed} {t("hospitalPosts.units")} - {post.donor_count ?? 0} {t("hospitalPosts.donorApplicants")}
                 </div>
-                <Badge variant={post.status === "active" ? "danger" : "secondary"}>{post.status}</Badge>
+                <div className="flex flex-wrap items-center gap-2 md:justify-end">
+                  <Badge
+                    variant={post.status === "active" ? "danger" : post.status === "deleted" ? "warning" : "secondary"}
+                  >
+                    {post.status}
+                  </Badge>
+                  <DeletePostButton postId={post.id} patientName={post.patient_name} status={post.status} />
+                </div>
               </div>
             ))
           ) : (

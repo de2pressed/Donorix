@@ -169,6 +169,24 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["posts"]["Row"]>;
         Relationships: [];
       };
+      chat_messages: {
+        Row: {
+          id: string;
+          post_id: string;
+          sender_id: string;
+          recipient_id: string;
+          message: string;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["chat_messages"]["Row"]> & {
+          post_id: string;
+          sender_id: string;
+          recipient_id: string;
+          message: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["chat_messages"]["Row"]>;
+        Relationships: [];
+      };
       donor_applications: {
         Row: {
           id: string;

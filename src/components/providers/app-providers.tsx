@@ -7,6 +7,9 @@ import { useState } from "react";
 import { Toaster } from "sonner";
 
 import { PageTransitionShell } from "@/components/layout/page-transition-shell";
+import { FloatingAssistant } from "@/components/layout/floating-assistant";
+import { MobileNav } from "@/components/layout/mobile-nav";
+import { NewPostFab } from "@/components/layout/new-post-fab";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { AuthSessionBridge } from "@/components/providers/auth-session-bridge";
 import { LocalePreferenceProvider } from "@/components/providers/locale-provider";
@@ -56,6 +59,9 @@ export function AppProviders({ children, locale, messages }: AppProvidersProps) 
                   </div>
                   <SiteFooter />
                 </div>
+                <MobileNav />
+                <NewPostFab />
+                <FloatingAssistant />
               </NotificationProvider>
             </AuthPromptProvider>
           </TooltipProvider>

@@ -1,5 +1,32 @@
 ## Donorix Brain (change log)
 
+### 2026-04-18 — Changelog 14 (typography reset + glass depth + logo cache execution)
+
+#### Typography reset
+- Removed the Playfair / italic brand system from the app shell and Tailwind font map.
+- Standardized the Donorix wordmark on `font-display` with a bold, straight treatment.
+- Kept the main landing hero headlines at `font-extrabold` for stronger display presence.
+
+#### Light mode depth
+- Reworked the light theme background, ambient blobs, and grid contrast so frosted surfaces read with more depth.
+- Strengthened `.glass-panel`, `.surface`, and `.glass` with lower opacity, clearer borders, and heavier blur.
+- Added a light-mode nested glass override so cards on glass surfaces stay visually legible.
+
+#### Logo reliability
+- Moved logo resolution into a module-level cache so client navigations reuse the resolved asset instead of flashing the fallback icon.
+
+#### CTA guard
+- Hid the donor hero "Register as Hospital" button for authenticated users and kept it for guests only.
+
+#### Files touched
+- `donorix/src/app/layout.tsx`
+- `donorix/src/app/globals.css`
+- `donorix/src/app/(main)/page.tsx`
+- `donorix/src/app/policies/layout.tsx`
+- `donorix/src/components/layout/app-logo.tsx`
+- `donorix/src/components/layout/site-footer.tsx`
+- `donorix/tailwind.config.ts`
+
 ### 2026-04-18 — Changelog 13 (typography + shell polish execution)
 
 #### Typography

@@ -34,7 +34,7 @@ export function SiteFooter() {
               <AppLogo
                 showTagline
                 tagline={t("tagline")}
-                taglineClassName="font-brand italic text-sm text-muted-foreground"
+                taglineClassName="font-sans text-sm text-muted-foreground"
               />
               <p className="max-w-xl text-sm leading-6 text-muted-foreground">{t("sdg")}</p>
             </div>

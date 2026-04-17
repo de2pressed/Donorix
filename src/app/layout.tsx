@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
-import { Noto_Sans_Devanagari, Playfair_Display, Syne } from "next/font/google";
+import { Noto_Sans_Devanagari, Syne } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 
 import { AppProviders } from "@/components/providers/app-providers";
@@ -33,14 +33,6 @@ const syne = Syne({
   variable: "--font-syne",
   display: "swap",
   weight: ["400", "500", "600", "700", "800"],
-});
-
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  variable: "--font-playfair",
-  display: "swap",
-  weight: ["400", "500", "600", "700"],
-  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
@@ -111,7 +103,6 @@ export default async function RootLayout({
           geistMono.variable,
           notoDevanagari.variable,
           syne.variable,
-          playfair.variable,
           "min-h-screen",
         )}
       >

@@ -2,7 +2,7 @@
 
 import { HeartHandshake } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { APP_NAME } from "@/lib/constants";
 import { cn } from "@/lib/utils/cn";
@@ -16,26 +16,33 @@ type AppLogoProps = {
   compact?: boolean;
 };
 
-function LogoMark({ compact = false }: { compact?: boolean }) {
-  const logoCandidates = useMemo(
-    () => [
-      "/logo/custom-logo.webp",
-      "/logo/custom-logo.png",
-      "/logo/logo.webp",
-      "/logo/logo.png",
-      "/logo/Logo.webp",
-      "/logo/Logo.png",
-      "/logo/donorix-logo.webp",
-      "/logo/donorix-logo.png",
-      "/logo/Donorix-logo.webp",
-      "/logo/Donorix-logo.png",
-    ],
-    [],
-  );
+const logoCandidates = [
+  "/logo/custom-logo.webp",
+  "/logo/custom-logo.png",
+  "/logo/logo.webp",
+  "/logo/logo.png",
+  "/logo/Logo.webp",
+  "/logo/Logo.png",
+  "/logo/donorix-logo.webp",
+  "/logo/donorix-logo.png",
+  "/logo/Donorix-logo.webp",
+  "/logo/Donorix-logo.png",
+];
 
-  const [resolvedSrc, setResolvedSrc] = useState<string | null>(null);
+let cachedLogoSrc: string | null | "unresolved" = "unresolved";
+
+function LogoMark({ compact = false }: { compact?: boolean }) {
+  const [resolvedSrc, setResolvedSrc] = useState<string | null>(() => {
+    if (cachedLogoSrc !== "unresolved") return cachedLogoSrc;
+    return null;
+  });
 
   useEffect(() => {
+    if (cachedLogoSrc !== "unresolved") {
+      setResolvedSrc(cachedLogoSrc);
+      return;
+    }
+
     let cancelled = false;
 
     async function resolveLogo() {
@@ -49,19 +56,23 @@ function LogoMark({ compact = false }: { compact?: boolean }) {
 
         if (cancelled) return;
         if (ok) {
+          cachedLogoSrc = src;
           setResolvedSrc(src);
           return;
         }
       }
 
-      setResolvedSrc(null);
+      if (!cancelled) {
+        cachedLogoSrc = null;
+        setResolvedSrc(null);
+      }
     }
 
     void resolveLogo();
     return () => {
       cancelled = true;
     };
-  }, [logoCandidates]);
+  }, []);
 
   return (
     <span
@@ -77,7 +88,10 @@ function LogoMark({ compact = false }: { compact?: boolean }) {
           alt={`${APP_NAME} logo`}
           className={cn("h-full w-full object-contain", compact ? "p-1.5" : "p-2")}
           draggable={false}
-          onError={() => setResolvedSrc(null)}
+          onError={() => {
+            cachedLogoSrc = null;
+            setResolvedSrc(null);
+          }}
         />
       ) : (
         <span className="absolute inset-0 flex items-center justify-center rounded-2xl bg-brand text-brand-foreground">
@@ -102,7 +116,7 @@ export function AppLogo({
       <div className="min-w-0">
         <p
           className={cn(
-            "truncate font-brand font-semibold italic tracking-tight text-foreground",
+            "truncate font-display font-bold tracking-tight text-foreground",
             compact ? "text-base" : "text-lg",
           )}
         >

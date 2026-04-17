@@ -30,7 +30,7 @@ export default async function HomePage() {
             <div className="space-y-6">
               <Badge variant="danger">{t("home.hospitalBadge")}</Badge>
               <div className="space-y-4">
-                <h1 className="font-display text-balance text-4xl font-semibold md:text-6xl">
+                <h1 className="font-display text-balance text-4xl font-extrabold md:text-6xl">
                   {t("home.hospitalTitle")}
                 </h1>
                 <p className="max-w-2xl text-balance text-base text-muted-foreground md:text-lg">
@@ -195,7 +195,7 @@ export default async function HomePage() {
           <div className="space-y-6">
             <Badge variant="danger">{t("hero.badge")}</Badge>
             <div className="space-y-4">
-              <h1 className="font-display max-w-4xl text-balance text-4xl font-semibold md:text-6xl">
+              <h1 className="font-display max-w-4xl text-balance text-4xl font-extrabold md:text-6xl">
                 {t("hero.title")}
               </h1>
               <p className="max-w-3xl text-balance text-base text-muted-foreground md:text-lg">
@@ -209,9 +209,11 @@ export default async function HomePage() {
                   <ArrowRight className="size-4" />
                 </Link>
               </Button>
-              <Button asChild size="lg" variant="outline">
-                <Link href="/signup?account=hospital">{t("nav.registerHospital")}</Link>
-              </Button>
+              {!currentProfile && (
+                <Button asChild size="lg" variant="outline">
+                  <Link href="/signup?account=hospital">{t("nav.registerHospital")}</Link>
+                </Button>
+              )}
             </div>
           </div>
           <div className="grid gap-4">

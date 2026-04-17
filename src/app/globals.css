@@ -3,34 +3,33 @@
 @tailwind utilities;
 
 :root {
-  --background: 347 45% 97%;
+  --background: 347 55% 95%;
   --foreground: 220 28% 12%;
-  --muted: 347 25% 92%;
-  --muted-foreground: 220 14% 38%;
-  --card: 0 0% 99%;
+  --muted: 347 30% 90%;
+  --muted-foreground: 220 14% 36%;
+  --card: 0 0% 100%;
   --card-foreground: 220 28% 12%;
-  --accent: 347 30% 96%;
+  --accent: 347 35% 94%;
   --accent-foreground: 220 28% 12%;
-  --border: 347 18% 82%;
+  --border: 347 22% 78%;
   --ring: 347 89% 43%;
   --brand: 347 89% 43%;
   --brand-foreground: 0 0% 100%;
-  --brand-soft: 347 72% 92%;
+  --brand-soft: 347 75% 90%;
   --success: 158 63% 37%;
   --success-foreground: 0 0% 100%;
   --warning: 40 93% 52%;
   --warning-foreground: 220 26% 14%;
   --danger: 0 78% 55%;
   --danger-foreground: 0 0% 100%;
-  --surface-1: #fffbfc;
-  --surface-2: #f8f0f2;
-  --surface-3: #f0e5e8;
+  --surface-1: #fff8f9;
+  --surface-2: #f5e8ec;
+  --surface-3: #ecdde2;
   --text-primary: #0f0f10;
-  --text-secondary: #4a4050;
-  --border-subtle: rgba(179, 12, 49, 0.08);
+  --text-secondary: #4a3f45;
+  --border-subtle: rgba(179, 12, 49, 0.1);
   --font-app-sans: var(--font-geist-sans);
   --font-display: var(--font-syne);
-  --font-brand: var(--font-playfair);
 }
 
 .dark {
@@ -80,11 +79,11 @@ html.dark {
 }
 
 .bg-grid-red {
-  background-color: #fdf5f6;
+  background-color: #fce8ec;
   background-image:
-    radial-gradient(ellipse 80% 40% at 50% 0%, rgba(179, 12, 49, 0.22) 0%, transparent 70%),
-    linear-gradient(rgba(180, 20, 30, 0.09) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(180, 20, 30, 0.09) 1px, transparent 1px);
+    radial-gradient(ellipse 80% 40% at 50% 0%, rgba(179, 12, 49, 0.3) 0%, transparent 70%),
+    linear-gradient(rgba(180, 20, 30, 0.11) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(180, 20, 30, 0.11) 1px, transparent 1px);
   background-position: center top, center center, center center;
   background-size: auto, 24px 24px, 24px 24px;
 }
@@ -99,13 +98,14 @@ html.dark {
 }
 
 body {
-  background-color: #fdf5f6;
+  background-color: #fce8ec;
   background-image:
-    radial-gradient(ellipse 80% 45% at 50% 0%, rgba(179, 12, 49, 0.28) 0%, transparent 68%),
-    linear-gradient(rgba(180, 20, 30, 0.1) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(180, 20, 30, 0.1) 1px, transparent 1px);
-  background-position: center top, center center, center center;
-  background-size: auto, 24px 24px, 24px 24px;
+    radial-gradient(ellipse 90% 55% at 50% 0%, rgba(179, 12, 49, 0.38) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 40% at 85% 15%, rgba(255, 100, 80, 0.18) 0%, transparent 50%),
+    linear-gradient(rgba(180, 20, 30, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(180, 20, 30, 0.12) 1px, transparent 1px);
+  background-position: center top, center top, center center, center center;
+  background-size: auto, auto, 24px 24px, 24px 24px;
   background-attachment: fixed;
   position: relative;
 }
@@ -196,9 +196,10 @@ html.donorix-booting #donorix-boot-splash {
 }
 
 .donorix-boot-splash__title {
-  font-family: var(--font-playfair), Georgia, serif;
-  font-style: italic;
-  font-weight: 700;
+  font-family: var(--font-syne), system-ui, sans-serif;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: -0.02em;
   color: hsl(var(--foreground));
   font-size: clamp(2rem, 4vw, 2.6rem);
   line-height: 1;
@@ -232,9 +233,9 @@ body::before {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(circle at 18% 22%, rgba(255, 245, 246, 0.8), transparent 36%),
-    radial-gradient(circle at 82% 14%, rgba(179, 12, 49, 0.32), transparent 38%),
-    radial-gradient(circle at 48% 80%, rgba(255, 122, 89, 0.28), transparent 39%);
+    radial-gradient(circle at 15% 18%, rgba(255, 220, 225, 0.95), transparent 32%),
+    radial-gradient(circle at 82% 12%, rgba(179, 12, 49, 0.42), transparent 36%),
+    radial-gradient(circle at 50% 82%, rgba(255, 100, 70, 0.36), transparent 38%);
   animation: ambient-shift 18s ease-in-out infinite alternate;
 }
 
@@ -307,28 +308,49 @@ button {
 }
 
 .glass-panel {
-  background: linear-gradient(145deg, rgba(255, 250, 251, 0.96), rgba(255, 244, 246, 0.88));
-  border: 1px solid rgba(179, 12, 49, 0.14);
+  background: linear-gradient(145deg, rgba(255, 248, 249, 0.8), rgba(255, 236, 242, 0.72));
+  border: 1px solid rgba(160, 20, 40, 0.2);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    0 1px 0 rgba(179, 12, 49, 0.06),
-    0 20px 52px rgba(17, 24, 39, 0.12),
-    0 4px 12px rgba(179, 12, 49, 0.06);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 0 rgba(179, 12, 49, 0.06),
+    0 1px 0 rgba(179, 12, 49, 0.08),
+    0 24px 56px rgba(17, 24, 39, 0.14),
+    0 4px 14px rgba(179, 12, 49, 0.08);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
 }
 
 .surface,
 .glass {
-  background: linear-gradient(145deg, rgba(255, 250, 251, 0.94), rgba(255, 244, 246, 0.84));
-  border: 1px solid rgba(179, 12, 49, 0.12);
+  background: linear-gradient(145deg, rgba(255, 248, 249, 0.76), rgba(255, 234, 240, 0.66));
+  border: 1px solid rgba(160, 20, 40, 0.16);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.88),
-    0 18px 46px rgba(17, 24, 39, 0.1),
-    0 4px 10px rgba(179, 12, 49, 0.05);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    0 20px 50px rgba(17, 24, 39, 0.13),
+    0 4px 12px rgba(179, 12, 49, 0.08);
+  backdrop-filter: blur(24px) saturate(175%);
+  -webkit-backdrop-filter: blur(24px) saturate(175%);
   border-radius: 1.75rem;
+}
+
+.surface .glass-panel,
+.glass .glass-panel,
+.glass-panel .glass-panel {
+  background: rgba(255, 255, 255, 0.96) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid rgba(160, 20, 40, 0.1);
+  box-shadow: 0 4px 16px rgba(17, 24, 39, 0.08), 0 1px 4px rgba(179, 12, 49, 0.04);
+}
+
+.dark .surface .glass-panel,
+.dark .glass .glass-panel,
+.dark .glass-panel .glass-panel {
+  background: unset !important;
+  backdrop-filter: unset !important;
+  -webkit-backdrop-filter: unset !important;
+  border: unset;
+  box-shadow: unset;
 }
 
 .dark .glass-panel {

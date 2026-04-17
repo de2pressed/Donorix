@@ -52,7 +52,6 @@ const config: Config = {
         sans: ["var(--font-app-sans)", "system-ui", "sans-serif"],
         mono: ["var(--font-geist-mono)", "monospace"],
         display: ["var(--font-syne)", "system-ui", "sans-serif"],
-        brand: ["var(--font-playfair)", "Georgia", "serif"],
       },
       borderRadius: {
         xl: "1.5rem",

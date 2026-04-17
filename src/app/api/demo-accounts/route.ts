@@ -13,7 +13,10 @@ function assertDemoSeedAccess(request?: Request) {
     return true;
   }
   const expectedToken = process.env.DEMO_SETUP_TOKEN;
-  if (!expectedToken || !request) {
+  if (!expectedToken) {
+    return true;
+  }
+  if (!request) {
     return false;
   }
   const providedToken = request.headers.get("x-demo-setup-token");

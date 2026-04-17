@@ -77,10 +77,10 @@ html.dark {
   background-color: #faf7f8;
   background-image:
     radial-gradient(ellipse 80% 40% at 50% 0%, rgba(180, 20, 30, 0.09) 0%, transparent 70%),
-    linear-gradient(rgba(200, 30, 40, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(200, 30, 40, 0.045) 1px, transparent 1px);
+    linear-gradient(rgba(200, 30, 40, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(200, 30, 40, 0.04) 1px, transparent 1px);
   background-position: center top, center center, center center;
-  background-size: auto, 40px 40px, 40px 40px;
+  background-size: auto, 24px 24px, 24px 24px;
 }
 
 .dark .bg-grid-red {
@@ -89,16 +89,17 @@ html.dark {
     radial-gradient(ellipse 80% 40% at 50% 0%, rgba(180, 20, 30, 0.18) 0%, transparent 70%),
     linear-gradient(rgba(200, 30, 40, 0.07) 1px, transparent 1px),
     linear-gradient(90deg, rgba(200, 30, 40, 0.07) 1px, transparent 1px);
+  background-size: auto, 24px 24px, 24px 24px;
 }
 
 body {
   background-color: #faf7f8;
   background-image:
     radial-gradient(ellipse 80% 40% at 50% 0%, rgba(180, 20, 30, 0.13) 0%, transparent 70%),
-    linear-gradient(rgba(200, 30, 40, 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(200, 30, 40, 0.07) 1px, transparent 1px);
+    linear-gradient(rgba(200, 30, 40, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(200, 30, 40, 0.05) 1px, transparent 1px);
   background-position: center top, center center, center center;
-  background-size: auto, 40px 40px, 40px 40px;
+  background-size: auto, 24px 24px, 24px 24px;
   background-attachment: fixed;
 }
 
@@ -109,8 +110,15 @@ html.dark body {
     linear-gradient(rgba(200, 30, 40, 0.07) 1px, transparent 1px),
     linear-gradient(90deg, rgba(200, 30, 40, 0.07) 1px, transparent 1px);
   background-position: center top, center center, center center;
-  background-size: auto, 40px 40px, 40px 40px;
+  background-size: auto, 24px 24px, 24px 24px;
   background-attachment: fixed;
+}
+
+@media (max-width: 768px) {
+  body,
+  html.dark body {
+    background-attachment: scroll;
+  }
 }
 
 #donorix-boot-splash {
@@ -382,6 +390,8 @@ button {
   border-left: 3px solid #dc2626 !important;
   border-color: rgba(220, 38, 38, 0.2) !important;
   isolation: isolate;
+  contain: layout style;
+  will-change: box-shadow;
 }
 
 .dark .emergency-card {
@@ -476,33 +486,18 @@ button {
       0 0 0 0 rgba(220, 38, 38, 0),
       0 0 0 0 rgba(220, 38, 38, 0),
       inset 3px 0 0 #dc2626;
-    transform: scale(1);
   }
   30% {
     box-shadow:
       0 0 18px 4px rgba(220, 38, 38, 0.28),
       0 0 40px 8px rgba(220, 38, 38, 0.1),
       inset 3px 0 0 #ff3333;
-    transform: scale(1.008);
   }
   60% {
     box-shadow:
       0 0 8px 2px rgba(220, 38, 38, 0.12),
       0 0 0 0 rgba(220, 38, 38, 0),
       inset 3px 0 0 #dc2626;
-    transform: scale(1);
-  }
-}
-
-@keyframes btn-press {
-  0% {
-    transform: scale(1);
-  }
-  40% {
-    transform: scale(0.95);
-  }
-  100% {
-    transform: scale(1);
   }
 }
 

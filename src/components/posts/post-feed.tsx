@@ -46,7 +46,7 @@ export function PostFeed({
         <PostFilter emergencyOnly={emergencyOnly} onEmergencyChange={setEmergencyOnly} />
       </div>
 
-      <div className="space-y-5 overflow-x-hidden">
+      <div className="space-y-5 [overflow-x:clip]">
         {filteredPosts.length ? (
           filteredPosts.map((post, index) => (
             <PostCard key={post.id} index={index} isAuthenticated={isAuthenticated} post={post} />

@@ -2,21 +2,40 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
+
+function SearchParamsKey({
+  children,
+  pathname,
+  reduceMotion,
+}: {
+  children: (routeKey: string) => React.ReactNode;
+  pathname: string;
+  reduceMotion: boolean;
+}) {
+  const searchParams = useSearchParams();
+  const search = searchParams?.toString();
+  const routeKey = search ? `${pathname}?${search}` : pathname;
+
+  return (
+    <motion.div
+      animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+      initial={reduceMotion ? false : { opacity: 0, y: 10, filter: "blur(2px)" }}
+      key={routeKey}
+      transition={{ duration: reduceMotion ? 0 : 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}
+    >
+      {children(routeKey)}
+    </motion.div>
+  );
+}
 
 export function PageTransitionShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = Boolean(useReducedMotion());
   const [progress, setProgress] = useState(0);
   const [loading, setLoading] = useState(false);
   const initialized = useRef(false);
   const failSafeTimeout = useRef<number | null>(null);
-
-  const routeKey = useMemo(() => {
-    const search = searchParams?.toString();
-    return search ? `${pathname}?${search}` : pathname;
-  }, [pathname, searchParams]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -129,7 +148,7 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [pathname, searchParams]);
+  }, [pathname]);
 
   return (
     <>
@@ -145,14 +164,22 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
         />
       </div>
 
-      <motion.div
-        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-        initial={reduceMotion ? false : { opacity: 0, y: 10, filter: "blur(2px)" }}
-        key={routeKey}
-        transition={{ duration: reduceMotion ? 0 : 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}
+      <Suspense
+        fallback={
+          <motion.div
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            initial={reduceMotion ? false : { opacity: 0, y: 10, filter: "blur(2px)" }}
+            key={pathname}
+            transition={{ duration: reduceMotion ? 0 : 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}
+          >
+            {children}
+          </motion.div>
+        }
       >
-        {children}
-      </motion.div>
+        <SearchParamsKey pathname={pathname} reduceMotion={reduceMotion}>
+          {() => children}
+        </SearchParamsKey>
+      </Suspense>
     </>
   );
 }

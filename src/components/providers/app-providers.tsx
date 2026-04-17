@@ -3,7 +3,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { AbstractIntlMessages } from "next-intl";
 import { ThemeProvider } from "next-themes";
-import { Suspense, useState } from "react";
+import { useState } from "react";
 import { Toaster } from "sonner";
 
 import { PageTransitionShell } from "@/components/layout/page-transition-shell";
@@ -52,9 +52,7 @@ export function AppProviders({ children, locale, messages }: AppProvidersProps) 
                 <CookieConsentBanner />
                 <div className="flex min-h-screen flex-col">
                   <div className="flex-1">
-                    <Suspense fallback={null}>
-                      <PageTransitionShell>{children}</PageTransitionShell>
-                    </Suspense>
+                    <PageTransitionShell>{children}</PageTransitionShell>
                   </div>
                   <SiteFooter />
                 </div>

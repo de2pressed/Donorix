@@ -17,7 +17,7 @@ export function PostFilter({
       <SelectTrigger aria-label={tFeed("filterLabel")} className="min-w-[220px]">
         <SelectValue placeholder={tFeed("filterLabel")} />
       </SelectTrigger>
-      <SelectContent className="min-w-[220px]">
+      <SelectContent className="min-w-[220px]" position="popper">
         <SelectItem value="all">{tFeed("filterAll")}</SelectItem>
         <SelectItem value="emergency">{tFeed("filterEmergency")}</SelectItem>
       </SelectContent>

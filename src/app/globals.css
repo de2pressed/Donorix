@@ -64,7 +64,6 @@
 
 html {
   color-scheme: light;
-  overflow-x: hidden;
   scroll-behavior: smooth;
   scrollbar-gutter: stable;
 }
@@ -114,7 +113,7 @@ html.dark body {
   background-attachment: fixed;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   body,
   html.dark body {
     background-attachment: scroll;

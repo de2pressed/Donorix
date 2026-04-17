@@ -40,6 +40,7 @@ export function MobileNav() {
       case "/hospital/donors":
         return tNav("donors");
       case "/hospital/chats":
+      case "/donor/chats":
         return tNav("chats");
       case "/notifications":
         return tNav("notifications");

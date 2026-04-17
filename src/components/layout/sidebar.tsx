@@ -25,6 +25,7 @@ function getSidebarLabel(
     case "/hospital/donors":
       return t("donors");
     case "/hospital/chats":
+    case "/donor/chats":
       return t("chats");
     case "/notifications":
       return t("notifications");

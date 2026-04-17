@@ -1,5 +1,19 @@
 ## Donorix Brain (change log)
 
+### 2026-04-18 — Font system revert
+
+#### Revert
+- Returned the app shell and Tailwind font stack to the default system UI families.
+- Removed the custom font loaders from the root layout and cleared the font CSS variables from the global stylesheet.
+- Switched the logo wordmark and policies header brand link back to plain system sans treatment.
+
+#### Files touched
+- `donorix/src/app/layout.tsx`
+- `donorix/src/app/globals.css`
+- `donorix/src/components/layout/app-logo.tsx`
+- `donorix/src/app/policies/layout.tsx`
+- `donorix/tailwind.config.ts`
+
 ### 2026-04-18 — Changelog 14 (typography reset + glass depth + logo cache execution)
 
 #### Typography reset

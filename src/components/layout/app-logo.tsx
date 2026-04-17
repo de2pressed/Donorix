@@ -116,7 +116,7 @@ export function AppLogo({
       <div className="min-w-0">
         <p
           className={cn(
-            "truncate font-display font-bold tracking-tight text-foreground",
+            "truncate font-sans font-bold tracking-tight text-foreground",
             compact ? "text-base" : "text-lg",
           )}
         >

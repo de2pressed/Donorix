@@ -28,8 +28,6 @@
   --text-primary: #0f0f10;
   --text-secondary: #4a3f45;
   --border-subtle: rgba(179, 12, 49, 0.1);
-  --font-app-sans: var(--font-geist-sans);
-  --font-display: var(--font-syne);
 }
 
 .dark {
@@ -58,10 +56,6 @@
   --text-primary: #f0ecee;
   --text-secondary: #9a8e93;
   --border-subtle: rgba(255, 255, 255, 0.06);
-}
-
-html[lang="hi"] {
-  --font-app-sans: var(--font-noto-devanagari);
 }
 
 * {
@@ -196,7 +190,7 @@ html.donorix-booting #donorix-boot-splash {
 }
 
 .donorix-boot-splash__title {
-  font-family: var(--font-syne), system-ui, sans-serif;
+  font-family: inherit;
   font-style: normal;
   font-weight: 800;
   letter-spacing: -0.02em;

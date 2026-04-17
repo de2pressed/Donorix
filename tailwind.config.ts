@@ -49,9 +49,9 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ["var(--font-app-sans)", "system-ui", "sans-serif"],
-        mono: ["var(--font-geist-mono)", "monospace"],
-        display: ["var(--font-syne)", "system-ui", "sans-serif"],
+        sans: ["system-ui", "sans-serif"],
+        mono: ["ui-monospace", "SFMono-Regular", "monospace"],
+        display: ["system-ui", "sans-serif"],
       },
       borderRadius: {
         xl: "1.5rem",

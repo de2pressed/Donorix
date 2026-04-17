@@ -4,7 +4,10 @@
 
 #### Hero and cards
 - Updated the hospital dashboard hero headline weight and size to match the guest hero treatment.
-- Added glass styling to the hospital and guest hero stat cards so they blend with the light theme glass surfaces.
+- Added a dedicated frosted `hero-stat-card` surface for the hospital and guest hero stat cards so they override the parent surface's white nested-card treatment and stay visually glassy.
+
+#### Feed post cards
+- Fixed the minimize control on expanded live request cards so it now collapses the card instead of bubbling into the post navigation.
 
 #### Mobile sheets and footer
 - Moved the profile actions logout control to the top of the mobile sheet and increased the bottom clearance.

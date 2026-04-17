@@ -73,7 +73,7 @@ export default async function HomePage() {
                       : t("home.verificationPending"),
                 },
               ].map((item) => (
-                <Card key={item.title} className="glass">
+                <Card key={item.title} className="hero-stat-card">
                   <CardContent className="flex items-start gap-4 p-5">
                     <div className="flex size-11 items-center justify-center rounded-2xl bg-brand-soft text-brand">
                       <item.icon className="size-5" />
@@ -234,7 +234,7 @@ export default async function HomePage() {
                 description: t("hero.featureThreeBody"),
               },
             ].map((item) => (
-              <Card key={item.title} className="glass">
+              <Card key={item.title} className="hero-stat-card">
                 <CardContent className="flex items-start gap-4 p-5">
                   <div className="flex size-11 items-center justify-center rounded-2xl bg-brand-soft text-brand">
                     <item.icon className="size-5" />

@@ -98,8 +98,24 @@ export function PostCard({
             </div>
           </div>
 
-          <div aria-hidden="true" className="shrink-0 text-muted-foreground">
-            {expanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+          <div className="shrink-0">
+            {expanded ? (
+              <button
+                aria-label="Minimize request card"
+                className="flex size-9 items-center justify-center rounded-full border border-border/70 bg-card/70 text-muted-foreground transition hover:border-brand/40 hover:text-brand"
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setExpanded(false);
+                }}
+              >
+                <ChevronUp className="size-4" />
+              </button>
+            ) : (
+              <div aria-hidden="true" className="text-muted-foreground">
+                <ChevronDown className="size-4" />
+              </div>
+            )}
           </div>
         </div>
 

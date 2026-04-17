@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 
@@ -152,6 +152,23 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
 
   return (
     <>
+      <AnimatePresence>
+        {loading ? (
+          <motion.div
+            aria-hidden="true"
+            className="pointer-events-none fixed inset-0 z-[90] overflow-hidden"
+            initial={reduceMotion ? { opacity: 0.96 } : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: reduceMotion ? 0 : 0.24, ease: "easeOut" }}
+          >
+            <div className="absolute inset-0 bg-[linear-gradient(160deg,rgba(5,5,6,0.84)_0%,rgba(16,9,12,0.78)_42%,rgba(3,3,4,0.92)_100%)] backdrop-blur-[30px]" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_78%_52%_at_50%_0%,rgba(179,12,49,0.18)_0%,rgba(179,12,49,0.08)_38%,transparent_72%)]" />
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03)_0%,transparent_28%,rgba(0,0,0,0.14)_100%)]" />
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+
       <div className="pointer-events-none fixed inset-x-0 top-0 z-[95] h-1">
         <motion.div
           animate={{ opacity: progress > 0 ? 1 : 0, scaleX: progress / 100 }}

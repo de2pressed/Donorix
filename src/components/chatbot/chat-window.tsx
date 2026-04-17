@@ -20,7 +20,7 @@ export function ChatWindow() {
     {
       role: "assistant",
       content:
-        "I can help you create a blood request, explain donor eligibility, or find matching posts in English or Hindi.",
+        "I can help you understand Donorix, check donor eligibility, or find requests you may be able to respond to.",
       createdAt: new Date().toISOString(),
     },
   ]);
@@ -68,7 +68,7 @@ export function ChatWindow() {
               {
                 role: "assistant",
                 content:
-                  "The chatbot API route is ready. Connect your OpenAI key and Supabase Edge Function to replace this placeholder reply.",
+                  "I can help you understand Donorix, check donor eligibility, or find requests you may be able to respond to.",
                 createdAt: timestamp,
               },
             ]);

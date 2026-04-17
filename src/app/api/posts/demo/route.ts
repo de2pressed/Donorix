@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 import { jsonError, requireServerUser } from "@/lib/http";
-import { enforceRateLimit } from "@/lib/rate-limit";
 import { BLOOD_TYPES } from "@/lib/constants";
 import { createDemoRequestDraft } from "@/lib/utils/demo-request";
 import { sanitizeText } from "@/lib/utils/sanitize";
@@ -32,11 +31,6 @@ export async function POST(request: NextRequest) {
 
     if (!hospitalAccount) {
       return jsonError("Hospital details are incomplete. Complete hospital registration first.", 409);
-    }
-
-    const rateLimit = await enforceRateLimit(`post-create-demo:${profile.id}`);
-    if (!rateLimit.success) {
-      return jsonError("Too many requests", 429);
     }
 
     const body = await request.json().catch(() => ({}));

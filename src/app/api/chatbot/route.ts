@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getFeedPosts } from "@/lib/data";
 import { env } from "@/lib/env";
 import { jsonError, requireServerUser } from "@/lib/http";
-import { enforceRateLimit } from "@/lib/rate-limit";
 import { canDonateToRecipient, isBloodType } from "@/lib/utils/blood-type";
 import type { BloodType } from "@/lib/utils/blood-type";
 import { sanitizeText } from "@/lib/utils/sanitize";
@@ -12,9 +11,12 @@ import { createPostSchema, type CreatePostInput } from "@/lib/validations/post";
 const SYSTEM_PROMPT = `You are Donorix Assistant, a guide for the Donorix blood donation platform in India.
 Help donors find requests, understand eligibility, and navigate the platform.
 Help hospitals create requests and manage donor applicants.
+Never imply that donor or guest accounts can create, draft, or publish blood requests. Only verified hospital accounts can do that.
 Be concise, practical, and medically careful.
 Do not provide specific medical advice or replace emergency services.
 Reply in the same language as the user when possible.`;
+
+const OPENAI_MODEL = "gpt-5-nano";
 
 const LANGUAGE_NAMES = {
   en: "English",
@@ -86,7 +88,7 @@ type ChatbotResponse = {
 const RESPONSES: Record<SupportedLanguage, Record<Intent, string>> = {
   en: {
     fallback:
-      "I can help you create a blood request, explain donor eligibility, or guide you to the live feed. Tell me whether you need help with an emergency case, a donation question, or posting a request.",
+      "I can help you understand Donorix, check donor eligibility, or find requests you may be able to respond to.",
     eligibility:
       "Most donors need to be 18 or older, weigh at least 50 kg, and keep a 90-day gap after a whole blood donation. Final eligibility must still be confirmed by the treating hospital or blood bank.",
     emergency:
@@ -240,8 +242,37 @@ function detectIntent(message: string): Intent {
   return "fallback";
 }
 
-function buildFallbackReply(message: string, language: SupportedLanguage) {
-  return RESPONSES[language][detectIntent(message)];
+function buildFallbackReply(message: string, language: SupportedLanguage, persona: Persona) {
+  const intent = detectIntent(message);
+
+  if (persona !== "hospital" && intent === "request") {
+    return RESPONSES[language].fallback;
+  }
+
+  return RESPONSES[language][intent];
+}
+
+function sanitizePersonaReply(reply: string, language: SupportedLanguage, persona: Persona) {
+  if (persona === "hospital") {
+    return reply;
+  }
+
+  const normalized = sanitizeText(reply).toLowerCase();
+  const forbiddenPhrases = [
+    "create a request",
+    "create a blood request",
+    "post a request",
+    "publish the request",
+    "draft the request",
+    "create a post",
+    "blood request",
+  ];
+
+  if (forbiddenPhrases.some((phrase) => normalized.includes(phrase))) {
+    return RESPONSES[language].fallback;
+  }
+
+  return reply;
 }
 
 function resolvePersona(requestedPersona: unknown, accountType?: string | null): Persona {
@@ -330,7 +361,7 @@ async function getOpenAIReply({
         Authorization: `Bearer ${env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: OPENAI_MODEL,
         messages: [
           {
             role: "system",
@@ -404,7 +435,7 @@ async function extractHospitalDraft({
         Authorization: `Bearer ${env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: OPENAI_MODEL,
         response_format: { type: "json_object" },
         temperature: 0.2,
         messages: [
@@ -568,11 +599,6 @@ export async function POST(request: NextRequest) {
 
   if (!body?.message) {
     return jsonError("Message is required", 422);
-  }
-
-  const rateLimit = await enforceRateLimit(`chatbot:${request.headers.get("x-forwarded-for") ?? "anonymous"}`);
-  if (!rateLimit.success) {
-    return jsonError("Too many requests", 429);
   }
 
   const { profile, hospitalAccount } = await requireServerUser(request);
@@ -747,9 +773,10 @@ export async function POST(request: NextRequest) {
       persona,
       pathname: body.pathname,
       messages,
-    })) ?? buildFallbackReply(body.message, language);
+    })) ?? buildFallbackReply(body.message, language, persona);
 
-  const guestReply = isGuestReminderTurn ? `${reply}\n\n${getGuestReminder(language)}` : reply;
+  const safeReply = sanitizePersonaReply(reply, language, persona);
+  const guestReply = isGuestReminderTurn ? `${safeReply}\n\n${getGuestReminder(language)}` : safeReply;
 
   return NextResponse.json({
     language,

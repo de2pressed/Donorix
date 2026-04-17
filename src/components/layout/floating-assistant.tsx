@@ -364,7 +364,7 @@ export function FloatingAssistant() {
         {open ? (
           <motion.div
             animate={{ opacity: 1, y: 0 }}
-            className="fixed bottom-[calc(env(safe-area-inset-bottom)+5.25rem)] right-4 z-[45] flex w-[calc(100vw-2rem)] max-h-[min(78vh,40rem)] max-w-[380px] flex-col overflow-hidden rounded-[1.75rem] border border-border bg-card shadow-soft md:bottom-[calc(env(safe-area-inset-bottom)+1rem)] max-[479px]:inset-x-0 max-[479px]:bottom-0 max-[479px]:top-[env(safe-area-inset-top)] max-[479px]:max-h-none max-[479px]:w-screen max-[479px]:max-w-none max-[479px]:rounded-none"
+            className="fixed bottom-[calc(env(safe-area-inset-bottom)+5.25rem)] right-4 z-[70] flex w-[calc(100vw-2rem)] max-h-[min(78vh,40rem)] max-w-[380px] flex-col overflow-hidden rounded-[1.75rem] border border-border bg-card shadow-soft md:bottom-[calc(env(safe-area-inset-bottom)+1rem)] max-[479px]:inset-x-0 max-[479px]:bottom-0 max-[479px]:top-[env(safe-area-inset-top)] max-[479px]:max-h-none max-[479px]:w-screen max-[479px]:max-w-none max-[479px]:rounded-none"
             exit={{ opacity: 0, y: 16 }}
             initial={{ opacity: 0, y: 16 }}
             transition={{ duration: reduceMotion ? 0 : 0.2, ease: "easeOut" }}
@@ -528,7 +528,7 @@ export function FloatingAssistant() {
               </div>
 
               <form
-                className="grid shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-t border-border bg-card px-4 py-4 max-[479px]:pb-[calc(env(safe-area-inset-bottom)+1rem)]"
+                className="grid shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-t border-border bg-card px-4 py-4 max-[479px]:pb-[calc(env(safe-area-inset-bottom)+1.5rem)]"
                 onSubmit={async (event) => {
                   event.preventDefault();
                   await sendMessage(value);
@@ -553,7 +553,7 @@ export function FloatingAssistant() {
       <button
         aria-label={open ? "Close Donorix assistant" : "Open Donorix assistant"}
         className={cn(
-          "fixed bottom-[calc(env(safe-area-inset-bottom)+5.25rem)] right-4 z-[45] flex size-[52px] items-center justify-center rounded-full bg-brand text-brand-foreground shadow-glow transition hover:opacity-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:bottom-6",
+          "fixed bottom-[calc(env(safe-area-inset-bottom)+5.25rem)] right-4 z-[70] flex size-[52px] items-center justify-center rounded-full bg-brand text-brand-foreground shadow-glow transition hover:opacity-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:bottom-6",
           footerVisible && "md:bottom-24",
           open && "pointer-events-none invisible opacity-0",
         )}

@@ -173,13 +173,14 @@ export async function getFeedPosts(userId?: string) {
   const posts = (data as FeedPost[] | null) ?? [];
   const postIds = posts.map((post) => post.id);
   const creatorMap = await getCreatorMap(supabase, posts.map((post) => post.created_by));
-  const countClient = getSupabaseAdminClient() ?? supabase;
+  const countClient = supabase;
   let donorCountMap = new Map<string, number>();
 
   if (postIds.length && countClient) {
     const { data: applicationRows } = await countClient
       .from("donor_applications")
       .select("post_id")
+      .in("status", ["pending", "approved"])
       .in("post_id", postIds);
 
     donorCountMap = new Map();
@@ -410,13 +411,14 @@ export async function getHospitalPosts(profileId: string, sortBy: "patient_name"
 
   const posts = (data as Post[] | null) ?? [];
   const postIds = posts.map((post) => post.id);
-  const countClient = getSupabaseAdminClient() ?? supabase;
+  const countClient = supabase;
   let donorCountMap = new Map<string, number>();
 
   if (postIds.length && countClient) {
     const { data: applicationRows } = await countClient
       .from("donor_applications")
       .select("post_id")
+      .in("status", ["pending", "approved"])
       .in("post_id", postIds);
 
     donorCountMap = new Map();

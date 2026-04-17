@@ -60,16 +60,6 @@ export async function PATCH(
     .eq("status", "pending")
     .neq("donor_id", donorId);
 
-  const { error } = await supabase
-    .from("donor_applications")
-    .update({ status: nextStatus })
-    .eq("post_id", id)
-    .eq("donor_id", donorId);
-
-  if (error) {
-    return jsonError(error.message, 500);
-  }
-
   if (nextStatus === "approved") {
     await supabase.from("posts").update({ approved_donor_id: donorId }).eq("id", id);
     await supabase
@@ -79,12 +69,29 @@ export async function PATCH(
       .neq("donor_id", donorId)
       .eq("status", "pending");
   } else if (post.approved_donor_id === donorId) {
+    const { error } = await supabase
+      .from("donor_applications")
+      .update({ status: "rejected" })
+      .eq("post_id", id)
+      .eq("donor_id", donorId);
+    if (error) {
+      return jsonError(error.message, 500);
+    }
     await supabase.from("posts").update({ approved_donor_id: null }).eq("id", id);
+  } else {
+    const { error } = await supabase
+      .from("donor_applications")
+      .update({ status: "rejected" })
+      .eq("post_id", id)
+      .eq("donor_id", donorId);
+    if (error) {
+      return jsonError(error.message, 500);
+    }
   }
 
   const admin = getSupabaseAdminClient();
   if (admin) {
-    const notificationTitle =
+  const notificationTitle =
       nextStatus === "approved"
         ? "Your donation offer was accepted"
         : "Your donation offer was not selected";
@@ -103,7 +110,7 @@ export async function PATCH(
       data: { status: nextStatus, post_id: id },
     });
 
-    if (nextStatus === "approved" && pendingApplications?.length) {
+  if (nextStatus === "approved" && pendingApplications?.length) {
       await admin.from("notifications").insert(
         pendingApplications.map((pending) => ({
           user_id: pending.donor_id,
@@ -114,7 +121,7 @@ export async function PATCH(
           data: { status: "rejected", post_id: id },
         })),
       );
-    }
+  }
   }
 
   return NextResponse.json({ ok: true });

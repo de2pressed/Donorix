@@ -21,7 +21,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https://images.unsplash.com https://api.dicebear.com",
       "font-src 'self' data:",
-      "connect-src 'self' https://*.supabase.co https://api.mapbox.com https://events.mapbox.com https://api.openai.com https://api.upstash.com https://api.twilio.com",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co ws://localhost:* wss://localhost:* ws://127.0.0.1:* wss://127.0.0.1:* https://api.mapbox.com https://events.mapbox.com https://api.openai.com https://api.upstash.com https://api.twilio.com",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",

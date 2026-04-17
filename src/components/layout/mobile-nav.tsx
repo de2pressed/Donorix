@@ -8,7 +8,13 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useUser } from "@/lib/hooks/use-user";
 import { getBottomNav, getMoreNav } from "@/lib/navigation";
@@ -104,6 +110,9 @@ export function MobileNav() {
         <DialogContent className="dialog-bottom-sheet inset-x-0 bottom-0 top-auto w-full max-w-none !translate-x-0 !translate-y-0 rounded-b-none rounded-t-[1.75rem] px-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] pt-8 sm:max-w-none lg:hidden">
           <DialogHeader>
             <DialogTitle>{tNav("more")}</DialogTitle>
+            <DialogDescription className="sr-only">
+              Quick links and account actions.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
             {moreItems.map((item) => (
@@ -114,7 +123,7 @@ export function MobileNav() {
                 onClick={() => setMoreOpen(false)}
               >
                 <item.icon className="size-4" />
-                {item.label}
+                {getLabel(item.href)}
               </Link>
             ))}
             {user ? (

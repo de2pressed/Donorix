@@ -205,6 +205,8 @@ export function LoginForm({ accountType = "donor" }: { accountType?: "donor" | "
     setIsSubmitting(true);
     try {
       await loginWithCredentials(values, accountType, accountType === "hospital" ? "/" : "/find");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to sign in.");
     } finally {
       setIsSubmitting(false);
     }

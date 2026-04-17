@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -66,6 +67,9 @@ export default function PoliciesLayout({ children }: { children: React.ReactNode
               <DialogContent className="max-w-[calc(100vw-1rem)]">
                 <DialogHeader>
                   <DialogTitle>Policy Menu</DialogTitle>
+                  <DialogDescription className="sr-only">
+                    Browse the policy sections on mobile.
+                  </DialogDescription>
                 </DialogHeader>
                 <nav className="max-h-[60vh] space-y-1 overflow-y-auto">
                   {POLICY_NAV.map((item) => (

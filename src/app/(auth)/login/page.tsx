@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { Building2, HeartHandshake } from "lucide-react";
 
@@ -66,7 +67,13 @@ export default async function LoginPage({
       </div>
 
       <div className="flex justify-center">
-        <LoginForm accountType={account} />
+        <Suspense
+          fallback={
+            <div className="h-64 w-full max-w-lg animate-pulse rounded-[1.8rem] border border-border bg-card/70 p-8" />
+          }
+        >
+          <LoginForm accountType={account} />
+        </Suspense>
       </div>
       <p className="text-center text-sm text-muted-foreground">
         New to Donorix?{" "}

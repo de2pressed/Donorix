@@ -12,6 +12,8 @@ import type { DonorApplicationWithDonor, FeedPost, Post } from "@/types/post";
 import type { HospitalAccount, Profile } from "@/types/user";
 
 type AdminAction = TableRow<"admin_actions">;
+type ServerSupabaseClient = Awaited<ReturnType<typeof createServerSupabaseClient>>;
+type CreatorSummary = Pick<Profile, "id" | "full_name" | "username" | "city" | "state" | "karma">;
 
 export type AdminUserApplication = TableRow<"donor_applications"> & {
   post: Pick<Post, "id" | "patient_name" | "patient_id" | "blood_type_needed" | "city" | "status"> | null;
@@ -39,6 +41,19 @@ type DonorSummary = Pick<
   Profile,
   "id" | "full_name" | "username" | "blood_type" | "total_donations" | "karma" | "is_verified" | "city" | "state"
 >;
+
+async function getCreatorMap(supabase: ServerSupabaseClient, creatorIds: string[]) {
+  if (!supabase || !creatorIds.length) {
+    return new Map<string, CreatorSummary>();
+  }
+
+  const { data } = await supabase
+    .from("profiles")
+    .select("id, full_name, username, city, state, karma")
+    .in("id", creatorIds);
+
+  return new Map(((data ?? []) as CreatorSummary[]).map((creator) => [creator.id, creator]));
+}
 
 export async function getCurrentProfile() {
   const supabase = await createServerSupabaseClient();
@@ -81,6 +96,7 @@ export async function getFeedPosts(userId?: string) {
 
   const posts = (data as FeedPost[] | null) ?? [];
   const postIds = posts.map((post) => post.id);
+  const creatorMap = await getCreatorMap(supabase, posts.map((post) => post.created_by));
   const countClient = getSupabaseAdminClient() ?? supabase;
   let donorCountMap = new Map<string, number>();
 
@@ -99,6 +115,7 @@ export async function getFeedPosts(userId?: string) {
   const postsWithCounts = posts.map((post) => ({
     ...post,
     donor_count: donorCountMap.get(post.id) ?? post.donor_count ?? 0,
+    creator: creatorMap.get(post.created_by) ?? null,
   }));
 
   if (!userId || !postsWithCounts.length) {
@@ -142,8 +159,16 @@ export async function getPostById(postId: string, userId?: string) {
 
   const post = (data as FeedPost | null) ?? null;
 
-  if (!post || !userId) {
-    return post;
+  const creatorMap = await getCreatorMap(supabase, post ? [post.created_by] : []);
+  const postWithCreator = post
+    ? {
+        ...post,
+        creator: creatorMap.get(post.created_by) ?? null,
+      }
+    : null;
+
+  if (!postWithCreator || !userId) {
+    return postWithCreator;
   }
 
   const { data: vote } = await supabase
@@ -154,7 +179,7 @@ export async function getPostById(postId: string, userId?: string) {
     .maybeSingle();
 
   return {
-    ...post,
+    ...postWithCreator,
     has_voted: Boolean(vote),
   };
 }

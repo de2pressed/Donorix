@@ -19,8 +19,8 @@ export function ProfileHeader({ profile }: { profile: Profile }) {
         : "Currently unavailable";
   const secondaryLine =
     profile.account_type === "hospital"
-      ? "Hospital account"
-      : `@${profile.username}${profile.blood_type ? ` • ${profile.blood_type}` : ""}`;
+      ? `Hospital account${profile.username ? ` - @${profile.username}` : ""}`
+      : `@${profile.username}${profile.blood_type ? ` - ${profile.blood_type}` : ""}`;
 
   return (
     <Card className="flex flex-col gap-6 md:flex-row md:items-center">
@@ -31,7 +31,9 @@ export function ProfileHeader({ profile }: { profile: Profile }) {
       <div className="space-y-3">
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-3xl font-semibold">{fullName}</h1>
-          <Badge variant={profile.account_type === "hospital" ? "secondary" : profile.is_available ? "success" : "secondary"}>
+          <Badge
+            variant={profile.account_type === "hospital" ? "secondary" : profile.is_available ? "success" : "secondary"}
+          >
             {statusLabel}
           </Badge>
           {profile.is_admin ? <Badge variant="danger">Admin</Badge> : null}

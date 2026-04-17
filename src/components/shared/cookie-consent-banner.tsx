@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -81,6 +82,9 @@ export function CookieConsentBanner() {
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Manage cookie preferences</DialogTitle>
+                  <DialogDescription className="sr-only">
+                    Review optional analytics and experience cookie settings.
+                  </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   {COOKIE_OPTIONS.map((option) => (

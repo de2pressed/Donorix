@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -177,6 +178,9 @@ export function UserMenu() {
           <DialogContent className="dialog-bottom-sheet inset-x-0 bottom-0 top-auto w-full max-w-none !translate-x-0 !translate-y-0 rounded-b-none rounded-t-[1.75rem] px-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] pt-8 sm:max-w-none">
             <DialogHeader>
               <DialogTitle>{tNav("profileActions")}</DialogTitle>
+              <DialogDescription className="sr-only">
+                Open your profile, settings, assistant, or sign out.
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-2">
               {showAdminControls ? (

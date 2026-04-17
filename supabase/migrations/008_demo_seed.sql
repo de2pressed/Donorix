@@ -354,7 +354,7 @@ begin
     demo_hospital_user_id,
     'Rahul Verma',
     'PATIENT-001',
-    'O-',
+    'O+',
     2,
     'City Lifeline Hospital',
     '12 Ring Road, New Delhi, Delhi 110001',

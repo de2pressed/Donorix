@@ -89,7 +89,16 @@ export function PostCard({
                 <Hospital className="size-4 text-brand" />
                 {tRequest("hospital")}
               </div>
-              <p className="mt-2 truncate text-sm text-muted-foreground">{post.hospital_name}</p>
+              {post.creator?.username ? (
+                <Link
+                  className="mt-2 block truncate text-sm text-muted-foreground transition hover:text-brand"
+                  href={`/profile/${post.creator.username}`}
+                >
+                  {post.hospital_name}
+                </Link>
+              ) : (
+                <p className="mt-2 truncate text-sm text-muted-foreground">{post.hospital_name}</p>
+              )}
             </div>
             <div className="rounded-[1.5rem] border border-border p-4">
               <div className="flex items-center gap-2 text-sm font-medium">

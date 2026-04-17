@@ -25,6 +25,10 @@ export function DonorList({
   const tRequest = useTranslations("request");
   const [busyId, setBusyId] = useState<string | null>(null);
 
+  if (!canAct && donors.length === 0) {
+    return null;
+  }
+
   async function updateStatus(donorId: string, status: "approved" | "rejected") {
     if (!postId) {
       return;
@@ -90,6 +94,7 @@ export function DonorList({
                       <Button
                         disabled={busyId === donor.id}
                         size="sm"
+                        aria-label={`Accept ${donor.donor?.full_name ?? donor.donor_id}`}
                         onClick={() => {
                           void updateStatus(donor.donor_id, "approved");
                         }}
@@ -100,6 +105,7 @@ export function DonorList({
                         disabled={busyId === donor.id}
                         size="sm"
                         variant="outline"
+                        aria-label={`Reject ${donor.donor?.full_name ?? donor.donor_id}`}
                         onClick={() => {
                           void updateStatus(donor.donor_id, "rejected");
                         }}

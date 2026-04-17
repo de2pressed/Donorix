@@ -94,7 +94,6 @@ export function getMoreNav(accountType?: AccountType | null, isAuthenticated = f
       { href: "/about", label: "About Us", icon: Info },
       { href: "/profile", label: "Profile", icon: User2 },
       { href: "/settings", label: "Settings", icon: Settings },
-      { href: "/signup?account=hospital", label: "Register as Hospital", icon: Building2 },
     ] satisfies NavItem[];
   }
 
@@ -108,5 +107,5 @@ export function getMoreNav(accountType?: AccountType | null, isAuthenticated = f
 }
 
 export function showRegisterHospitalButton(accountType?: AccountType | null) {
-  return accountType !== "hospital";
+  return accountType == null;
 }

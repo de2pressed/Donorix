@@ -80,6 +80,7 @@ type ChatbotResponse = {
   reply: string;
   persona: Persona;
   mode: "general" | "eligible_posts" | "hospital_draft";
+  aiActive: boolean;
   eligiblePosts?: EligiblePost[];
   draftState?: HospitalDraftState | null;
   reminder?: string | null;
@@ -88,7 +89,7 @@ type ChatbotResponse = {
 const RESPONSES: Record<SupportedLanguage, Record<Intent, string>> = {
   en: {
     fallback:
-      "I can help you understand Donorix, check donor eligibility, or find requests you may be able to respond to.",
+      "Donorix helps donors find compatible requests and helps verified hospitals manage blood requests. I can explain how it works, show requests you may be able to respond to, or help with donor eligibility.",
     eligibility:
       "Most donors need to be 18 or older, weigh at least 50 kg, and keep a 90-day gap after a whole blood donation. Final eligibility must still be confirmed by the treating hospital or blood bank.",
     emergency:
@@ -216,7 +217,7 @@ function detectIntent(message: string): Intent {
   const normalized = sanitizeText(message).toLowerCase();
 
   if (
-    ["elig", "eligible", "eligibility", "donor", "पात्र", "যোগ্য", "అర్హ", "தகுதி", "اہلیت"].some((term) =>
+    ["elig", "eligible", "eligibility", "पात्र", "যোগ্য", "అర్హ", "தகுதி", "اہلیت"].some((term) =>
       normalized.includes(term),
     )
   ) {
@@ -624,6 +625,7 @@ export async function POST(request: NextRequest) {
       languageName: LANGUAGE_NAMES[language],
       persona,
       mode: "eligible_posts",
+      aiActive: false,
       reply,
       eligiblePosts,
       reminder: isGuestReminderTurn ? getGuestReminder(language) : null,
@@ -648,6 +650,7 @@ export async function POST(request: NextRequest) {
         languageName: LANGUAGE_NAMES[language],
         persona,
         mode: "hospital_draft",
+        aiActive: false,
         reply:
           language === "hi"
             ? "Mujhe aapka hospital account setup complete nahi dikh raha. Please settings complete karke phir try karein."
@@ -669,6 +672,7 @@ export async function POST(request: NextRequest) {
         languageName: LANGUAGE_NAMES[language],
         persona,
         mode: "hospital_draft",
+        aiActive: false,
         reply:
           language === "hi"
             ? "Main draft banane mein madad kar sakta hoon, lekin post sirf verified hospital accounts se publish ho sakta hai. Pehle verification complete karein."
@@ -751,6 +755,7 @@ export async function POST(request: NextRequest) {
       languageName: LANGUAGE_NAMES[language],
       persona,
       mode: "hospital_draft",
+      aiActive: Boolean(extractedDraft),
       reply,
       draftState: {
         values: normalizedDraft,
@@ -766,15 +771,15 @@ export async function POST(request: NextRequest) {
     } satisfies ChatbotResponse);
   }
 
-  const reply =
-    (await getOpenAIReply({
-      message: body.message,
-      language,
-      persona,
-      pathname: body.pathname,
-      messages,
-    })) ?? buildFallbackReply(body.message, language, persona);
-
+  const aiReply = await getOpenAIReply({
+    message: body.message,
+    language,
+    persona,
+    pathname: body.pathname,
+    messages,
+  });
+  const reply = aiReply ?? buildFallbackReply(body.message, language, persona);
+  const aiActive = Boolean(aiReply);
   const safeReply = sanitizePersonaReply(reply, language, persona);
   const guestReply = isGuestReminderTurn ? `${safeReply}\n\n${getGuestReminder(language)}` : safeReply;
 
@@ -783,6 +788,7 @@ export async function POST(request: NextRequest) {
     languageName: LANGUAGE_NAMES[language],
     persona,
     mode: "general",
+    aiActive,
     reply: guestReply,
     reminder: isGuestReminderTurn ? getGuestReminder(language) : null,
   } satisfies ChatbotResponse);

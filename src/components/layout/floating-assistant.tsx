@@ -41,6 +41,7 @@ type ChatbotResponse = {
   reply?: string;
   persona?: Persona;
   mode?: "general" | "eligible_posts" | "hospital_draft";
+  aiActive?: boolean;
   eligiblePosts?: EligiblePost[];
   draftState?: HospitalDraftState | null;
   reminder?: string | null;
@@ -99,6 +100,7 @@ export function FloatingAssistant() {
   const [hasUnread, setHasUnread] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [footerVisible, setFooterVisible] = useState(false);
+  const [aiActive, setAiActive] = useState(false);
   const [eligiblePosts, setEligiblePosts] = useState<EligiblePost[]>([]);
   const [draftState, setDraftState] = useState<HospitalDraftState | null>(null);
   const { data: currentUser } = useUser();
@@ -285,6 +287,8 @@ export function FloatingAssistant() {
         setEligiblePosts([]);
       }
 
+      setAiActive(Boolean(response.ok && payload && typeof payload === "object" && "aiActive" in payload && payload.aiActive));
+
       if (response.ok && payload && "draftState" in payload) {
         setDraftState(payload.draftState ?? null);
       } else if (persona !== "hospital") {
@@ -295,6 +299,7 @@ export function FloatingAssistant() {
         ...current,
         { role: "assistant", content: tAssistant("fallback") },
       ]);
+      setAiActive(false);
       if (persona !== "hospital") {
         setEligiblePosts([]);
         setDraftState(null);
@@ -376,7 +381,25 @@ export function FloatingAssistant() {
                     <Bot className="size-5" />
                   </div>
                   <div>
-                    <p className="font-semibold">{tAssistant("title")}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold">{tAssistant("title")}</p>
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em]",
+                          aiActive
+                            ? "border-brand/25 bg-brand-soft text-brand"
+                            : "border-border bg-muted/40 text-muted-foreground",
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "size-1.5 rounded-full",
+                            aiActive ? "bg-brand shadow-[0_0_0_4px_rgba(179,12,49,0.12)]" : "bg-muted-foreground",
+                          )}
+                        />
+                        {aiActive ? "AI active" : "Fallback"}
+                      </span>
+                    </div>
                     <p className="text-xs text-muted-foreground">{tAssistant("subtitle")}</p>
                   </div>
                 </div>

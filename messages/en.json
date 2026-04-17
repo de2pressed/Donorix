@@ -130,7 +130,7 @@
     "intro": "Ask me about donor eligibility, how Donorix works, or requests you may be able to respond to. I will keep this conversation for the current session.",
     "loading": "Thinking...",
     "languageChanged": "Language changed to {language}.",
-    "fallback": "I can help you understand Donorix, check donor eligibility, or find requests you may be able to respond to.",
+    "fallback": "Donorix helps donors find compatible requests and helps verified hospitals manage blood requests. I can explain how it works, show requests you may be able to respond to, or help with donor eligibility.",
     "guestQuickHow": "How does Donorix work?",
     "guestQuickSignup": "Create a free account",
     "guestQuickActions": "What can I do here?",

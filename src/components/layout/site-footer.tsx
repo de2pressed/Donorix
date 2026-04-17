@@ -32,9 +32,11 @@ export function SiteFooter() {
           <div className="grid gap-8 border-b border-border/70 pb-8 md:grid-cols-2 xl:grid-cols-4">
             <div className="space-y-4 xl:col-span-2">
               <AppLogo
+                className="items-start"
                 showTagline
                 tagline={t("tagline")}
-                taglineClassName="font-sans text-sm text-muted-foreground"
+                taglineClassName="font-sans text-sm leading-5 text-muted-foreground"
+                wrapTagline
               />
               <p className="max-w-xl text-sm leading-6 text-muted-foreground">{t("sdg")}</p>
             </div>

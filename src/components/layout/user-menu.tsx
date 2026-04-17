@@ -175,14 +175,14 @@ export function UserMenu() {
           </Avatar>
         </button>
         <Dialog open={mobileOpen} onOpenChange={setMobileOpen}>
-          <DialogContent className="dialog-bottom-sheet inset-x-0 bottom-0 top-auto w-full max-w-none !translate-x-0 !translate-y-0 rounded-b-none rounded-t-[1.75rem] px-5 pb-[calc(env(safe-area-inset-bottom)+5.5rem)] pt-8 sm:max-w-none">
-            <DialogHeader>
+          <DialogContent className="dialog-bottom-sheet inset-x-0 bottom-0 top-auto w-full max-w-none !translate-x-0 !translate-y-0 rounded-b-none rounded-t-[1.75rem] px-5 pb-[calc(env(safe-area-inset-bottom)+6.75rem)] pt-7 sm:max-w-none">
+            <DialogHeader className="pb-4">
               <DialogTitle>{tNav("profileActions")}</DialogTitle>
               <DialogDescription className="sr-only">
                 Open your profile, settings, assistant, or sign out.
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-2">
+            <div className="space-y-3">
               <Button
                 className="w-full justify-start rounded-2xl border border-border px-4 py-3 text-sm font-medium text-danger hover:bg-danger/10 hover:text-danger"
                 type="button"

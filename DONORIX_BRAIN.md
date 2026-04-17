@@ -1,5 +1,59 @@
 ## Donorix Brain (change log)
 
+### 2026-04-18 - Leaderboard mobile polish
+
+#### Leaderboard
+- Reworked the leaderboard rows into a cleaner mobile-friendly card layout with more breathing room between identity, rank, and karma blocks.
+- Added distinct visual treatments for ranks 1, 2, and 3, a softer top-10 treatment for ranks 4 through 10, and a neutral default style for the rest.
+- Kept the overall design aligned with the frosted glass / pink-red Donorix theme while reducing the cramped feel on small screens.
+
+#### Files touched
+- `donorix/src/components/leaderboard/leaderboard-table.tsx`
+
+### 2026-04-18 - Mobile spacing follow-up
+
+#### Mobile sheets
+- Added extra bottom clearance and header breathing room to the profile actions sheet so the actions no longer crowd the fixed mobile nav.
+- Added matching padding to the mobile policy menu and gave the nav list a little more interior spacing.
+
+#### Footer
+- Allowed the footer tagline to wrap instead of truncating so the "Modern Indian Blood Donation Platform" line stays inside its frame on mobile.
+
+#### Hero surfaces
+- Made the hospital hero stat cards a bit more transparent again while keeping the frosted glass treatment.
+
+#### Routing
+- Moved About and Policies under the shared `(main)` route group so they inherit the same shell stack as the rest of the app instead of using separate top-level layouts.
+
+#### Files touched
+- `donorix/src/app/(main)/about/page.tsx`
+- `donorix/src/app/(main)/policies/layout.tsx`
+- `donorix/src/app/globals.css`
+- `donorix/src/components/layout/app-logo.tsx`
+- `donorix/src/components/layout/policies-layout-content.tsx`
+- `donorix/src/components/layout/site-footer.tsx`
+- `donorix/src/components/layout/user-menu.tsx`
+
+### 2026-04-18 - Follow-up consistency pass
+
+#### Hero surfaces
+- Made the hospital and guest hero stat cards slightly more transparent while keeping the frosted glass treatment.
+
+#### Post detail
+- Split the feed card from the detail card mode so opening a request page renders the post already expanded without the feed-only collapse hint.
+
+#### Shell consistency
+- Moved About and Policies into the shared app shell so they no longer use a separate page chrome from the rest of the workspace.
+
+#### Files touched
+- `donorix/src/app/about/layout.tsx`
+- `donorix/src/app/about/page.tsx`
+- `donorix/src/app/globals.css`
+- `donorix/src/app/policies/layout.tsx`
+- `donorix/src/components/layout/policies-layout-content.tsx`
+- `donorix/src/components/posts/post-card.tsx`
+- `donorix/src/components/posts/post-detail.tsx`
+
 ### 2026-04-18 - Changelog 15b (iteration 2 execution)
 
 #### Hero and cards

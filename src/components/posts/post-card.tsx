@@ -30,19 +30,25 @@ export function PostCard({
   post,
   isAuthenticated = false,
   index = 0,
+  mode = "feed",
 }: {
   post: FeedPost;
   isAuthenticated?: boolean;
   index?: number;
+  mode?: "feed" | "detail";
 }) {
   const reduceMotion = useReducedMotion();
   const router = useRouter();
   const tRequest = useTranslations("request");
-  const [expanded, setExpanded] = useState(false);
+  const isDetailView = mode === "detail";
+  const [expanded, setExpanded] = useState(isDetailView);
   const isActive = post.status === "active";
   const isFulfilled = post.status === "fulfilled";
+  const cardInteractive = !isDetailView;
 
   function handleCardClick() {
+    if (!cardInteractive) return;
+
     if (!expanded) {
       setExpanded(true);
       return;
@@ -60,20 +66,25 @@ export function PostCard({
     >
       <Card
         className={cn(
-          "min-w-0 cursor-pointer select-none p-0 transition-shadow hover:shadow-md",
+          "min-w-0 p-0",
+          cardInteractive && "cursor-pointer select-none transition-shadow hover:shadow-md",
           post.is_emergency ? "overflow-visible" : "overflow-hidden",
-          post.is_emergency && "emergency-card",
+          cardInteractive && post.is_emergency && "emergency-card",
         )}
-        aria-expanded={expanded}
-        onClick={handleCardClick}
-        onKeyDown={(event) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            handleCardClick();
-          }
-        }}
-        role="button"
-        tabIndex={0}
+        aria-expanded={cardInteractive ? expanded : undefined}
+        onClick={cardInteractive ? handleCardClick : undefined}
+        onKeyDown={
+          cardInteractive
+            ? (event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  handleCardClick();
+                }
+              }
+            : undefined
+        }
+        role={cardInteractive ? "button" : undefined}
+        tabIndex={cardInteractive ? 0 : undefined}
       >
         <div className="flex min-h-[4.5rem] items-center gap-3 px-5 py-3 md:px-6">
           <div className="min-w-0 flex-1 space-y-1">
@@ -99,7 +110,7 @@ export function PostCard({
           </div>
 
           <div className="shrink-0">
-            {expanded ? (
+            {cardInteractive && expanded ? (
               <button
                 aria-label="Minimize request card"
                 className="flex size-9 items-center justify-center rounded-full border border-border/70 bg-card/70 text-muted-foreground transition hover:border-brand/40 hover:text-brand"
@@ -111,11 +122,11 @@ export function PostCard({
               >
                 <ChevronUp className="size-4" />
               </button>
-            ) : (
+            ) : cardInteractive ? (
               <div aria-hidden="true" className="text-muted-foreground">
                 <ChevronDown className="size-4" />
               </div>
-            )}
+            ) : null}
           </div>
         </div>
 
@@ -269,9 +280,11 @@ export function PostCard({
                   </div>
                 </div>
 
-                <p className="text-center text-xs text-muted-foreground/60">
-                  Tap again to open full post &rarr;
-                </p>
+                {cardInteractive ? (
+                  <p className="text-center text-xs text-muted-foreground/60">
+                    Tap again to open full post &rarr;
+                  </p>
+                ) : null}
               </div>
             </motion.div>
           ) : null}

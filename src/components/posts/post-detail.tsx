@@ -18,7 +18,7 @@ export function PostDetail({
   return (
     <div className={showDonorRail ? "grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]" : "space-y-6"}>
       <div className="min-w-0">
-        <PostCard isAuthenticated={isAuthenticated} post={post} />
+        <PostCard isAuthenticated={isAuthenticated} mode="detail" post={post} />
       </div>
       {showDonorRail ? (
         <div className="min-w-0">

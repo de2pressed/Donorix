@@ -13,6 +13,7 @@ type AppLogoProps = {
   showTagline?: boolean;
   tagline?: string;
   taglineClassName?: string;
+  wrapTagline?: boolean;
   compact?: boolean;
 };
 
@@ -108,10 +109,11 @@ export function AppLogo({
   showTagline = false,
   tagline,
   taglineClassName,
+  wrapTagline = false,
   compact = false,
 }: AppLogoProps) {
   return (
-    <Link className={cn("inline-flex min-w-0 items-center gap-3", className)} href={href}>
+    <Link className={cn("inline-flex min-w-0 items-center gap-3", wrapTagline && "items-start", className)} href={href}>
       <LogoMark compact={compact} />
       <div className="min-w-0">
         <p
@@ -123,7 +125,14 @@ export function AppLogo({
           {APP_NAME}
         </p>
         {showTagline ? (
-          <p className={cn("truncate text-sm text-muted-foreground", taglineClassName)}>{tagline}</p>
+          <p
+            className={cn(
+              wrapTagline ? "whitespace-normal break-words text-sm leading-5 text-muted-foreground" : "truncate text-sm text-muted-foreground",
+              taglineClassName,
+            )}
+          >
+            {tagline}
+          </p>
         ) : null}
       </div>
     </Link>

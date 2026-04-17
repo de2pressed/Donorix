@@ -21,12 +21,13 @@ export function Header() {
   const tHeader = useTranslations("header");
 
   return (
-    <header className="glass-panel z-40 flex items-center justify-between gap-4 rounded-[1.75rem] px-4 py-3 lg:sticky lg:top-4">
+    <header className="glass-panel z-40 flex items-center justify-between gap-3 rounded-[1.75rem] px-4 py-3 lg:sticky lg:top-4">
       <div className="min-w-0 flex-1">
         <AppLogo
           className="max-w-[26rem]"
           compact
           showTagline
+          taglineClassName="hidden sm:block"
           tagline={user?.account_type === "hospital" ? user.full_name : tHeader("donorTagline")}
         />
       </div>

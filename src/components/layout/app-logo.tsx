@@ -12,6 +12,7 @@ type AppLogoProps = {
   className?: string;
   showTagline?: boolean;
   tagline?: string;
+  taglineClassName?: string;
   compact?: boolean;
 };
 
@@ -57,7 +58,14 @@ function LogoMark({ compact = false }: { compact?: boolean }) {
   );
 }
 
-export function AppLogo({ href = "/", className, showTagline = false, tagline, compact = false }: AppLogoProps) {
+export function AppLogo({
+  href = "/",
+  className,
+  showTagline = false,
+  tagline,
+  taglineClassName,
+  compact = false,
+}: AppLogoProps) {
   return (
     <Link className={cn("inline-flex min-w-0 items-center gap-3", className)} href={href}>
       <LogoMark compact={compact} />
@@ -65,7 +73,9 @@ export function AppLogo({ href = "/", className, showTagline = false, tagline, c
         <p className={cn("truncate font-semibold tracking-tight text-foreground", compact ? "text-base" : "text-lg")}>
           {APP_NAME}
         </p>
-        {showTagline ? <p className="truncate text-sm text-muted-foreground">{tagline}</p> : null}
+        {showTagline ? (
+          <p className={cn("truncate text-sm text-muted-foreground", taglineClassName)}>{tagline}</p>
+        ) : null}
       </div>
     </Link>
   );

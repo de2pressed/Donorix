@@ -14,8 +14,8 @@ export async function RightRail() {
     currentProfile?.account_type === "hospital" ? await getHospitalDashboard(currentProfile.id) : null;
 
   return (
-    <aside className="hidden w-[19rem] shrink-0 xl:block">
-      <div className="sticky top-6 space-y-4">
+    <aside className="hidden w-full min-w-0 shrink-0 xl:block">
+      <div className="sticky top-5 space-y-4">
         {currentProfile?.account_type === "hospital" ? (
           <Card>
             <CardHeader>

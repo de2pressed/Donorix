@@ -44,7 +44,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const { data: post, error: postError } = await supabase
     .from("posts")
-    .select("created_by, patient_name, blood_type_needed, city, state")
+    .select("created_by, patient_name, blood_type_needed, city, state, status, expires_at")
     .eq("id", id)
     .maybeSingle();
 
@@ -54,6 +54,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   if (!post) {
     return jsonError("Post not found", 404);
+  }
+  if (post.status !== "active") {
+    return jsonError("This request is no longer active.", 409);
+  }
+  if (new Date(post.expires_at).getTime() <= Date.now()) {
+    return jsonError("This request has already expired.", 409);
   }
 
   const eligibilityScore = computeEligibilityScore(profile.blood_type, post.blood_type_needed);

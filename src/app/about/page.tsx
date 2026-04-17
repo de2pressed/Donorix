@@ -1,7 +1,6 @@
 "use client";
 
 import { motion, useInView, useReducedMotion } from "framer-motion";
-import Link from "next/link";
 import {
   BellRing,
   Building2,
@@ -13,6 +12,7 @@ import {
 import { useRef } from "react";
 
 import { SecondaryPageBackLink } from "@/components/layout/secondary-page-back-link";
+import { AppLogo } from "@/components/layout/app-logo";
 import { Card, CardContent } from "@/components/ui/card";
 import { SUPPORT_EMAIL } from "@/lib/constants";
 
@@ -27,7 +27,7 @@ const STAGES = [
     icon: BellRing,
     title: "Donors Are Notified",
     description:
-      "Matched donors receive an SMS and in-app alert without broad spam.",
+      "Eligible opted-in donors receive in-app and email alerts without broad spam.",
   },
   {
     icon: Users,
@@ -64,10 +64,15 @@ function FlowCard({
 }) {
   return (
     <motion.div
-      animate={inView ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 20, scale: 0.98 }}
+      animate={
+        inView
+          ? { opacity: 1, y: 0, scale: 1, rotateX: 0, rotateY: 0 }
+          : { opacity: 0, y: 22, scale: 0.98, rotateX: -8, rotateY: index % 2 === 0 ? -4 : 4 }
+      }
       className="glass relative z-10 flex h-full flex-col gap-4 rounded-[1.75rem] p-5"
       initial={false}
-      transition={{ delay: index * 0.14, duration: 0.4, ease: "easeOut" }}
+      style={{ transformStyle: "preserve-3d" }}
+      transition={{ delay: index * 0.12, duration: 0.52, ease: "easeOut" }}
     >
       <div className="flex size-12 items-center justify-center rounded-2xl bg-brand-soft text-brand">
         <Icon className="size-6" />
@@ -95,9 +100,7 @@ export default function AboutPage() {
     <div className="mx-auto flex min-h-dvh w-full max-w-[1900px] flex-col px-4 py-4 lg:px-8 2xl:px-10">
       <header className="glass sticky top-4 z-40 mb-6 flex items-center gap-4 px-4 py-3">
         <SecondaryPageBackLink />
-        <Link className="font-semibold tracking-tight" href="/">
-          Donorix
-        </Link>
+        <AppLogo compact />
       </header>
 
       <div className="space-y-8">
@@ -158,17 +161,17 @@ export default function AboutPage() {
         <section
           ref={flowRef}
           className="relative overflow-hidden rounded-[2rem] border border-border bg-card/70 p-6 shadow-soft md:p-8"
+          style={{ perspective: "1300px" }}
         >
           <div className="mb-6 max-w-3xl space-y-3">
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-brand">
               How it works
             </p>
-            <h2 className="text-3xl font-semibold md:text-4xl">
+            <h2 className="fluid-title font-semibold">
               The donor-to-patient flow, shown step by step.
             </h2>
             <p className="text-sm leading-6 text-muted-foreground md:text-base">
-              Each stage appears in sequence so the request lifecycle is easy to understand even on a
-              first visit.
+              Scroll through a subtle depth sequence that keeps the full process understandable on every device.
             </p>
           </div>
 

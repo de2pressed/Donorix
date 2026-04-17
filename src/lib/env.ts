@@ -18,6 +18,9 @@ const envSchema = z.object({
   NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
   NEXTAUTH_SECRET: z.string().min(32).optional(),
   CRON_SECRET: z.string().min(16).optional(),
+  RESEND_API_KEY: z.string().min(1).optional(),
+  NOTIFICATION_FROM_EMAIL: z.string().email().optional(),
+  DEMO_SETUP_TOKEN: z.string().min(16).optional(),
 });
 
 const rawEnv = {
@@ -41,6 +44,10 @@ const rawEnv = {
   NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
   NEXTAUTH_SECRET: typeof window === "undefined" ? process.env.NEXTAUTH_SECRET : undefined,
   CRON_SECRET: typeof window === "undefined" ? process.env.CRON_SECRET : undefined,
+  RESEND_API_KEY: typeof window === "undefined" ? process.env.RESEND_API_KEY : undefined,
+  NOTIFICATION_FROM_EMAIL:
+    typeof window === "undefined" ? process.env.NOTIFICATION_FROM_EMAIL : undefined,
+  DEMO_SETUP_TOKEN: typeof window === "undefined" ? process.env.DEMO_SETUP_TOKEN : undefined,
 };
 
 const parsed = envSchema.safeParse(rawEnv);

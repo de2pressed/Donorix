@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { Building2, HeartHandshake, Settings } from "lucide-react";
+import { Building2, Settings } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 import { useNotificationsContext } from "@/components/providers/notification-context";
+import { AppLogo } from "@/components/layout/app-logo";
 import { useUser } from "@/lib/hooks/use-user";
 import { getSidebarNav, showRegisterHospitalButton } from "@/lib/navigation";
 import { cn } from "@/lib/utils/cn";
@@ -57,24 +58,19 @@ export function Sidebar() {
   const showRegisterHospital = showRegisterHospitalButton(user?.account_type);
 
   return (
-    <aside className="glass-panel sticky top-6 hidden h-[calc(100vh-3rem)] w-[15.5rem] shrink-0 flex-col justify-between overflow-hidden rounded-[1.75rem] p-5 lg:flex">
+    <aside className="glass-panel sticky top-5 hidden h-[calc(100vh-2.5rem)] w-full min-w-0 shrink-0 flex-col justify-between overflow-hidden rounded-[1.75rem] p-4 min-[1100px]:flex xl:p-5">
       <div className="space-y-8">
         <div className="space-y-3">
-          <Link className="inline-flex items-center gap-3" href="/">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-brand text-brand-foreground shadow-glow">
-              <HeartHandshake className="size-6" />
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand">
-                {user?.account_type === "hospital" ? tSidebar("hospitalWorkspace") : tSidebar("donorWorkspace")}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {user?.account_type === "hospital"
-                  ? tSidebar("hospitalWorkspaceDesc")
-                  : tSidebar("donorWorkspaceDesc")}
-              </p>
-            </div>
-          </Link>
+          <AppLogo
+            className="w-full"
+            showTagline
+            tagline={user?.account_type === "hospital" ? tSidebar("hospitalWorkspace") : tSidebar("donorWorkspace")}
+          />
+          <p className="text-sm text-muted-foreground">
+            {user?.account_type === "hospital"
+              ? tSidebar("hospitalWorkspaceDesc")
+              : tSidebar("donorWorkspaceDesc")}
+          </p>
         </div>
         <nav className="space-y-2">
           {items.map((item) => {

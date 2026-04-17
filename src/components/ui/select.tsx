@@ -40,7 +40,10 @@ const SelectContent = React.forwardRef<
       position={position}
       sideOffset={4}
       avoidCollisions
-      className={cn("z-[90] min-w-[220px] rounded-2xl border border-border bg-card p-2 shadow-soft", className)}
+      className={cn(
+        "z-[90] min-w-[220px] rounded-2xl border border-border bg-card p-2 shadow-soft will-change-transform",
+        className,
+      )}
       {...props}
     >
       <SelectPrimitive.Viewport className="p-1">{children}</SelectPrimitive.Viewport>

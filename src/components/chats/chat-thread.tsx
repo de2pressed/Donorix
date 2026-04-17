@@ -14,6 +14,15 @@ import type { HospitalChatThread } from "@/lib/data";
 import type { Profile } from "@/types/user";
 
 type ChatMessage = HospitalChatThread["messages"][number];
+const IMAGE_URL_REGEX = /(https?:\/\/\S+\.(?:png|jpe?g|webp|gif))/gi;
+
+function parseMessageWithImages(message: string) {
+  const imageUrls = Array.from(message.matchAll(IMAGE_URL_REGEX)).map((entry) => entry[0]);
+  return {
+    text: message.replace(IMAGE_URL_REGEX, "").trim(),
+    imageUrls: [...new Set(imageUrls)],
+  };
+}
 
 export function ChatThread({
   thread,
@@ -108,7 +117,7 @@ export function ChatThread({
           <div className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-brand">Approved donor chat</p>
             <div>
-              <CardTitle className="text-2xl">{thread.post.patient_name}</CardTitle>
+              <CardTitle className="text-[clamp(1.35rem,1.05rem+1vw,1.95rem)]">{thread.post.patient_name}</CardTitle>
               <CardDescription className="mt-1">
                 {thread.post.patient_id ?? "Case reference unavailable"} - {thread.post.blood_type_needed} -{" "}
                 Required by {formatDateTime(thread.post.required_by)}
@@ -172,18 +181,19 @@ export function ChatThread({
         </div>
 
         <div className="space-y-3">
-          <div className="chat-scroll flex max-h-[55vh] min-h-[22rem] flex-col gap-3 overflow-y-auto rounded-[1.5rem] border border-border bg-surface-2/50 p-4">
+          <div className="chat-scroll flex max-h-[58vh] min-h-[22rem] flex-col gap-3 overflow-y-auto rounded-[1.5rem] border border-border bg-surface-2/50 p-4 md:p-5">
             {messages.length ? (
               messages.map((message) => {
                 const isMine = message.sender_id === viewer.id;
                 const senderLabel =
                   message.sender?.full_name ?? message.sender?.username ?? (isMine ? "You" : "Participant");
+                const parsedMessage = parseMessageWithImages(message.message);
 
                 return (
                   <div key={message.id} className={cn("flex", isMine ? "justify-end" : "justify-start")}>
                     <div
                       className={cn(
-                        "max-w-[82%] rounded-[1.35rem] px-4 py-3 text-sm shadow-sm",
+                        "max-w-[90%] rounded-[1.35rem] px-4 py-3 text-[clamp(0.9rem,0.84rem+0.2vw,1rem)] shadow-sm sm:max-w-[82%]",
                         isMine
                           ? "bg-brand text-brand-foreground"
                           : "border border-border bg-card text-foreground",
@@ -193,7 +203,25 @@ export function ChatThread({
                         <span>{isMine ? "You" : senderLabel}</span>
                         <span>{formatRelativeTime(message.created_at)}</span>
                       </div>
-                      <p className="whitespace-pre-wrap leading-6">{message.message}</p>
+                      {parsedMessage.text ? (
+                        <p className="whitespace-pre-wrap leading-6">{parsedMessage.text}</p>
+                      ) : null}
+                      {parsedMessage.imageUrls.length ? (
+                        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                          {parsedMessage.imageUrls.map((imageUrl) => (
+                            <a key={imageUrl} href={imageUrl} target="_blank" rel="noreferrer" className="group block">
+                              <div className="relative h-32 overflow-hidden rounded-xl border border-border/50">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={imageUrl}
+                                  alt="Chat attachment"
+                                  className="h-full w-full object-cover transition group-hover:scale-[1.02]"
+                                />
+                              </div>
+                            </a>
+                          ))}
+                        </div>
+                      ) : null}
                     </div>
                   </div>
                 );

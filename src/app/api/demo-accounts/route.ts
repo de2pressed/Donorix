@@ -8,6 +8,18 @@ import { computeEligibilityScore } from "@/lib/utils/blood-type";
 
 const DEMO_POST_ID = "33333333-3333-4333-8333-333333333333";
 
+function assertDemoSeedAccess(request?: Request) {
+  if (process.env.NODE_ENV !== "production") {
+    return true;
+  }
+  const expectedToken = process.env.DEMO_SETUP_TOKEN;
+  if (!expectedToken || !request) {
+    return false;
+  }
+  const providedToken = request.headers.get("x-demo-setup-token");
+  return providedToken === expectedToken;
+}
+
 async function listUsersByEmail() {
   const admin = getSupabaseAdminClient();
   if (!admin) {
@@ -140,7 +152,11 @@ async function ensureDemoUser(
   return data.user;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  if (!assertDemoSeedAccess(request)) {
+    return jsonError("Demo account setup is not authorized.", 403);
+  }
+
   try {
     const status = await getDemoStatus();
 
@@ -154,7 +170,11 @@ export async function GET() {
   }
 }
 
-export async function POST() {
+export async function POST(request: Request) {
+  if (!assertDemoSeedAccess(request)) {
+    return jsonError("Demo account setup is not authorized.", 403);
+  }
+
   try {
     const admin = getSupabaseAdminClient();
     if (!admin) {

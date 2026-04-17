@@ -34,7 +34,14 @@ export function getRateLimiter() {
 
 export async function enforceRateLimit(identifier: string) {
   const limiter = getRateLimiter();
-  if (!limiter) return { success: true };
+  if (!limiter) {
+    const isProduction = process.env.NODE_ENV === "production";
+    if (isProduction) {
+      console.error("[rate-limit] Upstash missing in production for identifier", identifier);
+      return { success: false };
+    }
+    return { success: true };
+  }
 
   return limiter.limit(identifier);
 }

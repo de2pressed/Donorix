@@ -65,11 +65,16 @@
 html {
   color-scheme: light;
   scroll-behavior: smooth;
-  scrollbar-gutter: stable;
+  scrollbar-gutter: stable both-edges;
 }
 
 html.dark {
   color-scheme: dark;
+}
+
+body[data-scroll-locked] {
+  overflow-y: scroll !important;
+  margin-right: 0 !important;
 }
 
 .bg-grid-red {
@@ -100,6 +105,7 @@ body {
   background-position: center top, center center, center center;
   background-size: auto, 24px 24px, 24px 24px;
   background-attachment: fixed;
+  position: relative;
 }
 
 html.dark body {
@@ -215,6 +221,26 @@ body {
   @apply min-h-screen overflow-x-hidden font-sans text-foreground antialiased;
 }
 
+body::before {
+  content: "";
+  position: fixed;
+  inset: -20vh -10vw;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 18% 22%, rgba(255, 255, 255, 0.52), transparent 34%),
+    radial-gradient(circle at 82% 14%, rgba(179, 12, 49, 0.12), transparent 35%),
+    radial-gradient(circle at 48% 80%, rgba(255, 122, 89, 0.1), transparent 36%);
+  animation: ambient-shift 18s ease-in-out infinite alternate;
+}
+
+.dark body::before {
+  background:
+    radial-gradient(circle at 16% 26%, rgba(255, 255, 255, 0.08), transparent 32%),
+    radial-gradient(circle at 80% 16%, rgba(179, 12, 49, 0.24), transparent 36%),
+    radial-gradient(circle at 48% 80%, rgba(255, 122, 89, 0.16), transparent 38%);
+}
+
 .theme-transition,
 .theme-transition *,
 .theme-transition *::before,
@@ -246,38 +272,46 @@ button {
 }
 
 .glass-panel {
-  background: rgba(255, 255, 255, 0.55);
-  border: 1px solid var(--border-subtle);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.58));
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    0 14px 40px rgba(17, 24, 39, 0.11);
+  backdrop-filter: blur(18px) saturate(165%);
+  -webkit-backdrop-filter: blur(18px) saturate(165%);
 }
 
 .surface,
 .glass {
-  background: rgba(255, 255, 255, 0.55);
-  border: 1px solid var(--border-subtle);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.56));
+  border: 1px solid rgba(255, 255, 255, 0.33);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 14px 40px rgba(17, 24, 39, 0.1);
+  backdrop-filter: blur(18px) saturate(165%);
+  -webkit-backdrop-filter: blur(18px) saturate(165%);
   border-radius: 1.75rem;
 }
 
 .dark .glass-panel {
-  background: rgba(15, 15, 20, 0.55);
-  border: 1px solid var(--border-subtle);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(16px) saturate(160%);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  background: linear-gradient(150deg, rgba(35, 24, 29, 0.8), rgba(19, 13, 16, 0.6));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 18px 42px rgba(0, 0, 0, 0.38);
+  backdrop-filter: blur(20px) saturate(145%);
+  -webkit-backdrop-filter: blur(20px) saturate(145%);
 }
 
 .dark .surface,
 .dark .glass {
-  background: rgba(15, 15, 20, 0.55);
-  border: 1px solid var(--border-subtle);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(16px) saturate(160%);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  background: linear-gradient(150deg, rgba(35, 24, 29, 0.78), rgba(19, 13, 16, 0.58));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 16px 40px rgba(0, 0, 0, 0.36);
+  backdrop-filter: blur(20px) saturate(145%);
+  -webkit-backdrop-filter: blur(20px) saturate(145%);
   border-radius: 1.75rem;
 }
 
@@ -383,21 +417,26 @@ button {
 }
 
 .emergency-card {
-  animation: emergency-pulse 1.8s ease-in-out infinite;
+  animation: emergency-pulse 3.6s ease-in-out infinite;
   transform-origin: center;
-  background: rgba(220, 38, 38, 0.06) !important;
+  background: linear-gradient(125deg, rgba(220, 38, 38, 0.09), rgba(255, 255, 255, 0.58)) !important;
   border-left: 3px solid #dc2626 !important;
-  border-color: rgba(220, 38, 38, 0.2) !important;
+  border-color: rgba(220, 38, 38, 0.24) !important;
   isolation: isolate;
-  contain: layout style;
-  will-change: box-shadow;
+  overflow: visible;
+  contain: paint;
+  will-change: transform;
 }
 
 .dark .emergency-card {
-  background: rgba(220, 38, 38, 0.11) !important;
+  background: linear-gradient(125deg, rgba(220, 38, 38, 0.2), rgba(35, 24, 29, 0.68)) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
+  body::before {
+    animation: none;
+  }
+
   .emergency-card {
     animation: none;
     box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.4), inset 3px 0 0 #dc2626;
@@ -481,23 +520,31 @@ button {
 @keyframes emergency-pulse {
   0%,
   100% {
-    box-shadow:
-      0 0 0 0 rgba(220, 38, 38, 0),
-      0 0 0 0 rgba(220, 38, 38, 0),
-      inset 3px 0 0 #dc2626;
+    transform: translateZ(0) scale(1);
+    box-shadow: inset 3px 0 0 #dc2626;
   }
-  40%,
-  55% {
+  45% {
+    transform: translateZ(0) scale(1.004);
     box-shadow:
-      0 0 18px 4px rgba(220, 38, 38, 0.28),
-      0 0 40px 8px rgba(220, 38, 38, 0.1),
+      0 0 0 10px rgba(220, 38, 38, 0.08),
+      0 0 0 22px rgba(220, 38, 38, 0.04),
       inset 3px 0 0 #ff3333;
   }
-  75% {
+  78% {
+    transform: translateZ(0) scale(1.001);
     box-shadow:
-      0 0 8px 2px rgba(220, 38, 38, 0.12),
+      0 0 0 6px rgba(220, 38, 38, 0.07),
       0 0 0 0 rgba(220, 38, 38, 0),
       inset 3px 0 0 #dc2626;
+  }
+}
+
+@keyframes ambient-shift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  100% {
+    transform: translate3d(0, -1.25%, 0) scale(1.035);
   }
 }
 
@@ -592,6 +639,16 @@ button {
 }
 
 @layer utilities {
+  .fluid-title {
+    font-size: clamp(1.6rem, 1.1rem + 1.6vw, 2.8rem);
+    line-height: 1.08;
+  }
+
+  .fluid-body {
+    font-size: clamp(0.95rem, 0.88rem + 0.25vw, 1.08rem);
+    line-height: 1.65;
+  }
+
   .text-balance {
     text-wrap: balance;
   }

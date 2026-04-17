@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { getFeedPosts } from "@/lib/data";
 import { jsonError, requireServerUser } from "@/lib/http";
+import { notifyEligibleDonorsForNewHospitalPost } from "@/lib/notifications/hospital-post-alerts";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { sanitizeText } from "@/lib/utils/sanitize";
 import { createPostSchema } from "@/lib/validations/post";
@@ -26,6 +27,9 @@ export async function POST(request: NextRequest) {
 
     if (!hospitalAccount) {
       return jsonError("Hospital details are incomplete. Complete hospital registration first.", 409);
+    }
+    if (hospitalAccount.verification_status !== "verified") {
+      return jsonError("Only verified hospital accounts can create blood requests.", 403);
     }
 
     const rateLimit = await enforceRateLimit(`post-create:${profile.id}`);
@@ -75,6 +79,16 @@ export async function POST(request: NextRequest) {
     if (error) {
       return jsonError(error.message, 500);
     }
+
+    void notifyEligibleDonorsForNewHospitalPost({
+      postId: data.id,
+      patientName: sanitizeText(payload.patient_name),
+      bloodTypeNeeded: payload.blood_type_needed,
+      hospitalName: sanitizeText(hospitalAccount.hospital_name),
+      city: sanitizeText(hospitalAccount.city),
+      state: sanitizeText(hospitalAccount.state),
+      requiredBy: payload.required_by,
+    });
 
     return NextResponse.json({ postId: data.id }, { status: 201 });
   } catch {

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { PlusSquare, Settings } from "lucide-react";
 
 import { NotificationBell } from "@/components/notifications/notification-bell";
+import { AppLogo } from "@/components/layout/app-logo";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { UserMenu } from "@/components/layout/user-menu";
 import { UserMenuErrorBoundary } from "@/components/layout/user-menu-error-boundary";
@@ -22,14 +23,12 @@ export function Header() {
   return (
     <header className="glass-panel z-40 flex items-center justify-between gap-4 rounded-[1.75rem] px-4 py-3 lg:sticky lg:top-4">
       <div className="min-w-0 flex-1">
-        <Link className="inline-flex min-w-0 items-center gap-3" href="/">
-          <span className="shrink-0 text-lg font-semibold tracking-tight text-foreground">Donorix</span>
-          <span className="hidden max-w-[18rem] min-w-0 truncate text-[clamp(0.8rem,0.85vw,0.95rem)] text-muted-foreground md:inline">
-            {user?.account_type === "hospital"
-              ? user.full_name
-              : tHeader("donorTagline")}
-          </span>
-        </Link>
+        <AppLogo
+          className="max-w-[26rem]"
+          compact
+          showTagline
+          tagline={user?.account_type === "hospital" ? user.full_name : tHeader("donorTagline")}
+        />
       </div>
 
       <div className="flex items-center gap-2">

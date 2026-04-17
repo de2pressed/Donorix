@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { Clock3, Droplets, Hospital, MapPin, Users } from "lucide-react";
+import { BadgeCheck, Clock3, Droplets, Hospital, MapPin, Users } from "lucide-react";
 
 import { DonateButton } from "@/components/posts/donate-button";
 import { EmergencyBadge } from "@/components/posts/emergency-badge";
@@ -38,7 +38,8 @@ export function PostCard({
     >
       <Card
         className={cn(
-          "min-w-0 overflow-hidden",
+          "min-w-0",
+          post.is_emergency ? "overflow-visible" : "overflow-hidden",
           post.is_emergency && "emergency-card",
         )}
       >
@@ -99,6 +100,10 @@ export function PostCard({
               ) : (
                 <p className="mt-2 truncate text-sm text-muted-foreground">{post.hospital_name}</p>
               )}
+              <p className="mt-2 inline-flex items-center gap-1 rounded-full border border-brand/20 bg-brand-soft/60 px-2 py-1 text-[11px] font-medium text-brand">
+                <BadgeCheck className="size-3" />
+                Registered facility source
+              </p>
             </div>
             <div className="rounded-[1.5rem] border border-border p-4">
               <div className="flex items-center gap-2 text-sm font-medium">
@@ -123,6 +128,21 @@ export function PostCard({
               {post.additional_notes}
             </p>
           ) : null}
+
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="rounded-[1.35rem] border border-border/80 bg-card/45 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">Eligibility signal</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Donors see blood-type compatibility ranking and distance priority before they apply.
+              </p>
+            </div>
+            <div className="rounded-[1.35rem] border border-border/80 bg-card/45 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">Request timeline</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Posted -> donor applications -> approval -> completion tracking in one thread.
+              </p>
+            </div>
+          </div>
 
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">

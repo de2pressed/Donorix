@@ -21,7 +21,7 @@ export function PoliciesLayoutContent({ children }: { children: React.ReactNode 
 
   return (
     <div className="space-y-6">
-      <section className="glass-panel rounded-[1.75rem] p-6 md:p-8">
+      <section className="surface hero-grid overflow-hidden p-6 md:p-8">
         <div className="space-y-3">
           <p className="text-sm font-semibold uppercase tracking-[0.24em] text-brand">Policies</p>
           <h1 className="font-display text-2xl font-semibold md:text-3xl">
@@ -40,20 +40,20 @@ export function PoliciesLayoutContent({ children }: { children: React.ReactNode 
                 Policy Menu
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-[calc(100vw-1rem)] px-5 pb-[calc(env(safe-area-inset-bottom)+6rem)] pt-7">
-              <DialogHeader className="pb-4">
+            <DialogContent className="flex max-w-[calc(100vw-1rem)] flex-col overflow-hidden px-5 pb-[calc(env(safe-area-inset-bottom)+6rem)] pt-7">
+              <DialogHeader className="shrink-0 pb-4">
                 <DialogTitle>Policy Menu</DialogTitle>
                 <DialogDescription className="sr-only">
                   Browse the policy sections on mobile.
                 </DialogDescription>
               </DialogHeader>
-              <nav className="max-h-[60vh] space-y-2 overflow-y-auto pb-2">
+              <nav className="min-h-0 flex-1 space-y-2 overflow-y-auto pb-2 pr-1">
                 {POLICY_NAV.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      "block rounded-2xl px-4 py-3 text-sm text-muted-foreground transition hover:bg-brand-soft hover:text-brand",
+                      "block rounded-2xl px-4 py-3 text-sm leading-tight text-muted-foreground transition hover:bg-brand-soft hover:text-brand",
                       pathname === item.href && "bg-brand-soft text-brand",
                     )}
                   >
@@ -67,20 +67,20 @@ export function PoliciesLayoutContent({ children }: { children: React.ReactNode 
       </section>
 
       <div className="grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
-        <aside className="hidden rounded-[1.75rem] border border-border bg-card/80 p-4 lg:block lg:sticky lg:top-24 lg:h-[calc(100vh-7rem)]">
+        <aside className="hidden rounded-[1.75rem] border border-border bg-card/80 p-4 lg:sticky lg:top-24 lg:flex lg:h-[calc(100vh-7rem)] lg:flex-col lg:overflow-hidden">
           <div className="space-y-2 px-2 pb-4">
             <h2 className="font-display text-2xl font-semibold">Policies</h2>
             <p className="text-sm text-muted-foreground">
               Legal, consent, privacy, and safety controls for the Donorix platform.
             </p>
           </div>
-          <nav className="space-y-1 overflow-y-auto pr-1">
+          <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto pr-1">
             {POLICY_NAV.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "block rounded-2xl px-4 py-3 text-sm text-muted-foreground transition hover:bg-brand-soft hover:text-brand",
+                  "block rounded-2xl px-4 py-3 text-sm leading-tight text-muted-foreground transition hover:bg-brand-soft hover:text-brand",
                   pathname === item.href && "bg-brand-soft text-brand",
                 )}
               >

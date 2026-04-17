@@ -67,12 +67,12 @@ function FlowCard({
           ? { opacity: 1, y: 0, scale: 1, rotateX: 0, rotateY: 0 }
           : { opacity: 0, y: 22, scale: 0.98, rotateX: -8, rotateY: index % 2 === 0 ? -4 : 4 }
       }
-      className="glass relative z-10 flex h-full flex-col gap-4 rounded-[1.75rem] p-5"
+      className="glass relative z-10 flex h-full flex-col gap-5 rounded-[1.75rem] p-6"
       initial={false}
       style={{ transformStyle: "preserve-3d" }}
       transition={{ delay: index * 0.12, duration: 0.52, ease: "easeOut" }}
     >
-      <div className="flex size-12 items-center justify-center rounded-2xl bg-brand-soft text-brand">
+      <div className="flex size-14 items-center justify-center rounded-[1.35rem] bg-brand-soft text-brand">
         <Icon className="size-6" />
       </div>
       <div className="space-y-2">
@@ -80,7 +80,7 @@ function FlowCard({
           Stage {index + 1}
         </p>
         <h2 className="font-display text-xl font-semibold">{title}</h2>
-        <p className="text-sm leading-6 text-muted-foreground">{description}</p>
+        <p className="text-sm leading-7 text-muted-foreground">{description}</p>
       </div>
     </motion.div>
   );
@@ -95,10 +95,10 @@ export default function AboutPage() {
   });
 
   return (
-    <div className="space-y-8">
-      <section className="surface hero-grid overflow-hidden p-6 md:p-8">
-        <div className="grid gap-8 xl:grid-cols-[1.1fr_0.9fr] xl:items-center">
-          <div className="space-y-5">
+    <div className="space-y-10">
+      <section className="surface hero-grid overflow-hidden p-8 md:p-10">
+        <div className="grid gap-10 xl:grid-cols-[1.1fr_0.9fr] xl:items-center">
+          <div className="space-y-6">
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-brand">
               About Donorix
             </p>
@@ -113,9 +113,9 @@ export default function AboutPage() {
           </div>
 
           <Card className="overflow-hidden border-border/80">
-            <CardContent className="space-y-4 p-6">
+            <CardContent className="space-y-5 p-8">
               <div className="flex items-center gap-3">
-                <div className="flex size-11 items-center justify-center rounded-2xl bg-brand text-brand-foreground shadow-glow">
+                <div className="flex size-12 items-center justify-center rounded-[1.15rem] bg-brand text-brand-foreground shadow-glow">
                   <Droplets className="size-5" />
                 </div>
                 <div>
@@ -127,14 +127,14 @@ export default function AboutPage() {
               </div>
               <div className="rounded-[1.5rem] border border-border p-4">
                 <p className="text-sm font-medium">Mission</p>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                <p className="mt-2 text-sm leading-7 text-muted-foreground">
                   Reduce avoidable delays in blood coordination by giving hospitals a structured
                   request system and donors a clear, trustworthy way to respond.
                 </p>
               </div>
               <div className="rounded-[1.5rem] border border-border p-4">
                 <p className="text-sm font-medium">Founding team</p>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                <p className="mt-2 text-sm leading-7 text-muted-foreground">
                   Built by Jayant Kumar and Sahil Kumar Jha for high-stakes medical coordination in
                   India.
                 </p>
@@ -152,24 +152,24 @@ export default function AboutPage() {
 
       <section
         ref={flowRef}
-        className="relative overflow-hidden rounded-[2rem] border border-border bg-card/70 p-6 shadow-soft md:p-8"
+        className="relative overflow-hidden rounded-[2rem] border border-border bg-card/70 p-8 shadow-soft md:p-10"
         style={{ perspective: "1300px" }}
       >
-        <div className="mb-6 max-w-3xl space-y-3">
+        <div className="mb-8 max-w-3xl space-y-4">
           <p className="text-sm font-semibold uppercase tracking-[0.24em] text-brand">
             How it works
           </p>
           <h2 className="font-display fluid-title font-semibold">
             The donor-to-patient flow, shown step by step.
           </h2>
-          <p className="text-sm leading-6 text-muted-foreground md:text-base">
+          <p className="text-sm leading-7 text-muted-foreground md:text-base">
             Scroll through a subtle depth sequence that keeps the full process understandable on every device.
           </p>
         </div>
 
-        <div className="space-y-4 md:hidden">
+        <div className="space-y-5 md:hidden">
           {STAGES.map((stage, index) => (
-            <div key={stage.title} className="flex flex-col items-center gap-4">
+            <div key={stage.title} className="flex flex-col items-center gap-5">
               <FlowCard
                 Icon={stage.icon}
                 description={stage.description}
@@ -180,7 +180,7 @@ export default function AboutPage() {
               {index < STAGES.length - 1 ? (
                 <motion.div
                   animate={inView ? { opacity: 1, scaleY: 1 } : { opacity: 0, scaleY: 0 }}
-                  className="h-10 w-1 origin-top rounded-full bg-gradient-to-b from-brand to-[#ff7a59]"
+                  className="h-12 w-1 origin-top rounded-full bg-gradient-to-b from-brand to-[#ff7a59]"
                   initial={false}
                   transition={{
                     delay: reduceMotion ? 0 : index * 0.14 + 0.12,
@@ -193,7 +193,7 @@ export default function AboutPage() {
           ))}
         </div>
 
-        <div className="relative hidden grid-cols-[repeat(5,minmax(0,1fr))] gap-4 md:grid">
+        <div className="relative hidden grid-cols-[repeat(5,minmax(0,1fr))] gap-5 md:grid">
           {STAGES.map((stage, index) => (
             <div key={stage.title} className="relative">
               <FlowCard

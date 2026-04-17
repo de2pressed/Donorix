@@ -1,6 +1,14 @@
 import Link from "next/link";
-import { ClipboardList, FileText, HeartHandshake, ShieldCheck, Trophy, Users } from "lucide-react";
+import {
+  ClipboardList,
+  FileText,
+  HeartHandshake,
+  ShieldCheck,
+  Trophy,
+  Users,
+} from "lucide-react";
 
+import { InteractivePanel } from "@/components/layout/interactive-panel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCurrentProfile, getHospitalDashboard, getLeaderboard } from "@/lib/data";
 import { POLICY_NAV } from "@/lib/constants";
@@ -17,7 +25,7 @@ export async function RightRail() {
     <aside className="hidden w-full min-w-0 shrink-0 xl:block">
       <div className="sticky top-5 space-y-4">
         {currentProfile?.account_type === "hospital" ? (
-          <Card>
+          <InteractivePanel href="/hospital/posts" label="Open patient post history">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <ClipboardList className="size-5 text-brand" />
@@ -25,28 +33,40 @@ export async function RightRail() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
-              <div className="rounded-[1.25rem] border border-border px-4 py-3">
+              <Link
+                className="block rounded-[1.25rem] border border-border px-4 py-3 transition hover:border-brand/30 hover:bg-brand-soft/60"
+                href="/hospital/posts"
+                onClick={(event) => event.stopPropagation()}
+              >
                 <p className="text-muted-foreground">{t("rightRail.activeRequests")}</p>
                 <p className="mt-1 font-mono text-2xl font-semibold">
                   {hospitalDashboard?.stats.activeRequests ?? 0}
                 </p>
-              </div>
-              <div className="rounded-[1.25rem] border border-border px-4 py-3">
+              </Link>
+              <Link
+                className="block rounded-[1.25rem] border border-border px-4 py-3 transition hover:border-brand/30 hover:bg-brand-soft/60"
+                href="/hospital/donors"
+                onClick={(event) => event.stopPropagation()}
+              >
                 <p className="text-muted-foreground">{t("rightRail.pendingApplicants")}</p>
                 <p className="mt-1 font-mono text-2xl font-semibold">
                   {hospitalDashboard?.stats.pendingApplications ?? 0}
                 </p>
-              </div>
-              <div className="rounded-[1.25rem] border border-border px-4 py-3">
+              </Link>
+              <Link
+                className="block rounded-[1.25rem] border border-border px-4 py-3 transition hover:border-brand/30 hover:bg-brand-soft/60"
+                href="/hospital/posts"
+                onClick={(event) => event.stopPropagation()}
+              >
                 <p className="text-muted-foreground">{t("rightRail.fulfilledThisMonth")}</p>
                 <p className="mt-1 font-mono text-2xl font-semibold">
                   {hospitalDashboard?.stats.fulfilledThisMonth ?? 0}
                 </p>
-              </div>
+              </Link>
             </CardContent>
-          </Card>
+          </InteractivePanel>
         ) : (
-          <Card>
+          <InteractivePanel href="/leaderboard" label="Open the top donors leaderboard">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Trophy className="size-5 text-brand" />
@@ -56,9 +76,16 @@ export async function RightRail() {
             <CardContent className="space-y-3">
               {leaders.length ? (
                 leaders.map((leader, index) => (
-                  <div key={leader.id} className="flex items-center justify-between gap-3 rounded-[1.25rem] border border-border px-4 py-3">
+                  <div
+                    key={leader.id}
+                    className="flex items-center justify-between gap-3 rounded-[1.25rem] border border-border px-4 py-3"
+                  >
                     <div className="min-w-0">
-                      <Link className="truncate font-medium transition-colors hover:text-brand" href={`/profile/${leader.username}`}>
+                      <Link
+                        className="truncate font-medium transition-colors hover:text-brand"
+                        href={`/profile/${leader.username}`}
+                        onClick={(event) => event.stopPropagation()}
+                      >
                         {leader.full_name}
                       </Link>
                       <p className="truncate text-sm text-muted-foreground">
@@ -69,15 +96,16 @@ export async function RightRail() {
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-muted-foreground">
-                  {t("rightRail.topDonorsEmpty")}
-                </p>
+                <p className="text-sm text-muted-foreground">{t("rightRail.topDonorsEmpty")}</p>
               )}
             </CardContent>
-          </Card>
+          </InteractivePanel>
         )}
 
-        <Card>
+        <InteractivePanel
+          href="/about"
+          label={currentProfile?.account_type === "hospital" ? "Open the about us page" : "Open the about Donorix page"}
+        >
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               {currentProfile?.account_type === "hospital" ? (
@@ -85,26 +113,28 @@ export async function RightRail() {
               ) : (
                 <HeartHandshake className="size-5 text-brand" />
               )}
-              {currentProfile?.account_type === "hospital" ? t("rightRail.hospitalGuide") : t("rightRail.aboutDonorix")}
+              {currentProfile?.account_type === "hospital"
+                ? t("rightRail.hospitalGuide")
+                : t("rightRail.aboutDonorix")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-muted-foreground">
             {currentProfile?.account_type === "hospital" ? (
               <>
-                <p>
-                  {t("rightRail.hospitalGuideBody")}
-                </p>
-                <Link className="inline-flex items-center gap-2 text-brand hover:text-brand/80" href="/hospital/donors">
+                <p>{t("rightRail.hospitalGuideBody")}</p>
+                <Link
+                  className="inline-flex items-center gap-2 text-brand hover:text-brand/80"
+                  href="/hospital/donors"
+                  onClick={(event) => event.stopPropagation()}
+                >
                   {t("rightRail.reviewDonorApplicants")}
                 </Link>
               </>
             ) : (
-              <p>
-                {t("rightRail.aboutDonorixBody")}
-              </p>
+              <p>{t("rightRail.aboutDonorixBody")}</p>
             )}
           </CardContent>
-        </Card>
+        </InteractivePanel>
 
         {currentProfile?.account_type === "hospital" ? (
           <Card>
@@ -120,7 +150,7 @@ export async function RightRail() {
           </Card>
         ) : null}
 
-        <Card>
+        <InteractivePanel href="/policies" label="Open the policy section">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <FileText className="size-5 text-brand" />
@@ -133,12 +163,13 @@ export async function RightRail() {
                 key={item.href}
                 href={item.href}
                 className="block rounded-2xl px-4 py-3 text-sm text-muted-foreground transition hover:bg-brand-soft hover:text-brand"
+                onClick={(event) => event.stopPropagation()}
               >
                 {item.label}
               </Link>
             ))}
           </CardContent>
-        </Card>
+        </InteractivePanel>
       </div>
     </aside>
   );

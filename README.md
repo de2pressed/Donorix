@@ -11,6 +11,7 @@ npm install
 ```
 
 2. Configure environment variables in `.env.local` (Supabase keys, cron secret, optional Twilio/OpenAI/Upstash values).
+   - Add `OPENAI_API_KEY=your_key_here` to enable the AI assistant. If it is omitted, the chatbot falls back to deterministic replies.
 
 3. Apply Supabase migrations:
 

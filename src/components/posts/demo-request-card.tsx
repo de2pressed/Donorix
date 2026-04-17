@@ -5,14 +5,24 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { authenticatedFetch } from "@/lib/supabase/authenticated-fetch";
+import { getDemoRequestReadyLabel } from "@/lib/utils/demo-request";
 import type { HospitalAccount } from "@/types/user";
+import type { DemoRequestDraft } from "@/lib/utils/demo-request";
 
-export function DemoRequestCard({ hospital }: { hospital: HospitalAccount }) {
+export function DemoRequestCard({
+  demoDraft,
+  hospital,
+}: {
+  demoDraft: DemoRequestDraft;
+  hospital: HospitalAccount;
+}) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isEmergency, setIsEmergency] = useState(demoDraft.isEmergency);
 
   async function handleCreateDemoRequest() {
     if (isSubmitting) {
@@ -24,6 +34,10 @@ export function DemoRequestCard({ hospital }: { hospital: HospitalAccount }) {
     try {
       const response = await authenticatedFetch("/api/posts/demo", {
         method: "POST",
+        body: JSON.stringify({
+          ...demoDraft,
+          isEmergency,
+        }),
       });
 
       const payload = (await response.json().catch(() => null)) as { error?: string; postId?: string } | null;
@@ -55,7 +69,7 @@ export function DemoRequestCard({ hospital }: { hospital: HospitalAccount }) {
         <div className="space-y-1">
           <CardTitle>Create a demo request</CardTitle>
           <CardDescription>
-            One click posts a prefilled emergency request for stakeholder walkthroughs.
+            Randomized patient data and an emergency toggle for stakeholder walkthroughs.
           </CardDescription>
         </div>
       </CardHeader>
@@ -66,20 +80,36 @@ export function DemoRequestCard({ hospital }: { hospital: HospitalAccount }) {
             <span className="font-medium text-foreground">{hospital.hospital_name}</span>
           </div>
           <div className="flex items-center justify-between gap-3">
+            <span className="text-muted-foreground">Patient</span>
+            <span className="font-medium text-foreground">{demoDraft.patientName}</span>
+          </div>
+          <div className="flex items-center justify-between gap-3">
             <span className="text-muted-foreground">Blood type</span>
-            <span className="font-medium text-foreground">O+</span>
+            <span className="font-medium text-foreground">{demoDraft.bloodTypeNeeded}</span>
           </div>
           <div className="flex items-center justify-between gap-3">
             <span className="text-muted-foreground">Units</span>
-            <span className="font-medium text-foreground">1</span>
+            <span className="font-medium text-foreground">{demoDraft.unitsNeeded}</span>
           </div>
           <div className="flex items-center justify-between gap-3">
             <span className="text-muted-foreground">Status</span>
-            <span className="font-medium text-foreground">Emergency</span>
+            <span className="font-medium text-foreground">{isEmergency ? "Emergency" : "Standard"}</span>
           </div>
           <div className="flex items-center justify-between gap-3">
             <span className="text-muted-foreground">Ready by</span>
-            <span className="font-medium text-foreground">about 1 hour</span>
+            <span className="font-medium text-foreground">{getDemoRequestReadyLabel(isEmergency)}</span>
+          </div>
+        </div>
+
+        <div className="rounded-[1.25rem] border border-danger/20 bg-danger/5 p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-danger">Emergency toggle</p>
+              <p className="text-xs leading-5 text-muted-foreground">
+                Turn this on when you want the demo request to use emergency routing.
+              </p>
+            </div>
+            <Switch checked={isEmergency} onCheckedChange={setIsEmergency} />
           </div>
         </div>
 
@@ -98,7 +128,7 @@ export function DemoRequestCard({ hospital }: { hospital: HospitalAccount }) {
         </Button>
 
         <p className="text-xs leading-5 text-muted-foreground">
-          This uses the current hospital profile and creates a flagged demo request immediately.
+          This uses the current hospital profile and creates a randomized demo request immediately.
         </p>
       </CardContent>
     </Card>

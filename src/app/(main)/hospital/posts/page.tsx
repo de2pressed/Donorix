@@ -59,9 +59,13 @@ export default async function HospitalPostsPage() {
                 </div>
                 <div className="flex flex-wrap items-center gap-2 md:justify-end">
                   <Badge
-                    variant={post.status === "active" ? "danger" : post.status === "deleted" ? "warning" : "secondary"}
+                    variant={post.status === "fulfilled" ? "success" : post.status === "deleted" ? "warning" : "secondary"}
                   >
-                    {post.status}
+                    {post.status === "fulfilled"
+                      ? "Fulfilled"
+                      : post.status === "deleted"
+                        ? "Deleted"
+                        : "Not fulfilled"}
                   </Badge>
                   <DeletePostButton postId={post.id} patientName={post.patient_name} status={post.status} />
                 </div>

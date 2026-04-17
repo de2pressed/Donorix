@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 
 import { DonorList } from "@/components/posts/donor-list";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getCurrentProfile, getHospitalDashboard } from "@/lib/data";
+import { getCurrentProfile, getHospitalPendingApplications } from "@/lib/data";
 import { getRequestMessages, translate } from "@/lib/i18n";
 import type { DonorApplicationWithDonor } from "@/types/post";
 
@@ -18,10 +18,10 @@ export default async function HospitalDonorsPage() {
     redirect("/");
   }
 
-  const dashboard = await getHospitalDashboard(profile.id);
-  const byPost = new Map<string, typeof dashboard.applicants>();
+  const pendingApplications = await getHospitalPendingApplications(profile.id);
+  const byPost = new Map<string, typeof pendingApplications>();
 
-  for (const application of dashboard.applicants) {
+  for (const application of pendingApplications) {
     const list = byPost.get(application.post_id) ?? [];
     list.push(application);
     byPost.set(application.post_id, list);

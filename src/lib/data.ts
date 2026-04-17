@@ -127,6 +127,10 @@ type DonorSummary = Pick<
   "id" | "full_name" | "username" | "blood_type" | "total_donations" | "karma" | "is_verified" | "city" | "state"
 >;
 
+export type HospitalApplicationSummary = DonorApplicationWithDonor & {
+  post: Pick<Post, "id" | "patient_name" | "patient_id" | "blood_type_needed" | "status"> | null;
+};
+
 async function getCreatorMap(supabase: ServerSupabaseClient, creatorIds: string[]) {
   if (!supabase || !creatorIds.length) {
     return new Map<string, CreatorSummary>();
@@ -679,19 +683,7 @@ export async function getHospitalDashboard(profileId: string) {
         fulfilledThisMonth: 0,
       },
       posts: [] as Post[],
-      applicants: [] as Array<{
-        id: string;
-        post_id: string;
-        donor_id: string;
-        status: string;
-        eligibility_score: number;
-        distance_km: number | null;
-        note: string | null;
-        created_at: string;
-        updated_at: string;
-        donor: Pick<Profile, "id" | "full_name" | "username" | "blood_type" | "city" | "state" | "karma"> | null;
-        post: Pick<Post, "id" | "patient_name" | "patient_id" | "blood_type_needed" | "status"> | null;
-      }>,
+      applicants: [] as HospitalApplicationSummary[],
     };
   }
 
@@ -731,7 +723,7 @@ export async function getHospitalDashboard(profileId: string) {
     donorIds.length > 0
       ? await supabase
           .from("profiles")
-          .select("id, full_name, username, blood_type, city, state, karma")
+          .select("id, full_name, username, blood_type, total_donations, karma, is_verified, city, state")
           .in("id", donorIds)
       : { data: [] };
 
@@ -765,8 +757,66 @@ export async function getHospitalDashboard(profileId: string) {
             status: postMap.get(application.post_id)!.status,
           }
         : null,
-    })),
+    })) as HospitalApplicationSummary[],
   };
+}
+
+export async function getHospitalPendingApplications(profileId: string) {
+  const supabase = await createServerSupabaseClient();
+  if (!supabase) return [] as HospitalApplicationSummary[];
+
+  const posts = await getHospitalPosts(profileId);
+  const postIds = posts.map((post) => post.id);
+
+  if (!postIds.length) {
+    return [] as HospitalApplicationSummary[];
+  }
+
+  const { data: applications, error } = await supabase
+    .from("donor_applications")
+    .select("id, post_id, donor_id, status, eligibility_score, distance_km, note, created_at, updated_at")
+    .in("post_id", postIds)
+    .eq("status", "pending")
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  if (error) {
+    return [] as HospitalApplicationSummary[];
+  }
+
+  const donorIds = [...new Set((applications ?? []).map((application) => application.donor_id))];
+  const donorLookup =
+    donorIds.length > 0
+      ? await supabase
+          .from("profiles")
+          .select("id, full_name, username, blood_type, total_donations, karma, is_verified, city, state")
+          .in("id", donorIds)
+      : { data: [] };
+
+  const donorMap = new Map((donorLookup.data ?? []).map((donor) => [donor.id, donor]));
+  const postMap = new Map(posts.map((post) => [post.id, post]));
+
+  return ((applications ?? []) as TableRow<"donor_applications">[]).map((application) => ({
+    ...application,
+    distance_km:
+      application.distance_km ??
+      estimateDistanceKm(
+        donorMap.get(application.donor_id)?.city,
+        donorMap.get(application.donor_id)?.state,
+        postMap.get(application.post_id)?.city,
+        postMap.get(application.post_id)?.state,
+      ),
+    donor: donorMap.get(application.donor_id) ?? null,
+    post: postMap.get(application.post_id)
+      ? {
+          id: postMap.get(application.post_id)!.id,
+          patient_name: postMap.get(application.post_id)!.patient_name,
+          patient_id: postMap.get(application.post_id)!.patient_id,
+          blood_type_needed: postMap.get(application.post_id)!.blood_type_needed,
+          status: postMap.get(application.post_id)!.status,
+        }
+      : null,
+  })) as HospitalApplicationSummary[];
 }
 
 export async function getNotifications(userId?: string) {

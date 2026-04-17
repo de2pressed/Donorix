@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { DemoRequestCard } from "@/components/posts/demo-request-card";
 import { PostForm } from "@/components/posts/post-form";
 import { getCurrentProfile, getHospitalAccountByProfileId } from "@/lib/data";
+import { createDemoRequestDraft } from "@/lib/utils/demo-request";
 
 export default async function NewPostPage() {
   const profile = await getCurrentProfile();
@@ -21,10 +22,12 @@ export default async function NewPostPage() {
     redirect("/settings");
   }
 
+  const demoDraft = createDemoRequestDraft();
+
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
       <div className="xl:col-start-2 xl:row-start-1">
-        <DemoRequestCard hospital={hospital} />
+        <DemoRequestCard demoDraft={demoDraft} hospital={hospital} />
       </div>
       <div className="xl:col-start-1 xl:row-start-1">
         <PostForm hospital={hospital} />

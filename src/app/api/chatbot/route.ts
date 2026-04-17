@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { getFeedPosts } from "@/lib/data";
 import { env } from "@/lib/env";
-import { jsonError } from "@/lib/http";
+import { jsonError, requireServerUser } from "@/lib/http";
 import { enforceRateLimit } from "@/lib/rate-limit";
+import { canDonateToRecipient, isBloodType } from "@/lib/utils/blood-type";
+import type { BloodType } from "@/lib/utils/blood-type";
 import { sanitizeText } from "@/lib/utils/sanitize";
+import { createPostSchema, type CreatePostInput } from "@/lib/validations/post";
 
 const SYSTEM_PROMPT = `You are Donorix Assistant, a guide for the Donorix blood donation platform in India.
 Help donors find requests, understand eligibility, and navigate the platform.
@@ -29,6 +33,55 @@ const LANGUAGE_NAMES = {
 
 type SupportedLanguage = keyof typeof LANGUAGE_NAMES;
 type Intent = "fallback" | "eligibility" | "emergency" | "request";
+type Persona = "guest" | "donor" | "hospital";
+type ChatRole = "assistant" | "user" | "system";
+
+type ChatMessageInput = {
+  role: ChatRole;
+  content: string;
+};
+
+type HospitalDraftState = {
+  values: Partial<CreatePostInput>;
+  missingFields: string[];
+  questions: string[];
+  readyForReview: boolean;
+  summary: string;
+  blockedReason?: string | null;
+};
+
+type EligiblePost = {
+  id: string;
+  patient_name: string;
+  blood_type_needed: string;
+  hospital_name: string;
+  city: string;
+  state: string;
+  units_needed: number;
+  required_by: string | null;
+  link: string;
+};
+
+type ChatbotRequest = {
+  message?: string;
+  language?: string;
+  persona?: Persona;
+  pathname?: string;
+  messages?: ChatMessageInput[];
+  draftState?: HospitalDraftState | null;
+  userMessageCount?: number;
+};
+
+type ChatbotResponse = {
+  language: SupportedLanguage;
+  languageName: string;
+  reply: string;
+  persona: Persona;
+  mode: "general" | "eligible_posts" | "hospital_draft";
+  eligiblePosts?: EligiblePost[];
+  draftState?: HospitalDraftState | null;
+  reminder?: string | null;
+};
 
 const RESPONSES: Record<SupportedLanguage, Record<Intent, string>> = {
   en: {
@@ -191,7 +244,80 @@ function buildFallbackReply(message: string, language: SupportedLanguage) {
   return RESPONSES[language][detectIntent(message)];
 }
 
-async function getOpenAIReply(message: string, language: SupportedLanguage) {
+function resolvePersona(requestedPersona: unknown, accountType?: string | null): Persona {
+  if (accountType === "hospital") return "hospital";
+  if (accountType === "donor") return "donor";
+  if (requestedPersona === "hospital" || requestedPersona === "donor" || requestedPersona === "guest") {
+    return requestedPersona;
+  }
+  return "guest";
+}
+
+function isEligibilityRequest(message: string) {
+  const normalized = sanitizeText(message).toLowerCase();
+  return [
+    "eligible",
+    "eligibility",
+    "compatible",
+    "compatibility",
+    "show posts",
+    "find posts",
+    "posts i can donate to",
+    "eligible to donate",
+    "donate to",
+    "can i donate",
+    "which posts",
+  ].some((term) => normalized.includes(term));
+}
+
+function isHospitalDraftRequest(message: string, draftState: HospitalDraftState | null | undefined) {
+  if (draftState?.readyForReview) {
+    return true;
+  }
+
+  const normalized = sanitizeText(message).toLowerCase();
+  return [
+    "create post",
+    "new request",
+    "patient post",
+    "blood request",
+    "post for patient",
+    "draft",
+    "request for patient",
+    "admit",
+    "ward",
+    "blood needed",
+  ].some((term) => normalized.includes(term));
+}
+
+function getGuestReminder(language: SupportedLanguage) {
+  if (language === "hi") {
+    return "मुफ़्त खाता आपको ज़्यादा tailored help, donor matches, और hospital shortcuts देता है.";
+  }
+
+  return "A free account unlocks more tailored help, donor matches, and hospital shortcuts.";
+}
+
+function buildConversationTranscript(messages: ChatMessageInput[] | undefined, latestMessage: string) {
+  const trimmed = (messages ?? []).slice(-8);
+  const lines = trimmed.map((entry) => `${entry.role.toUpperCase()}: ${sanitizeText(entry.content)}`);
+  lines.push(`USER: ${sanitizeText(latestMessage)}`);
+  return lines.join("\n");
+}
+
+async function getOpenAIReply({
+  message,
+  language,
+  persona,
+  pathname,
+  messages,
+}: {
+  message: string;
+  language: SupportedLanguage;
+  persona: Persona;
+  pathname?: string;
+  messages?: ChatMessageInput[];
+}) {
   if (!env.OPENAI_API_KEY) {
     return null;
   }
@@ -208,11 +334,23 @@ async function getOpenAIReply(message: string, language: SupportedLanguage) {
         messages: [
           {
             role: "system",
-            content: SYSTEM_PROMPT,
+            content: `${SYSTEM_PROMPT}
+
+Current persona: ${persona}.
+Current page: ${pathname ?? "unknown"}.
+Rules:
+- If persona is donor, answer general platform questions and guide eligible-post discovery.
+- If persona is hospital, help with request drafting, but do not invent missing patient details.
+- If persona is guest, answer general questions and stay subtly encouraging about creating a free account.
+- Never give medical diagnosis or replace emergency services.
+- Keep responses concise and practical.`,
           },
           {
             role: "user",
-            content: `[language:${language}] ${message}`,
+            content: `Conversation transcript:
+${buildConversationTranscript(messages, message)}
+
+Respond in ${LANGUAGE_NAMES[language]} when possible.`,
           },
         ],
         max_tokens: 300,
@@ -241,8 +379,192 @@ async function getOpenAIReply(message: string, language: SupportedLanguage) {
   }
 }
 
+async function extractHospitalDraft({
+  message,
+  language,
+  messages,
+  currentDraft,
+  hospitalDefaults,
+}: {
+  message: string;
+  language: SupportedLanguage;
+  messages?: ChatMessageInput[];
+  currentDraft?: HospitalDraftState | null;
+  hospitalDefaults: Partial<CreatePostInput>;
+}) {
+  if (!env.OPENAI_API_KEY) {
+    return null;
+  }
+
+  try {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        response_format: { type: "json_object" },
+        temperature: 0.2,
+        messages: [
+          {
+            role: "system",
+            content: `You extract blood-request fields for Donorix hospital users.
+Never guess or invent missing values.
+Only include values explicitly supplied by the user or present in the provided draft defaults.
+If a field is uncertain, set it to null and list it in missing_fields or questions.
+Return JSON with:
+{
+  "reply": string,
+  "values": {
+    "patient_name": string | null,
+    "patient_id": string | null,
+    "blood_type_needed": string | null,
+    "units_needed": number | null,
+    "hospital_name": string | null,
+    "hospital_address": string | null,
+    "city": string | null,
+    "state": string | null,
+    "contact_name": string | null,
+    "contact_phone": string | null,
+    "contact_email": string | null,
+    "medical_condition": string | null,
+    "additional_notes": string | null,
+    "is_emergency": boolean | null,
+    "required_by": string | null,
+    "initial_radius_km": number | null
+  },
+  "missing_fields": string[],
+  "questions": string[],
+  "ready_for_review": boolean,
+  "summary": string
+}
+The reply must be concise and in the same language as the user when possible.`,
+          },
+          {
+            role: "user",
+            content: `Language: ${LANGUAGE_NAMES[language]}
+Draft defaults: ${JSON.stringify(hospitalDefaults)}
+Current draft: ${JSON.stringify(currentDraft?.values ?? {})}
+Conversation transcript:
+${buildConversationTranscript(messages, message)}
+
+Latest message: ${sanitizeText(message)}`,
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const payload = (await response.json().catch(() => null)) as
+      | {
+          choices?: Array<{
+            message?: {
+              content?: string | null;
+            };
+          }>;
+        }
+      | null;
+
+    const raw = payload?.choices?.[0]?.message?.content?.trim();
+    if (!raw) {
+      return null;
+    }
+
+    const parsed = JSON.parse(raw) as Partial<HospitalDraftState> & {
+      reply?: string;
+      values?: Partial<CreatePostInput>;
+      missing_fields?: string[];
+      questions?: string[];
+      ready_for_review?: boolean;
+      summary?: string;
+    };
+
+    return {
+      reply: typeof parsed.reply === "string" ? parsed.reply.trim() : "",
+      values: parsed.values ?? {},
+      missingFields: Array.isArray(parsed.missing_fields)
+        ? parsed.missing_fields.filter((field): field is string => typeof field === "string")
+        : [],
+      questions: Array.isArray(parsed.questions)
+        ? parsed.questions.filter((field): field is string => typeof field === "string")
+        : [],
+      readyForReview: Boolean(parsed.ready_for_review),
+      summary: typeof parsed.summary === "string" ? parsed.summary.trim() : "",
+    } satisfies HospitalDraftState & { reply: string };
+  } catch {
+    return null;
+  }
+}
+
+function formatEligiblePostsReply(posts: EligiblePost[], language: SupportedLanguage) {
+  const intro =
+    language === "hi"
+      ? `Mujhe ${posts.length} compatible requests mile.`
+      : `I found ${posts.length} compatible request${posts.length === 1 ? "" : "s"}.`;
+
+  const lines = posts
+    .slice(0, 5)
+    .map(
+      (post, index) =>
+        `${index + 1}. ${post.patient_name} - ${post.blood_type_needed} - ${post.hospital_name}, ${post.city}, ${post.state}`,
+    );
+
+  return [intro, ...lines, "Open any card to view the post and respond directly."].join("\n");
+}
+
+function buildHospitalFallbackReply(missingFields: string[], language: SupportedLanguage) {
+  const questionMap: Record<string, string> = {
+    patient_name: "What is the patient name?",
+    patient_id: "What patient ID or case reference should I use?",
+    blood_type_needed: "Which blood group is needed?",
+    units_needed: "How many units are needed?",
+    contact_name: "Who should I list as the contact person?",
+    contact_phone: "What contact phone number should I use?",
+    medical_condition: "What is the medical reason for the blood request?",
+    required_by: "When is the blood required? Please share a date and time.",
+  };
+
+  const questions = missingFields
+    .map((field) => questionMap[field])
+    .filter((value): value is string => Boolean(value));
+
+  const prefix =
+    language === "hi"
+      ? "मुझे यह request तैयार करने से पहले कुछ जानकारी चाहिए:"
+      : "I need a few missing details before I can prepare this request:";
+
+  return [prefix, ...questions.map((question) => `- ${question}`)].join("\n");
+}
+
+function buildEligiblePosts(posts: Awaited<ReturnType<typeof getFeedPosts>>, donorBloodType: string | null | undefined) {
+  if (!donorBloodType || !isBloodType(donorBloodType)) {
+    return [] as EligiblePost[];
+  }
+
+  return posts
+    .filter((post) => post.blood_type_needed && isBloodType(post.blood_type_needed))
+    .filter((post) => canDonateToRecipient(donorBloodType, post.blood_type_needed as BloodType))
+    .slice(0, 5)
+    .map((post) => ({
+      id: post.id,
+      patient_name: post.patient_name,
+      blood_type_needed: post.blood_type_needed,
+      hospital_name: post.hospital_name,
+      city: post.city,
+      state: post.state,
+      units_needed: post.units_needed,
+      required_by: post.required_by ?? null,
+      link: `/posts/${post.id}`,
+    }));
+}
+
 export async function POST(request: NextRequest) {
-  const body = (await request.json().catch(() => null)) as { message?: string; language?: string } | null;
+  const body = (await request.json().catch(() => null)) as ChatbotRequest | null;
 
   if (!body?.message) {
     return jsonError("Message is required", 422);
@@ -253,13 +575,188 @@ export async function POST(request: NextRequest) {
     return jsonError("Too many requests", 429);
   }
 
+  const { profile, hospitalAccount } = await requireServerUser(request);
   const language = resolveLanguage(body.language);
+  const persona = resolvePersona(body.persona, profile?.account_type);
+  const messages = body.messages ?? [];
+  const userMessageCount = body.userMessageCount ?? messages.filter((entry) => entry.role === "user").length;
+  const isGuestReminderTurn = persona === "guest" && userMessageCount > 0 && userMessageCount % 3 === 0;
+
+  if (persona === "donor" && (isEligibilityRequest(body.message) || sanitizeText(body.message).includes("eligible posts"))) {
+    const donorPosts = await getFeedPosts(profile?.id);
+    const eligiblePosts = buildEligiblePosts(donorPosts, profile?.blood_type);
+
+    const reply =
+      eligiblePosts.length > 0
+        ? formatEligiblePostsReply(eligiblePosts, language)
+        : language === "hi"
+          ? "Mujhe abhi koi compatible post nahi mila. Aap feed par compatible matches dobara check kar sakte hain."
+          : "I couldn't find any compatible posts right now. You can check the compatible matches view again from the feed.";
+
+    return NextResponse.json({
+      language,
+      languageName: LANGUAGE_NAMES[language],
+      persona,
+      mode: "eligible_posts",
+      reply,
+      eligiblePosts,
+      reminder: isGuestReminderTurn ? getGuestReminder(language) : null,
+    } satisfies ChatbotResponse);
+  }
+
+  if (persona === "hospital" && isHospitalDraftRequest(body.message, body.draftState)) {
+    const hospitalDefaults: Partial<CreatePostInput> = {
+      hospital_name: hospitalAccount?.hospital_name ?? profile?.full_name ?? undefined,
+      hospital_address: hospitalAccount?.address ?? undefined,
+      city: hospitalAccount?.city ?? profile?.city ?? undefined,
+      state: hospitalAccount?.state ?? profile?.state ?? undefined,
+      contact_name: hospitalAccount?.contact_person_name ?? profile?.full_name ?? undefined,
+      contact_phone: hospitalAccount?.official_contact_phone ?? profile?.phone ?? undefined,
+      contact_email: hospitalAccount?.official_contact_email ?? profile?.email ?? undefined,
+      initial_radius_km: 25,
+    };
+
+    if (!hospitalAccount) {
+      return NextResponse.json({
+        language,
+        languageName: LANGUAGE_NAMES[language],
+        persona,
+        mode: "hospital_draft",
+        reply:
+          language === "hi"
+            ? "Mujhe aapka hospital account setup complete nahi dikh raha. Please settings complete karke phir try karein."
+            : "Your hospital account setup looks incomplete. Please complete hospital registration in settings first.",
+        draftState: {
+          values: hospitalDefaults,
+          missingFields: ["hospital account details"],
+          questions: ["Please complete hospital registration in Settings before creating a request."],
+          readyForReview: false,
+          summary: "Hospital account details are incomplete.",
+          blockedReason: "Hospital details are incomplete.",
+        },
+      } satisfies ChatbotResponse);
+    }
+
+    if (hospitalAccount.verification_status !== "verified") {
+      return NextResponse.json({
+        language,
+        languageName: LANGUAGE_NAMES[language],
+        persona,
+        mode: "hospital_draft",
+        reply:
+          language === "hi"
+            ? "Main draft banane mein madad kar sakta hoon, lekin post sirf verified hospital accounts se publish ho sakta hai. Pehle verification complete karein."
+            : "I can help draft the request, but publishing is blocked until this hospital account is verified.",
+        draftState: {
+          values: hospitalDefaults,
+          missingFields: ["hospital verification"],
+          questions: ["Please finish hospital verification before publishing this request."],
+          readyForReview: false,
+          summary: "Drafting is allowed, but publishing is blocked until verification is complete.",
+          blockedReason: "Only verified hospital accounts can create blood requests.",
+        },
+      } satisfies ChatbotResponse);
+    }
+
+    const extractedDraft =
+      (await extractHospitalDraft({
+        message: body.message,
+        language,
+        messages,
+        currentDraft: body.draftState,
+        hospitalDefaults,
+      })) ?? null;
+
+    const mergedValues = {
+      ...(body.draftState?.values ?? {}),
+      ...hospitalDefaults,
+      ...(extractedDraft?.values ?? {}),
+    };
+
+    const normalizedDraft = {
+      ...mergedValues,
+      patient_name: typeof mergedValues.patient_name === "string" ? mergedValues.patient_name : "",
+      patient_id: typeof mergedValues.patient_id === "string" ? mergedValues.patient_id : "",
+      blood_type_needed:
+        typeof mergedValues.blood_type_needed === "string" && isBloodType(mergedValues.blood_type_needed)
+          ? mergedValues.blood_type_needed
+          : undefined,
+      units_needed:
+        typeof mergedValues.units_needed === "number" && Number.isFinite(mergedValues.units_needed)
+          ? mergedValues.units_needed
+          : undefined,
+      contact_name: typeof mergedValues.contact_name === "string" ? mergedValues.contact_name : "",
+      contact_phone: typeof mergedValues.contact_phone === "string" ? mergedValues.contact_phone : "",
+      contact_email: typeof mergedValues.contact_email === "string" ? mergedValues.contact_email : "",
+      medical_condition: typeof mergedValues.medical_condition === "string" ? mergedValues.medical_condition : "",
+      required_by: typeof mergedValues.required_by === "string" ? mergedValues.required_by : "",
+      initial_radius_km:
+        typeof mergedValues.initial_radius_km === "number" && Number.isFinite(mergedValues.initial_radius_km)
+          ? mergedValues.initial_radius_km
+          : 25,
+    };
+
+    const validation = createPostSchema.safeParse(normalizedDraft);
+    const missingFields = validation.success
+      ? []
+      : validation.error.issues
+          .map((issue) => issue.path[0])
+          .filter((field): field is string => typeof field === "string");
+
+    const readyForReview = validation.success;
+    const summary =
+      extractedDraft?.summary ||
+      (readyForReview
+        ? `Patient ${normalizedDraft.patient_name} needs ${normalizedDraft.blood_type_needed} blood, ${normalizedDraft.units_needed} unit${
+            normalizedDraft.units_needed === 1 ? "" : "s"
+          }, required by ${normalizedDraft.required_by}.`
+        : `I still need ${missingFields.length} detail${missingFields.length === 1 ? "" : "s"} before I can finalize the draft.`);
+
+    const reply =
+      extractedDraft?.reply?.trim() ||
+      (readyForReview
+        ? language === "hi"
+          ? "Draft tayyar hai. Neeche review karke post create karein."
+          : "The draft is ready. Review it below and create the request when you're ready."
+        : buildHospitalFallbackReply(missingFields, language));
+
+    return NextResponse.json({
+      language,
+      languageName: LANGUAGE_NAMES[language],
+      persona,
+      mode: "hospital_draft",
+      reply,
+      draftState: {
+        values: normalizedDraft,
+        missingFields,
+        questions: extractedDraft?.questions?.length
+          ? extractedDraft.questions
+          : missingFields.map((field) => field.replace(/_/g, " ")),
+        readyForReview,
+        summary,
+        blockedReason: null,
+      },
+      reminder: isGuestReminderTurn ? getGuestReminder(language) : null,
+    } satisfies ChatbotResponse);
+  }
+
   const reply =
-    (await getOpenAIReply(body.message, language)) ?? buildFallbackReply(body.message, language);
+    (await getOpenAIReply({
+      message: body.message,
+      language,
+      persona,
+      pathname: body.pathname,
+      messages,
+    })) ?? buildFallbackReply(body.message, language);
+
+  const guestReply = isGuestReminderTurn ? `${reply}\n\n${getGuestReminder(language)}` : reply;
 
   return NextResponse.json({
     language,
     languageName: LANGUAGE_NAMES[language],
-    reply,
-  });
+    persona,
+    mode: "general",
+    reply: guestReply,
+    reminder: isGuestReminderTurn ? getGuestReminder(language) : null,
+  } satisfies ChatbotResponse);
 }

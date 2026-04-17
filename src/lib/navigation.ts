@@ -43,6 +43,7 @@ export function getSidebarNav(accountType?: AccountType | null) {
   return [
     { href: "/", label: "Home", icon: Home },
     { href: "/find", label: "Find to Donate", icon: HeartHandshake },
+    { href: "/donor/chats", label: "Chats", icon: MessagesSquare },
     { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
     { href: "/notifications", label: "Notifications", icon: Bell },
     { href: "/policies/terms", label: "Policies", icon: FileText },
@@ -93,6 +94,7 @@ export function getMoreNav(accountType?: AccountType | null, isAuthenticated = f
   if (isAuthenticated) {
     return [
       { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
+      { href: "/donor/chats", label: "Chats", icon: MessagesSquare },
       { href: "/policies/terms", label: "Policies", icon: FileText },
       { href: "/about", label: "About Us", icon: Info },
       { href: "/profile", label: "Profile", icon: User2 },

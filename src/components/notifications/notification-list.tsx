@@ -49,6 +49,19 @@ export function NotificationList({ notifications }: { notifications: Notificatio
     return () => window.clearTimeout(timeout);
   }, [notifications, queryClient, router]);
 
+  function getNotificationHref(notification: Notification) {
+    if (
+      notification.post_id &&
+      (notification.type === "application_approved" ||
+        notification.type === "chat_message" ||
+        notification.type === "chat_ready")
+    ) {
+      return `/chat/${notification.post_id}`;
+    }
+
+    return notification.post_id ? `/posts/${notification.post_id}` : "/notifications";
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -65,7 +78,7 @@ export function NotificationList({ notifications }: { notifications: Notificatio
               transition={{ delay: index * 0.04, duration: 0.22, ease: "easeOut" }}
             >
               <Link
-                href={notification.post_id ? `/posts/${notification.post_id}` : "/notifications"}
+                href={getNotificationHref(notification)}
                 className="block rounded-[1.5rem] border border-border p-4 transition hover:bg-muted/50"
               >
                 <div className="flex items-center justify-between gap-4">

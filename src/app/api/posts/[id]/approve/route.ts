@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { jsonError, requireServerUser } from "@/lib/http";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -50,6 +51,35 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     .eq("post_id", id)
     .neq("donor_id", body.donorId)
     .eq("status", "pending");
+
+  const admin = getSupabaseAdminClient();
+  if (admin) {
+    const { data: postMeta } = await supabase
+      .from("posts")
+      .select("patient_name, hospital_name, created_by")
+      .eq("id", id)
+      .maybeSingle();
+
+    await admin.from("notifications").insert({
+      user_id: body.donorId,
+      type: "application_approved",
+      title: "Your donation offer was accepted",
+      body: `${postMeta?.hospital_name ?? "The hospital"} has accepted your application for patient ${postMeta?.patient_name ?? "a patient"}. Please coordinate directly.`,
+      post_id: id,
+      data: { status: "approved", post_id: id },
+    });
+
+    if (postMeta?.created_by) {
+      await admin.from("notifications").insert({
+        user_id: postMeta.created_by,
+        type: "chat_ready",
+        title: "Chat ready with approved donor",
+        body: `You can now chat with the approved donor for patient ${postMeta.patient_name ?? "this request"}.`,
+        post_id: id,
+        data: { post_id: id, donor_id: body.donorId },
+      });
+    }
+  }
 
   return NextResponse.json({ ok: true });
 }

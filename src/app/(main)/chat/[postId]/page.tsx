@@ -1,4 +1,5 @@
 import { redirect, notFound } from "next/navigation";
+import Link from "next/link";
 
 import { ChatThread } from "@/components/chats/chat-thread";
 import { Button } from "@/components/ui/button";
@@ -32,9 +33,9 @@ export default async function ChatThreadPage({ params }: { params: Promise<{ pos
           </p>
         </div>
         <Button asChild variant="outline">
-          <a href={profile.account_type === "hospital" ? "/hospital/chats" : "/"}>
-            {profile.account_type === "hospital" ? "Back to chats" : "Back home"}
-          </a>
+          <Link href={profile.account_type === "hospital" ? "/hospital/chats" : "/donor/chats"}>
+            {profile.account_type === "hospital" ? "Back to chats" : "Back to chats"}
+          </Link>
         </Button>
       </div>
 

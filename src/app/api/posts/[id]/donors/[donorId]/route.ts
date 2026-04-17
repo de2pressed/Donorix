@@ -110,6 +110,17 @@ export async function PATCH(
       data: { status: nextStatus, post_id: id },
     });
 
+    if (nextStatus === "approved") {
+      await admin.from("notifications").insert({
+        user_id: post.created_by,
+        type: "chat_ready",
+        title: "Chat ready with approved donor",
+        body: `You can now chat with the approved donor for patient ${post.patient_name ?? "this request"}.`,
+        post_id: id,
+        data: { post_id: id, donor_id: donorId },
+      });
+    }
+
   if (nextStatus === "approved" && pendingApplications?.length) {
       await admin.from("notifications").insert(
         pendingApplications.map((pending) => ({

@@ -1,4 +1,5 @@
 import { LeaderboardTable } from "@/components/leaderboard/leaderboard-table";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { getLeaderboard } from "@/lib/data";
 import { getRequestMessages, translate } from "@/lib/i18n";
@@ -14,18 +15,29 @@ export default async function LeaderboardPage() {
   return (
     <div className="space-y-6 md:space-y-8">
       <section className="surface hero-grid overflow-hidden p-6 md:p-8">
-        <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr] xl:items-end">
-          <div className="space-y-4">
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-brand">Leaderboard</p>
-            <h1 className="font-display text-balance text-4xl font-semibold leading-[1.02] md:text-5xl">
-              {t("leaderboard.title")}
-            </h1>
-            <p className="max-w-3xl text-balance text-base text-muted-foreground md:text-lg">
-              {t("leaderboard.subtitle")}
-            </p>
+        <div className="space-y-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="space-y-4">
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-brand">Leaderboard</p>
+              <div className="max-w-3xl space-y-3">
+                <h1 className="font-display text-balance text-4xl font-semibold leading-[1.02] md:text-5xl">
+                  {t("leaderboard.title")}
+                </h1>
+                <p className="text-balance text-base text-muted-foreground md:text-lg">
+                  {t("leaderboard.subtitle")}
+                </p>
+              </div>
+            </div>
+
+            <Badge
+              className="w-fit rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em]"
+              variant="secondary"
+            >
+              Top 100 board
+            </Badge>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
+          <div className="grid gap-3 md:grid-cols-3">
             {[
               {
                 icon: Users,

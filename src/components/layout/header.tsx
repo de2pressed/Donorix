@@ -20,7 +20,7 @@ export function Header() {
   const tHeader = useTranslations("header");
 
   return (
-    <header className="glass-panel sticky top-4 z-40 flex items-center justify-between gap-4 rounded-[1.75rem] px-4 py-3">
+    <header className="glass-panel z-40 flex items-center justify-between gap-4 rounded-[1.75rem] px-4 py-3 lg:sticky lg:top-4">
       <div className="min-w-0 flex-1">
         <Link className="inline-flex min-w-0 items-center gap-3" href="/">
           <span className="shrink-0 text-lg font-semibold tracking-tight text-foreground">Donorix</span>

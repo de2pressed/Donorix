@@ -82,25 +82,25 @@ export function MobileNav() {
           return item.href === "#more" ? (
             <button
               key={item.label}
-              className="flex flex-1 min-w-0 flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-medium text-muted-foreground transition hover:text-brand"
+              className="flex flex-1 min-w-0 flex-col items-center justify-center gap-1 rounded-2xl px-1 py-2 text-center text-[10px] font-medium leading-none text-muted-foreground transition hover:text-brand"
               type="button"
               onClick={() => setMoreOpen(true)}
             >
               <Icon className="size-4" />
-              {getLabel(item.href)}
+              <span className="block w-full truncate">{item.label}</span>
             </button>
           ) : (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-1 min-w-0 flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-medium text-muted-foreground transition hover:text-brand",
+                "flex flex-1 min-w-0 flex-col items-center justify-center gap-1 rounded-2xl px-1 py-2 text-center text-[10px] font-medium leading-none text-muted-foreground transition hover:text-brand",
                 (item.href === "/" ? pathname === "/" : pathname === item.href || pathname.startsWith(`${item.href}/`)) &&
                   "bg-brand-soft text-brand",
               )}
             >
               <Icon className="size-4" />
-              {getLabel(item.href)}
+              <span className="block w-full truncate">{item.label}</span>
             </Link>
           );
         })}

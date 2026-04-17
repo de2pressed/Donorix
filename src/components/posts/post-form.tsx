@@ -189,7 +189,7 @@ export function PostForm({ hospital }: { hospital: HospitalAccount }) {
   const requiredBy = form.watch("required_by");
 
   return (
-    <Card className="w-full max-w-4xl overflow-hidden">
+    <Card className="w-full overflow-hidden">
       <CardHeader className="space-y-4">
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-4 text-sm text-muted-foreground">

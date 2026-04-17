@@ -195,7 +195,7 @@ export default async function HomePage() {
           <div className="space-y-6">
             <Badge variant="danger">{t("hero.badge")}</Badge>
             <div className="space-y-4">
-              <h1 className="font-display max-w-4xl text-balance text-4xl font-extrabold md:text-6xl">
+              <h1 className="font-display max-w-4xl text-balance text-4xl font-bold md:text-5xl">
                 {t("hero.title")}
               </h1>
               <p className="max-w-3xl text-balance text-base text-muted-foreground md:text-lg">

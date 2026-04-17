@@ -27,14 +27,24 @@ export function ThemeToggle({ className }: { className?: string }) {
       type="button"
       variant="ghost"
       onClick={() => {
-        const root = document.documentElement;
-        root.classList.add("theme-transition");
-        window.requestAnimationFrame(() => {
-          setTheme(isDark ? "light" : "dark");
-        });
+        let overlay = document.getElementById("theme-switch-overlay");
+        if (!overlay) {
+          overlay = document.createElement("div");
+          overlay.id = "theme-switch-overlay";
+          document.body.appendChild(overlay);
+        }
+
+        overlay.classList.remove("theme-fade-out");
+        overlay.classList.add("theme-fade-in");
+
         window.setTimeout(() => {
-          root.classList.remove("theme-transition");
-        }, 320);
+          setTheme(isDark ? "light" : "dark");
+
+          window.setTimeout(() => {
+            overlay?.classList.remove("theme-fade-in");
+            overlay?.classList.add("theme-fade-out");
+          }, 60);
+        }, 160);
       }}
     >
       <motion.span

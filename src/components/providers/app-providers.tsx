@@ -65,7 +65,24 @@ export function AppProviders({ children, locale, messages }: AppProvidersProps) 
               </NotificationProvider>
             </AuthPromptProvider>
           </TooltipProvider>
-          <Toaster position="top-right" richColors />
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              classNames: {
+                toast:
+                  "glass-panel !rounded-2xl !border !border-border !bg-transparent !px-4 !py-3 !text-sm !gap-3 !font-sans !text-foreground !shadow-lg",
+                title: "!font-semibold !text-foreground",
+                description: "!text-muted-foreground",
+                success: "!border-[hsl(var(--success)/0.35)] [&>[data-icon]]:!text-[hsl(var(--success))]",
+                error: "!border-[hsl(var(--danger)/0.35)] [&>[data-icon]]:!text-[hsl(var(--danger))]",
+                warning: "!border-[hsl(var(--warning)/0.35)] [&>[data-icon]]:!text-[hsl(var(--warning))]",
+                info: "!border-[hsl(var(--brand)/0.35)] [&>[data-icon]]:!text-[hsl(var(--brand))]",
+                actionButton: "!bg-brand !text-brand-foreground !rounded-xl !text-xs !font-semibold",
+                cancelButton: "!bg-muted !text-muted-foreground !rounded-xl !text-xs",
+                closeButton: "!bg-card !border-border !text-muted-foreground hover:!text-foreground",
+              },
+            }}
+          />
         </QueryClientProvider>
       </LocalePreferenceProvider>
     </ThemeProvider>

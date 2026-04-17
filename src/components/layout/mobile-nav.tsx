@@ -110,7 +110,7 @@ export function MobileNav() {
       </nav>
 
       <Dialog open={moreOpen} onOpenChange={setMoreOpen}>
-        <DialogContent className="dialog-bottom-sheet inset-x-0 bottom-0 top-auto w-full max-w-none !translate-x-0 !translate-y-0 rounded-b-none rounded-t-[1.75rem] px-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] pt-8 sm:max-w-none lg:hidden">
+        <DialogContent className="dialog-bottom-sheet inset-x-0 bottom-0 top-auto w-full max-w-none !translate-x-0 !translate-y-0 rounded-b-none rounded-t-[1.75rem] px-5 pb-[calc(env(safe-area-inset-bottom)+5.5rem)] pt-8 sm:max-w-none lg:hidden">
           <DialogHeader>
             <DialogTitle>{tNav("more")}</DialogTitle>
             <DialogDescription className="sr-only">
@@ -118,20 +118,9 @@ export function MobileNav() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
-            {moreItems.map((item) => (
-              <Link
-                key={item.href}
-                className="flex items-center gap-3 rounded-2xl border border-border px-4 py-3 text-sm font-medium text-foreground transition hover:bg-brand-soft"
-                href={item.href}
-                onClick={() => setMoreOpen(false)}
-              >
-                <item.icon className="size-4" />
-                {getLabel(item.href)}
-              </Link>
-            ))}
             {user ? (
               <Button
-                className="w-full justify-start"
+                className="w-full justify-start text-danger hover:bg-danger/10 hover:text-danger"
                 type="button"
                 variant="ghost"
                 onClick={async () => {
@@ -143,6 +132,17 @@ export function MobileNav() {
                 {tNav("logout")}
               </Button>
             ) : null}
+            {moreItems.map((item) => (
+              <Link
+                key={item.href}
+                className="flex items-center gap-3 rounded-2xl border border-border px-4 py-3 text-sm font-medium text-foreground transition hover:bg-brand-soft"
+                href={item.href}
+                onClick={() => setMoreOpen(false)}
+              >
+                <item.icon className="size-4" />
+                {getLabel(item.href)}
+              </Link>
+            ))}
           </div>
         </DialogContent>
       </Dialog>

@@ -271,21 +271,6 @@ body::after {
   opacity: 0.92;
 }
 
-.theme-transition,
-.theme-transition *,
-.theme-transition *::before,
-.theme-transition *::after {
-  transition-property:
-    background-color,
-    color,
-    border-color,
-    box-shadow,
-    fill,
-    stroke !important;
-  transition-duration: 280ms !important;
-  transition-timing-function: ease !important;
-}
-
 a {
   @apply transition-colors;
 }
@@ -468,6 +453,28 @@ button {
 .animate-toast-in {
   animation: toast-in 250ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
   will-change: transform;
+}
+
+/* Sonner toast theme overrides */
+[data-sonner-toaster] {
+  --normal-bg: transparent;
+  --normal-border: hsl(var(--border));
+  --normal-text: hsl(var(--foreground));
+  --success-bg: transparent;
+  --success-border: hsl(var(--success) / 0.3);
+  --success-text: hsl(var(--foreground));
+  --error-bg: transparent;
+  --error-border: hsl(var(--danger) / 0.3);
+  --error-text: hsl(var(--foreground));
+  --warning-bg: transparent;
+  --warning-border: hsl(var(--warning) / 0.3);
+  --warning-text: hsl(var(--foreground));
+  font-family: inherit;
+}
+
+[data-sonner-toast] {
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
 }
 
 .emergency-card {
@@ -702,6 +709,34 @@ button {
   to {
     transform: translateX(120%);
   }
+}
+
+/* Theme switch glass-fade overlay */
+#theme-switch-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+  background: rgba(255, 248, 249, 0.72);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  transition: opacity 180ms ease;
+  will-change: opacity;
+}
+
+html.dark #theme-switch-overlay {
+  background: rgba(17, 10, 13, 0.72);
+}
+
+#theme-switch-overlay.theme-fade-in {
+  opacity: 1;
+  transition: opacity 160ms ease;
+}
+
+#theme-switch-overlay.theme-fade-out {
+  opacity: 0;
+  transition: opacity 200ms ease 60ms;
 }
 
 @layer utilities {

@@ -1,6 +1,35 @@
 ## Donorix Brain (change log)
 
-### 2026-04-18 — Font system revert
+### 2026-04-18 - Changelog 15 (theme fade, toast theming, feed cards, mobile nav)
+
+#### Theme switch
+- Replaced the global `.theme-transition` repaint hack with a frosted overlay fade for theme changes.
+- Kept the theme switch animation localized to the toggle interaction instead of transitioning every element on the page.
+
+#### Toasts
+- Replaced Sonner `richColors` with theme-matched toast class names.
+- Added global Sonner CSS variable overrides and toast backdrop blur so notifications match the glass UI.
+
+#### Feed cards
+- Reworked feed post cards into collapsed and expanded states with click-to-expand and second-click navigation.
+- Kept interactive controls and profile links from triggering card navigation.
+
+#### Mobile nav
+- Increased the bottom-sheet clearance so the logout action is not hidden behind the fixed mobile nav bar.
+- Moved logout to the top of the more-menu list and styled it as a destructive action.
+
+#### Hero polish
+- Reduced the guest hero headline weight and size so it better matches the logged-in hero treatment.
+
+#### Files touched
+- `donorix/src/app/globals.css`
+- `donorix/src/components/layout/theme-toggle.tsx`
+- `donorix/src/components/providers/app-providers.tsx`
+- `donorix/src/components/posts/post-card.tsx`
+- `donorix/src/components/layout/mobile-nav.tsx`
+- `donorix/src/app/(main)/page.tsx`
+
+### 2026-04-18 - Font system revert
 
 #### Revert
 - Returned the app shell and Tailwind font stack to the default system UI families.

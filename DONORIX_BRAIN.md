@@ -38,11 +38,17 @@
 #### Footer
 - Upgraded footer structure + spacing, then removed excessive translucency causing “visual overlap” perception:
   - `donorix/src/components/layout/site-footer.tsx`
+- Fixed footer clipping/overlap by moving large safe-area bottom padding from inner wrapper onto the footer container:
+  - `donorix/src/components/layout/site-footer.tsx`
 
 #### Header (mobile)
 - Fixed top bar mobile text overlap by hiding tagline on small screens and improving truncation:
   - `donorix/src/components/layout/app-logo.tsx`
   - `donorix/src/components/layout/header.tsx`
+
+#### Logo reliability
+- Prevented broken-image placeholder by preloading logo candidates and only rendering the `<img>` once a logo successfully loads:
+  - `donorix/src/components/layout/app-logo.tsx`
 
 #### Chats
 - Adjusted donor-hospital chat typography and metadata row to reduce overly-wide appearance:

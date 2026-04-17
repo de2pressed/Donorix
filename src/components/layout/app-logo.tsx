@@ -2,7 +2,7 @@
 
 import { HeartHandshake } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { APP_NAME } from "@/lib/constants";
 import { cn } from "@/lib/utils/cn";
@@ -17,16 +17,47 @@ type AppLogoProps = {
 };
 
 function LogoMark({ compact = false }: { compact?: boolean }) {
-  const [currentSrcIndex, setCurrentSrcIndex] = useState(0);
-  const logoCandidates = [
-    "/logo/custom-logo.webp",
-    "/logo/custom-logo.png",
-    "/logo/logo.webp",
-    "/logo/logo.png",
-    "/logo/donorix-logo.webp",
-    "/logo/donorix-logo.png",
-  ];
-  const currentSrc = logoCandidates[currentSrcIndex] ?? null;
+  const logoCandidates = useMemo(
+    () => [
+      "/logo/custom-logo.webp",
+      "/logo/custom-logo.png",
+      "/logo/logo.webp",
+      "/logo/logo.png",
+      "/logo/donorix-logo.webp",
+      "/logo/donorix-logo.png",
+    ],
+    [],
+  );
+
+  const [resolvedSrc, setResolvedSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function resolveLogo() {
+      for (const src of logoCandidates) {
+        const ok = await new Promise<boolean>((resolve) => {
+          const img = new Image();
+          img.onload = () => resolve(true);
+          img.onerror = () => resolve(false);
+          img.src = src;
+        });
+
+        if (cancelled) return;
+        if (ok) {
+          setResolvedSrc(src);
+          return;
+        }
+      }
+
+      setResolvedSrc(null);
+    }
+
+    void resolveLogo();
+    return () => {
+      cancelled = true;
+    };
+  }, [logoCandidates]);
 
   return (
     <span
@@ -35,19 +66,13 @@ function LogoMark({ compact = false }: { compact?: boolean }) {
         compact ? "size-10" : "size-11",
       )}
     >
-      {currentSrc ? (
+      {resolvedSrc ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={currentSrc}
+          src={resolvedSrc}
           alt={`${APP_NAME} logo`}
-          className="h-full w-full object-contain p-1"
-          onError={() => {
-            if (currentSrcIndex < logoCandidates.length - 1) {
-              setCurrentSrcIndex((index) => index + 1);
-              return;
-            }
-            setCurrentSrcIndex(logoCandidates.length);
-          }}
+          className={cn("h-full w-full object-contain", compact ? "p-1.5" : "p-2")}
+          draggable={false}
         />
       ) : (
         <span className="absolute inset-0 flex items-center justify-center rounded-2xl bg-brand text-brand-foreground">

@@ -24,7 +24,7 @@ export default async function ChatThreadPage({ params }: { params: Promise<{ pos
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-[calc(env(safe-area-inset-bottom)+7.5rem)] lg:pb-0">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-3xl font-semibold">Chat</h1>

@@ -16,7 +16,16 @@ type AppLogoProps = {
 };
 
 function LogoMark({ compact = false }: { compact?: boolean }) {
-  const [currentSrc, setCurrentSrc] = useState<string | null>("/logo/custom-logo.webp");
+  const [currentSrcIndex, setCurrentSrcIndex] = useState(0);
+  const logoCandidates = [
+    "/logo/custom-logo.webp",
+    "/logo/custom-logo.png",
+    "/logo/logo.webp",
+    "/logo/logo.png",
+    "/logo/donorix-logo.webp",
+    "/logo/donorix-logo.png",
+  ];
+  const currentSrc = logoCandidates[currentSrcIndex] ?? null;
 
   return (
     <span
@@ -32,11 +41,11 @@ function LogoMark({ compact = false }: { compact?: boolean }) {
           alt={`${APP_NAME} logo`}
           className="h-full w-full object-contain p-1"
           onError={() => {
-            if (currentSrc.endsWith(".webp")) {
-              setCurrentSrc("/logo/custom-logo.png");
+            if (currentSrcIndex < logoCandidates.length - 1) {
+              setCurrentSrcIndex((index) => index + 1);
               return;
             }
-            setCurrentSrc(null);
+            setCurrentSrcIndex(logoCandidates.length);
           }}
         />
       ) : (

@@ -199,9 +199,11 @@ export function ChatThread({
                           : "border border-border bg-card text-foreground",
                       )}
                     >
-                      <div className="mb-2 flex items-center justify-between gap-3 text-[11px] font-semibold uppercase tracking-[0.18em] opacity-75">
-                        <span>{isMine ? "You" : senderLabel}</span>
-                        <span>{formatRelativeTime(message.created_at)}</span>
+                      <div className="mb-2 flex flex-col gap-1 text-[11px] font-medium tracking-[0.03em] opacity-80 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                        <span className="truncate">{isMine ? "You" : senderLabel}</span>
+                        <span className="shrink-0 text-[10px] tracking-[0.04em] opacity-80">
+                          {formatRelativeTime(message.created_at)}
+                        </span>
                       </div>
                       {parsedMessage.text ? (
                         <p className="whitespace-pre-wrap leading-6">{parsedMessage.text}</p>

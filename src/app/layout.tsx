@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
+import { Noto_Sans_Devanagari } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 
 import { AppProviders } from "@/components/providers/app-providers";
@@ -18,6 +19,13 @@ const geistMono = localFont({
   src: "./fonts/GeistMonoVF.woff",
   variable: "--font-geist-mono",
   weight: "100 900",
+});
+
+const notoDevanagari = Noto_Sans_Devanagari({
+  subsets: ["devanagari", "latin"],
+  variable: "--font-noto-devanagari",
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -81,7 +89,10 @@ export default async function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: bootstrapScript }} />
       </head>
-      <body suppressHydrationWarning className={cn(geistSans.variable, geistMono.variable, "min-h-screen")}>
+      <body
+        suppressHydrationWarning
+        className={cn(geistSans.variable, geistMono.variable, notoDevanagari.variable, "min-h-screen")}
+      >
         <div aria-hidden="true" id="donorix-boot-splash" suppressHydrationWarning>
           <div className="donorix-boot-splash__content">
             <div className="donorix-boot-splash__brand">

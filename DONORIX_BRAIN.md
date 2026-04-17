@@ -49,6 +49,21 @@
 #### Logo reliability
 - Prevented broken-image placeholder by preloading logo candidates and only rendering the `<img>` once a logo successfully loads:
   - `donorix/src/components/layout/app-logo.tsx`
+- Added Linux/Vercel-safe filename variants and runtime `onError` fallback to guarantee the default mark shows instead of a broken icon:
+  - `donorix/src/components/layout/app-logo.tsx`
+
+#### Language (Hindi)
+- Removed `????` placeholder strings from `messages/hi.json` and ensured Hindi renders using a Devanagari-capable font:
+  - `donorix/messages/hi.json`
+  - `donorix/src/app/layout.tsx`
+  - `donorix/src/app/globals.css`
+  - `donorix/tailwind.config.ts`
+
+#### Footer overlap prevention
+- Added footer visibility detection and lifted fixed UI (assistant + FAB) when the footer enters the viewport to prevent overlap:
+  - `donorix/src/components/layout/site-footer.tsx`
+  - `donorix/src/components/layout/floating-assistant.tsx`
+  - `donorix/src/components/layout/new-post-fab.tsx`
 
 #### Chats
 - Adjusted donor-hospital chat typography and metadata row to reduce overly-wide appearance:

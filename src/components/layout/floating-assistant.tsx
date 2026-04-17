@@ -39,6 +39,7 @@ export function FloatingAssistant() {
   ]);
   const [hasUnread, setHasUnread] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [footerVisible, setFooterVisible] = useState(false);
 
   const languageNames = useMemo(
     () => Object.fromEntries(INDIAN_LANGUAGES.map((entry) => [entry.code, entry.label])),
@@ -58,6 +59,26 @@ export function FloatingAssistant() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    const footer = document.getElementById("site-footer");
+    if (!footer || typeof IntersectionObserver === "undefined") return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        setFooterVisible(Boolean(entry?.isIntersecting));
+      },
+      {
+        root: null,
+        threshold: 0.12,
+      },
+    );
+
+    observer.observe(footer);
+    return () => observer.disconnect();
+  }, [mounted]);
 
   useEffect(() => {
     if (hidden) {
@@ -258,6 +279,7 @@ export function FloatingAssistant() {
         aria-label={open ? "Close Donorix assistant" : "Open Donorix assistant"}
         className={cn(
           "fixed bottom-[calc(env(safe-area-inset-bottom)+5.25rem)] right-4 z-[45] flex size-[52px] items-center justify-center rounded-full bg-brand text-brand-foreground shadow-glow transition hover:opacity-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:bottom-6",
+          footerVisible && "md:bottom-24",
           open && "pointer-events-none invisible opacity-0",
         )}
         type="button"

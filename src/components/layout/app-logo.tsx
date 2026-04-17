@@ -23,8 +23,12 @@ function LogoMark({ compact = false }: { compact?: boolean }) {
       "/logo/custom-logo.png",
       "/logo/logo.webp",
       "/logo/logo.png",
+      "/logo/Logo.webp",
+      "/logo/Logo.png",
       "/logo/donorix-logo.webp",
       "/logo/donorix-logo.png",
+      "/logo/Donorix-logo.webp",
+      "/logo/Donorix-logo.png",
     ],
     [],
   );
@@ -73,6 +77,7 @@ function LogoMark({ compact = false }: { compact?: boolean }) {
           alt={`${APP_NAME} logo`}
           className={cn("h-full w-full object-contain", compact ? "p-1.5" : "p-2")}
           draggable={false}
+          onError={() => setResolvedSrc(null)}
         />
       ) : (
         <span className="absolute inset-0 flex items-center justify-center rounded-2xl bg-brand text-brand-foreground">

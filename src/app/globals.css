@@ -28,6 +28,7 @@
   --text-primary: #0f0f10;
   --text-secondary: #4a4a52;
   --border-subtle: rgba(0, 0, 0, 0.08);
+  --font-app-sans: var(--font-geist-sans);
 }
 
 .dark {
@@ -56,6 +57,10 @@
   --text-primary: #f0ecee;
   --text-secondary: #9a8e93;
   --border-subtle: rgba(255, 255, 255, 0.06);
+}
+
+html[lang="hi"] {
+  --font-app-sans: var(--font-noto-devanagari);
 }
 
 * {

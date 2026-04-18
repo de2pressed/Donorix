@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Trash2 } from "lucide-react";
+import { ChevronDown, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -89,6 +89,7 @@ export function HospitalPostHistory({ posts, copy }: HospitalPostHistoryProps) {
   const [confirmTarget, setConfirmTarget] = useState<"selected" | "all" | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [visiblePosts, setVisiblePosts] = useState<Post[]>(posts);
+  const [showDeletedPosts, setShowDeletedPosts] = useState(false);
   const selectAllRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -310,10 +311,23 @@ export function HospitalPostHistory({ posts, copy }: HospitalPostHistoryProps) {
                 <h2 className="text-lg font-semibold">{copy.deletedSectionTitle}</h2>
                 <p className="text-sm text-muted-foreground">{copy.deletedSectionHint}</p>
               </div>
-              <Badge variant="warning">{deletedPosts.length}</Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant="warning">{deletedPosts.length}</Badge>
+                <Button
+                  className="gap-1"
+                  disabled={!deletedPosts.length}
+                  size="sm"
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setShowDeletedPosts((current) => !current)}
+                >
+                  {showDeletedPosts ? "Hide" : "Show"}
+                  <ChevronDown className={cn("size-4 transition-transform", showDeletedPosts && "rotate-180")} />
+                </Button>
+              </div>
             </div>
 
-            {deletedPosts.length ? (
+            {showDeletedPosts && deletedPosts.length ? (
               <div className="space-y-3">
                 {deletedPosts.map((post) => (
                   <div
@@ -344,7 +358,7 @@ export function HospitalPostHistory({ posts, copy }: HospitalPostHistoryProps) {
                   </div>
                 ))}
               </div>
-            ) : (
+            ) : deletedPosts.length ? null : (
               <div className="rounded-[1.25rem] border border-dashed border-border p-6 text-sm text-muted-foreground">
                 {copy.emptyDeleted}
               </div>

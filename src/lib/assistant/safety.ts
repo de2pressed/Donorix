@@ -111,18 +111,13 @@ export function evaluateAssistantSafety({
   }
 
   const abusive = signals.includes("abuse-keyword");
-  const earlyConversation = userMessageCount < 3;
-  const shouldLock = abusive || (!earlyConversation && repeatedCount >= 2) || (!earlyConversation && score >= 6);
+  const shouldLock = abusive;
   const spammy = signals.some((signal) => signal.includes("spam") || signal.includes("burst"));
 
   let reason: string | null = null;
   if (shouldLock) {
     if (abusive) {
       reason = "Harassment or threat behavior was detected.";
-    } else if (spammy || repeatedCount >= 2) {
-      reason = "Repeated spam or flood behavior was detected.";
-    } else {
-      reason = "This chat has been disabled for the current conversation.";
     }
   }
 

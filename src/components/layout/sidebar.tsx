@@ -85,14 +85,19 @@ export function Sidebar() {
             const showUnreadBadge = item.href === "/notifications" && unreadCount > 0;
 
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "relative flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-muted-foreground transition hover:bg-brand-soft hover:text-brand",
-                  active && "bg-brand-soft text-brand",
-                )}
-              >
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "relative flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-muted-foreground transition hover:bg-brand-soft hover:text-brand",
+                active && "bg-brand-soft text-brand",
+              )}
+              onClick={() => {
+                if (item.href === "/notifications") {
+                  void notifContext?.markAllRead();
+                }
+              }}
+            >
                 <Icon className="size-4" />
                 {item.label}
                 {showUnreadBadge ? (

@@ -15,7 +15,7 @@ export function useNotifications({
   return useQuery<Notification[]>({
     enabled,
     queryKey: ["notifications", userId ?? "guest"],
-    refetchInterval: 15_000,
+    refetchInterval: 5_000,
     refetchIntervalInBackground: true,
     refetchOnReconnect: true,
     queryFn: async () => {

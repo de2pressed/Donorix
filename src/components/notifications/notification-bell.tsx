@@ -6,8 +6,11 @@ import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef } from "react";
 
+import { useNotificationsContextSafe } from "@/components/providers/notification-context";
+
 export function NotificationBell({ unreadCount = 0 }: { unreadCount?: number }) {
   const tNav = useTranslations("nav");
+  const notifContext = useNotificationsContextSafe();
   const previousCount = useRef(unreadCount);
   const shouldRing = unreadCount > previousCount.current;
 
@@ -20,6 +23,9 @@ export function NotificationBell({ unreadCount = 0 }: { unreadCount?: number }) 
       href="/notifications"
       className="glass-chip relative flex size-11 items-center justify-center rounded-full border border-border text-foreground"
       aria-label={tNav("notifications")}
+      onClick={() => {
+        void notifContext?.markAllRead();
+      }}
     >
       <motion.span
         animate={shouldRing ? { rotate: [0, -16, 12, -10, 6, 0] } : { rotate: 0 }}

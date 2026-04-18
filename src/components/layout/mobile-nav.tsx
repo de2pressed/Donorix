@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useNotificationsContextSafe } from "@/components/providers/notification-context";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +25,7 @@ export function MobileNav() {
   const pathname = usePathname();
   const router = useRouter();
   const { data: user } = useUser();
+  const notifContext = useNotificationsContextSafe();
   const tNav = useTranslations("nav");
   const [moreOpen, setMoreOpen] = useState(false);
   const items = getBottomNav(user?.account_type, Boolean(user));
@@ -103,6 +105,11 @@ export function MobileNav() {
                 (item.href === "/" ? pathname === "/" : pathname === item.href || pathname.startsWith(`${item.href}/`)) &&
                   "bg-brand-soft text-brand",
               )}
+              onClick={() => {
+                if (item.href === "/notifications") {
+                  void notifContext?.markAllRead();
+                }
+              }}
             >
               <Icon className="size-4" />
               <span className="block w-full truncate">{item.label}</span>

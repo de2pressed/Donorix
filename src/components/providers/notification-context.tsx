@@ -6,6 +6,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { NotificationToast, type NotificationToastItem } from "@/components/notifications/notification-toast";
 import { useNotifications } from "@/lib/hooks/use-notifications";
 import { useUser } from "@/lib/hooks/use-user";
+import { authenticatedFetch } from "@/lib/supabase/authenticated-fetch";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { Notification } from "@/types/notification";
 
@@ -14,6 +15,7 @@ type NotificationContextValue = {
   unreadCount: number;
   toasts: NotificationToastItem[];
   dismissToast: (id: string) => void;
+  markAllRead: () => Promise<void>;
 };
 
 const NotificationContext = createContext<NotificationContextValue | null>(null);
@@ -205,6 +207,38 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     setToasts((current) => current.filter((toast) => toast.id !== id));
   }, []);
 
+  const markAllRead = useCallback(async () => {
+    if (!userId) {
+      return;
+    }
+
+    const unreadIds = queryClient
+      .getQueryData<Notification[]>(["notifications", userId])
+      ?.filter((notification) => !notification.read_at)
+      .map((notification) => notification.id) ?? [];
+
+    if (!unreadIds.length) {
+      return;
+    }
+
+    const readAt = new Date().toISOString();
+    queryClient.setQueryData<Notification[]>(["notifications", userId], (current = []) =>
+      current.map((notification) =>
+        unreadIds.includes(notification.id) ? { ...notification, read_at: readAt } : notification,
+      ),
+    );
+
+    try {
+      await authenticatedFetch("/api/notifications", {
+        method: "PATCH",
+        body: JSON.stringify({ ids: unreadIds }),
+        redirectOnAuthFailure: false,
+      });
+    } catch {
+      queryClient.invalidateQueries({ queryKey: ["notifications", userId] });
+    }
+  }, [queryClient, userId]);
+
   const unreadCount = useMemo(
     () => notifications.filter((notification) => !notification.read_at).length,
     [notifications],
@@ -216,8 +250,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       unreadCount,
       toasts,
       dismissToast,
+      markAllRead,
     }),
-    [dismissToast, notifications, toasts, unreadCount],
+    [dismissToast, markAllRead, notifications, toasts, unreadCount],
   );
 
   return (

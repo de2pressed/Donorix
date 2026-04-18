@@ -23,7 +23,6 @@ import {
 } from "@/lib/assistant/draft";
 import {
   ASSISTANT_KNOWLEDGE_CASE_COUNT,
-  buildKnowledgeFallbackReply,
   buildKnowledgePrompt,
   getKnowledgeIntentLabel,
   isGreetingMessage,
@@ -42,12 +41,16 @@ import type {
 
 const ASSISTANT_SYSTEM_PROMPT = `You are Donorix Assistant, the help experience for the Donorix blood donation platform in India.
 Rules:
+- Be friendly, cooperative, and direct.
+- Answer the user's actual question first. Do not default to preset replies or quick-action scripts.
+- If the user asks a general question, answer it normally even when it is not about Donorix.
 - Reply entirely in the user's selected language.
 - Do not mix languages unless you are naming a product, hospital, or fixed technical term.
-- Use the supplied knowledge brief as the source of truth for Donorix facts, policies, navigation, and support.
+- Use the supplied knowledge brief as background context for Donorix facts, policies, navigation, and support.
 - Never invent donor eligibility, hospital details, policy exceptions, or post data.
 - Never imply that donor or guest users can create, draft, or publish blood requests.
 - For hospital draft flows, ask only for missing fields and switch to audit/review mode once the form is complete.
+- If the user needs clarification, ask one short follow-up instead of guessing.
 - Be concise, practical, and medically careful.
 - Do not provide diagnosis or replace emergency services.
 - Treat explicit language as normal unless it is harassment, scams, threats, or repeated flood behavior.`;
@@ -279,25 +282,29 @@ function buildGeneralFallbackReply({
   }
 
   if (matches.length) {
-    return buildKnowledgeFallbackReply(matches[0], language);
+    if (language === "hi") {
+      return "यह Donorix के इस विषय से जुड़ा लगता है। मैं अगले कदम बता सकता हूँ या इसे आसान भाषा में समझा सकता हूँ।";
+    }
+
+    return `This looks related to ${matches[0]?.case.canonicalQuestions[0] ?? matches[0]?.case.category ?? "that topic"}. I can help with the next step or explain it in plain language.`;
   }
 
   if (language === "hi") {
     return persona === "hospital"
-      ? "मैं hospital requests, donor eligibility, policies, और Donorix के सामान्य कामकाज के बारे में मदद कर सकता हूँ।"
-      : "मैं donor eligibility, compatible posts, policies, और Donorix के सामान्य कामकाज के बारे में मदद कर सकता हूँ।";
+      ? "मैं अस्पताल के अनुरोध, डोनर पात्रता, नीतियों, और Donorix के सामान्य कामकाज के बारे में मदद कर सकता हूँ।"
+      : "मैं डोनर पात्रता, मिलती पोस्ट, नीतियों, और Donorix के सामान्य कामकाज के बारे में मदद कर सकता हूँ।";
   }
 
   return persona === "hospital"
-    ? "I can help with hospital requests, donor eligibility, policies, and how Donorix works."
-    : "I can help with donor eligibility, compatible posts, policies, and how Donorix works.";
+    ? "I can help with hospital requests, donor eligibility, policies, or any other question you want to ask."
+    : "I can help with donor eligibility, compatible posts, policies, or any other question you want to ask.";
 }
 
 function buildKnowledgeAssistantModels() {
   return DEFAULT_ASSISTANT_MODELS;
 }
 
-async function getKnowledgeReply({
+async function getModelReply({
   message,
   language,
   persona,
@@ -698,7 +705,7 @@ export async function POST(request: NextRequest) {
 
   const knowledgeMatches = matchKnowledgeCases(body.message, persona);
   const intent = `knowledge:${getKnowledgeIntentLabel(knowledgeMatches) ?? "general"}`;
-  const knowledgeReply = await getKnowledgeReply({
+  const assistantReply = await getModelReply({
     message: body.message,
     language,
     persona,
@@ -708,8 +715,8 @@ export async function POST(request: NextRequest) {
     messages,
   });
 
-  const reply = knowledgeReply ?? buildGeneralFallbackReply({ message: body.message, language, persona, matches: knowledgeMatches });
-  const aiActive = Boolean(knowledgeReply);
+  const reply = assistantReply ?? buildGeneralFallbackReply({ message: body.message, language, persona, matches: knowledgeMatches });
+  const aiActive = Boolean(assistantReply);
   const conversationSummary = buildConversationSummary({
     previousSummary: body.conversationSummary ?? null,
     latestMessage: body.message,

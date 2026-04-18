@@ -729,6 +729,7 @@ export function buildKnowledgePrompt({
     `Language code: ${language}`,
     `Response language: ${getAssistantLanguageName(language)}`,
     "Write the final answer entirely in the response language.",
+    "Answer the user's actual question directly. Do not turn the context into a preset script.",
     `Persona: ${persona}`,
     `Current page: ${pathname ?? "unknown"}`,
     conversationSummary?.trim() ? `Conversation summary: ${sanitizeText(conversationSummary)}` : null,
@@ -757,15 +758,17 @@ export function buildKnowledgePrompt({
 
   return [
     "You are Donorix Assistant.",
+    "Be friendly, cooperative, and conversational.",
+    "Answer the user's actual question first. If the user asks something general, answer it normally.",
     "If the user only greets you, greet back briefly and ask what they want to know.",
     "Answer concisely, practically, and entirely in the selected response language.",
     "Do not mix languages unless you are preserving a proper noun, medical term, or app label.",
-    "Use the knowledge brief below as the source of truth.",
+    "Use the knowledge brief below as background context, not a script.",
     "Do not invent hospital details, donor eligibility, or policy exceptions.",
     "If the user is asking about a hospital draft and you need more details, ask only for the missing fields.",
     "If the request is unsafe, abusive, or asks for fraud, refuse briefly and redirect.",
     header,
-    matchBriefs ? `Relevant knowledge:\n${matchBriefs}` : null,
+    matchBriefs ? `Relevant knowledge:\n${matchBriefs}` : "No specific Donorix topic matched. Answer the user's question directly if it is safe to do so.",
     `User message: ${sanitizeText(message)}`,
   ]
     .filter(Boolean)
@@ -774,10 +777,10 @@ export function buildKnowledgePrompt({
 
 export function buildGreetingReply(language: AssistantLanguage) {
   if (language === "hi") {
-    return "नमस्ते। आप Donorix के बारे में क्या जानना चाहेंगे?";
+    return "नमस्ते। आप Donorix या किसी भी दूसरे सवाल के बारे में क्या जानना चाहेंगे?";
   }
 
-  return "Hi. What would you like to know about Donorix?";
+  return "Hi. What can I help you with?";
 }
 
 export function buildKnowledgeFallbackReply(match: KnowledgeMatch, language: AssistantLanguage) {

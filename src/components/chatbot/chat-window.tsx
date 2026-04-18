@@ -19,8 +19,7 @@ export function ChatWindow() {
   const [messages, setMessages] = useState<ChatEntry[]>([
     {
       role: "assistant",
-      content:
-        "I can help you understand Donorix, check donor eligibility, or find requests you may be able to respond to.",
+      content: "Ask me anything about Donorix or whatever you're trying to figure out.",
       createdAt: new Date().toISOString(),
     },
   ]);
@@ -67,8 +66,7 @@ export function ChatWindow() {
               { role: "user", content: value, createdAt: timestamp },
               {
                 role: "assistant",
-                content:
-                  "I can help you understand Donorix, check donor eligibility, or find requests you may be able to respond to.",
+                content: "Ask me anything about Donorix or whatever you're trying to figure out.",
                 createdAt: timestamp,
               },
             ]);
@@ -83,7 +81,7 @@ export function ChatWindow() {
             rows={1}
             value={value}
             onChange={(event: ChangeEvent<HTMLTextAreaElement>) => setValue(event.target.value)}
-            placeholder="Ask in English, Hindi, or another supported language"
+            placeholder="Ask anything in English, Hindi, or another supported language"
             className="max-h-24 flex-1 resize-none overflow-y-auto bg-transparent py-1 text-sm text-content-primary outline-none placeholder:text-content-secondary"
           />
           <Button

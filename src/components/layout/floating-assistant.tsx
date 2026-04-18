@@ -436,6 +436,9 @@ export function FloatingAssistant() {
               </div>
 
               <div className="flex flex-wrap gap-2 px-4 pb-4">
+                <p className="w-full text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                  {tAssistant("quickPromptLabel")}
+                </p>
                 {quickActions.map((action) => (
                   <Button
                     key={action}

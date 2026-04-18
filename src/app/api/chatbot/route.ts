@@ -40,7 +40,8 @@ import type {
 
 const ASSISTANT_SYSTEM_PROMPT = `You are Donorix Assistant, the help experience for the Donorix blood donation platform in India.
 Rules:
-- Reply in the user's language when possible.
+- Reply entirely in the user's selected language.
+- Do not mix languages unless you are naming a product, hospital, or fixed technical term.
 - Use the supplied knowledge brief as the source of truth for Donorix facts, policies, navigation, and support.
 - Never invent donor eligibility, hospital details, policy exceptions, or post data.
 - Never imply that donor or guest users can create, draft, or publish blood requests.
@@ -51,9 +52,10 @@ Rules:
 
 const DEFAULT_ASSISTANT_MODELS = [
   env.OPENAI_ASSISTANT_MODEL?.trim(),
-  "gpt-5.1",
+  "gpt-5.4",
+  "gpt-5.4-pro",
   "gpt-5",
-  "gpt-5-nano",
+  "gpt-5.1",
 ].filter((model): model is string => Boolean(model));
 
 type AssistantMode = ChatbotResponsePayload["mode"];

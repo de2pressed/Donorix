@@ -17,6 +17,45 @@ type OpenAIChatOptions = {
   responseFormat?: { type: "json_object" };
 };
 
+type OpenAIResponsesPayload = {
+  output_text?: string | null;
+  output?: Array<{
+    type?: string;
+    content?: Array<
+      | {
+          type?: string;
+          text?: string | null;
+        }
+      | null
+    >;
+  }>;
+};
+
+function toResponsesInput(messages: OpenAIChatMessage[]) {
+  return messages.map((message) => ({
+    role: message.role === "system" ? "developer" : message.role,
+    content: message.content,
+  }));
+}
+
+function extractResponseText(payload: OpenAIResponsesPayload | null) {
+  const outputText = payload?.output_text?.trim();
+  if (outputText) {
+    return outputText;
+  }
+
+  for (const item of payload?.output ?? []) {
+    for (const part of item.content ?? []) {
+      const text = part?.text?.trim();
+      if (text) {
+        return text;
+      }
+    }
+  }
+
+  return null;
+}
+
 export async function callAssistantOpenAI({
   models,
   messages,
@@ -30,7 +69,33 @@ export async function callAssistantOpenAI({
 
   for (const model of models) {
     try {
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      const responsesResponse = await fetch("https://api.openai.com/v1/responses", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model,
+          input: toResponsesInput(messages),
+          max_output_tokens: maxTokens,
+          temperature,
+          ...(responseFormat ? { text: { format: responseFormat } } : {}),
+        }),
+      });
+
+      if (responsesResponse.ok) {
+        const payload = (await responsesResponse.json().catch(() => null)) as OpenAIResponsesPayload | null;
+        const content = extractResponseText(payload);
+        if (content) {
+          return {
+            content,
+            model,
+          };
+        }
+      }
+
+      const chatResponse = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -45,11 +110,11 @@ export async function callAssistantOpenAI({
         }),
       });
 
-      if (!response.ok) {
+      if (!chatResponse.ok) {
         continue;
       }
 
-      const payload = (await response.json().catch(() => null)) as
+      const payload = (await chatResponse.json().catch(() => null)) as
         | {
             choices?: Array<{
               message?: {

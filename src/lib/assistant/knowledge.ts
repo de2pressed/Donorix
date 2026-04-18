@@ -696,6 +696,9 @@ export function buildKnowledgePrompt({
 }) {
   const header = [
     `Language: ${getAssistantLanguageName(language)}`,
+    `Language code: ${language}`,
+    `Response language: ${getAssistantLanguageName(language)}`,
+    "Write the final answer entirely in the response language.",
     `Persona: ${persona}`,
     `Current page: ${pathname ?? "unknown"}`,
     conversationSummary?.trim() ? `Conversation summary: ${sanitizeText(conversationSummary)}` : null,
@@ -724,7 +727,8 @@ export function buildKnowledgePrompt({
 
   return [
     "You are Donorix Assistant.",
-    "Answer concisely, practically, and in the user's language when possible.",
+    "Answer concisely, practically, and entirely in the selected response language.",
+    "Do not mix languages unless you are preserving a proper noun, medical term, or app label.",
     "Use the knowledge brief below as the source of truth.",
     "Do not invent hospital details, donor eligibility, or policy exceptions.",
     "If the user is asking about a hospital draft and you need more details, ask only for the missing fields.",

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ContactForm } from "@/components/contact/contact-form";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { getCurrentProfile, getUserContactQueries } from "@/lib/data";
 import { formatDateTime } from "@/lib/utils/format";
 
@@ -35,19 +36,21 @@ export default async function ContactPage() {
           <CardHeader>
             <CardTitle>Submit a query</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="mb-5 grid gap-3 rounded-[1.5rem] border border-border bg-muted/20 p-4 text-sm md:grid-cols-3">
-              <div>
-                <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Name</p>
-                <p className="mt-1 font-medium">{profile.full_name}</p>
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Email</p>
-                <p className="mt-1 font-medium">{profile.email}</p>
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Phone</p>
-                <p className="mt-1 font-medium">{profile.phone}</p>
+          <CardContent className="space-y-5">
+            <div className="rounded-[1.5rem] border border-border bg-muted/20 p-4">
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <div className="min-w-0 space-y-1">
+                  <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Name</p>
+                  <p className="break-words text-sm font-medium leading-6">{profile.full_name}</p>
+                </div>
+                <div className="min-w-0 space-y-1">
+                  <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Email</p>
+                  <p className="break-all text-sm font-medium leading-6">{profile.email}</p>
+                </div>
+                <div className="min-w-0 space-y-1 sm:col-span-2 xl:col-span-1">
+                  <p className="text-xs uppercase tracking-[0.14em] text-muted-foreground">Phone</p>
+                  <p className="break-words text-sm font-medium leading-6">{profile.phone}</p>
+                </div>
               </div>
             </div>
             <ContactForm />
@@ -58,9 +61,11 @@ export default async function ContactPage() {
           <CardHeader>
             <CardTitle>How this works</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3 text-sm text-muted-foreground">
+          <CardContent className="space-y-4 text-sm text-muted-foreground">
             <p>Admin replies stay inside Donorix so you can reopen this page later and read the latest response.</p>
+            <Separator />
             <p>New queries are unresolved by default until an admin adds a reply or marks them solved.</p>
+            <Separator />
             <p>If your issue is urgent or medical, contact the hospital or emergency services directly.</p>
           </CardContent>
         </Card>
@@ -76,17 +81,17 @@ export default async function ContactPage() {
               <div key={query.id} className="space-y-3 rounded-[1.5rem] border border-border p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0 space-y-1">
-                    <p className="font-medium">{query.subject}</p>
+                    <p className="break-words font-medium leading-6">{query.subject}</p>
                     <p className="text-sm text-muted-foreground">{formatDateTime(query.created_at)}</p>
                   </div>
                   <Badge variant={getStatusVariant(query.status)}>{query.status}</Badge>
                 </div>
 
-                <p className="whitespace-pre-wrap text-sm text-muted-foreground">{query.query}</p>
+                <p className="whitespace-pre-wrap break-words text-sm text-muted-foreground leading-6">{query.query}</p>
 
                 <div className="rounded-[1.25rem] border border-border bg-muted/20 p-3">
                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Latest reply</p>
-                  <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">
+                  <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-6 text-foreground">
                     {query.reply?.trim() ? query.reply : "No reply yet."}
                   </p>
                 </div>

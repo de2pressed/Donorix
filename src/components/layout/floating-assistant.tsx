@@ -516,12 +516,12 @@ export function FloatingAssistant() {
                       <Bot className="size-4 text-brand" />
                       {tAssistant("draftReviewTitle")}
                     </div>
-                    <p className="text-sm text-muted-foreground">{draftState.summary}</p>
+                    <p className="break-words text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">{draftState.summary}</p>
 
                     {draftState.auditSummary ? (
                       <div className="rounded-2xl border border-border bg-muted/20 p-3">
                         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Audit summary</p>
-                        <p className="text-sm text-foreground">{draftState.auditSummary}</p>
+                        <p className="break-words text-sm leading-relaxed text-foreground whitespace-pre-wrap">{draftState.auditSummary}</p>
                       </div>
                     ) : null}
 
@@ -530,29 +530,29 @@ export function FloatingAssistant() {
                         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                           {tAssistant("draftChecklistTitle")}
                         </p>
-                        <div className="grid gap-2 sm:grid-cols-2">
+                        <div className="grid gap-2 md:grid-cols-2">
                           {draftState.fieldChecklist.map((field) => (
                             <div
                               key={field.field}
                               className={cn(
-                                "rounded-2xl border px-3 py-2",
+                                "min-w-0 rounded-2xl border px-3 py-2 overflow-hidden",
                                 field.missing ? "border-warning/30 bg-warning/10" : "border-border bg-muted/20",
                               )}
                             >
-                              <div className="flex items-center justify-between gap-2">
-                                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                              <div className="flex items-start justify-between gap-2">
+                                <p className="min-w-0 flex-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground break-words">
                                   {field.label}
                                 </p>
                                 <span
                                   className={cn(
-                                    "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em]",
+                                    "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em]",
                                     field.missing ? "bg-warning/20 text-foreground" : "bg-brand-soft text-brand",
                                   )}
                                 >
                                   {field.missing ? tAssistant("draftFieldMissing") : tAssistant("draftFieldFilled")}
                                 </span>
                               </div>
-                              <p className="mt-2 text-sm text-foreground">
+                              <p className="mt-2 min-w-0 break-words text-sm leading-relaxed text-foreground whitespace-pre-wrap">
                                 {field.missing ? field.prompt ?? tAssistant("draftHold") : field.value}
                               </p>
                             </div>
@@ -564,11 +564,13 @@ export function FloatingAssistant() {
                         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                           {tAssistant("draftCapturedTitle")}
                         </p>
-                        <div className="grid gap-2 sm:grid-cols-2">
+                        <div className="grid gap-2 md:grid-cols-2">
                           {capturedFields.map((field) => (
-                            <div key={field.field} className="rounded-2xl border border-border bg-muted/20 px-3 py-2">
-                              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{field.label}</p>
-                              <p className="text-sm text-foreground">{field.value}</p>
+                            <div key={field.field} className="min-w-0 rounded-2xl border border-border bg-muted/20 px-3 py-2 overflow-hidden">
+                              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground break-words">
+                                {field.label}
+                              </p>
+                              <p className="break-words text-sm leading-relaxed text-foreground whitespace-pre-wrap">{field.value}</p>
                             </div>
                           ))}
                         </div>
@@ -582,7 +584,7 @@ export function FloatingAssistant() {
                         </p>
                         <div className="flex flex-wrap gap-2">
                           {draftState.missingFields.map((field) => (
-                            <span key={field} className="rounded-full border border-border bg-muted/30 px-3 py-1 text-xs text-muted-foreground">
+                            <span key={field} className="max-w-full rounded-full border border-border bg-muted/30 px-3 py-1 text-xs text-muted-foreground break-words whitespace-normal">
                               {field.replace(/_/g, " ")}
                             </span>
                           ))}
@@ -597,7 +599,7 @@ export function FloatingAssistant() {
                         </p>
                         <div className="space-y-1">
                           {draftState.questions.map((question) => (
-                            <p key={question} className="text-sm text-foreground">
+                            <p key={question} className="break-words text-sm leading-relaxed text-foreground whitespace-pre-wrap">
                               {question}
                             </p>
                           ))}
@@ -606,7 +608,7 @@ export function FloatingAssistant() {
                     ) : null}
 
                     {draftState.blockedReason ? (
-                      <p className="rounded-2xl border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-foreground">
+                      <p className="break-words whitespace-pre-wrap rounded-2xl border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-foreground">
                         {draftState.blockedReason}
                       </p>
                     ) : null}
@@ -626,7 +628,7 @@ export function FloatingAssistant() {
                 ) : null}
 
                 {chatDisabled ? (
-                  <div className="rounded-[1.25rem] border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-foreground">
+                  <div className="break-words whitespace-pre-wrap rounded-[1.25rem] border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-foreground">
                     {chatDisabledReason ?? "Chat disabled for the current session."}
                   </div>
                 ) : null}

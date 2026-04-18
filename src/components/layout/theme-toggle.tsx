@@ -43,15 +43,15 @@ export function ThemeToggle({ className }: { className?: string }) {
           window.setTimeout(() => {
             overlay?.classList.remove("theme-fade-in");
             overlay?.classList.add("theme-fade-out");
-          }, 80);
-        }, 320);
+          }, 40);
+        }, 180);
       }}
     >
       <motion.span
         animate={{ opacity: 1, rotate: isDark ? 180 : 0, scale: 1 }}
         className="inline-flex"
         initial={false}
-        transition={{ duration: 0.28, ease: "easeInOut" }}
+        transition={{ duration: 0.18, ease: "easeInOut" }}
       >
         {isDark ? <SunMedium className="size-4" /> : <MoonStar className="size-4" />}
       </motion.span>

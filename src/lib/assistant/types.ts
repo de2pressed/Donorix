@@ -28,14 +28,25 @@ export type HospitalDraftState = {
   values: Partial<CreatePostInput>;
   missingFields: string[];
   questions: string[];
+  fieldChecklist?: HospitalDraftChecklistItem[];
   readyForReview: boolean;
   summary: string;
   blockedReason?: string | null;
   reviewMode?: "collecting" | "review" | "blocked";
   auditSummary?: string;
   capturedFields?: string[];
+  nextMissingField?: string | null;
   nextAction?: string | null;
   lastUpdatedAt?: string;
+};
+
+export type HospitalDraftChecklistItem = {
+  field: string;
+  label: string;
+  value: string;
+  required: boolean;
+  missing: boolean;
+  prompt?: string | null;
 };
 
 export type ChatbotRequestPayload = {

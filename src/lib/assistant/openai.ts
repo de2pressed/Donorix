@@ -1,7 +1,7 @@
 import { env } from "@/lib/env";
 import { sanitizeText } from "@/lib/utils/sanitize";
 
-import type { AssistantLanguage } from "@/lib/assistant/language";
+import { getAssistantLanguageName, type AssistantLanguage } from "@/lib/assistant/language";
 import type { ChatbotConversationMessage } from "@/lib/assistant/types";
 
 type OpenAIChatMessage = {
@@ -169,5 +169,5 @@ export function buildConversationTranscript({
 }
 
 export function buildAssistantLanguageHint(language: AssistantLanguage) {
-  return language === "en" ? "English" : language;
+  return getAssistantLanguageName(language);
 }

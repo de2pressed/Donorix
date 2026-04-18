@@ -47,6 +47,7 @@ Rules:
 - Answer the user's actual question first. Do not default to preset replies or quick-action scripts.
 - If the user asks a general question, answer it normally even when it is not about Donorix.
 - Reply entirely in the user's selected language.
+- If the user writes the question in English but has selected another language, still answer in the selected language.
 - Do not mix languages unless you are naming a product, hospital, or fixed technical term.
 - Use the supplied knowledge brief as background context for Donorix facts, policies, navigation, and support.
 - Never invent donor eligibility, hospital details, policy exceptions, or post data.
@@ -213,7 +214,7 @@ function buildLockedResponse({
 function formatEligiblePostsReply(posts: EligiblePost[], language: AssistantLanguage) {
   const intro =
     language === "hi"
-      ? `Mujhe ${posts.length} compatible requests mile.`
+      ? `मुझे ${posts.length} संगत अनुरोध मिले हैं.`
       : `I found ${posts.length} compatible request${posts.length === 1 ? "" : "s"}.`;
 
   const lines = posts
@@ -223,7 +224,11 @@ function formatEligiblePostsReply(posts: EligiblePost[], language: AssistantLang
         `${index + 1}. ${post.patient_name} - ${post.blood_type_needed} - ${post.hospital_name}, ${post.city}, ${post.state}`,
     );
 
-  return [intro, ...lines, "Open any card to view the post and respond directly."].join("\n");
+  return [
+    intro,
+    ...lines,
+    language === "hi" ? "किसी भी कार्ड को खोलें और सीधे जवाब दें." : "Open any card to view the post and respond directly.",
+  ].join("\n");
 }
 
 function buildEligiblePosts(
@@ -346,7 +351,7 @@ async function getModelReply({
   try {
     const response = await callAssistantOpenAI({
       models: buildKnowledgeAssistantModels(),
-      maxTokens: 360,
+      maxTokens: 460,
       temperature: 0.35,
       messages: [
         { role: "system", content: systemPrompt },
@@ -501,7 +506,7 @@ export async function POST(request: NextRequest) {
 
   const { profile, hospitalAccount } = await requireServerUser(request);
   const persona = resolvePersona(body.persona, profile?.account_type);
-  const language = resolveAssistantLanguage(profile?.preferred_language ?? body.language, body.message);
+  const language = resolveAssistantLanguage(body.language, profile?.preferred_language, body.message);
   const pathname = body.pathname ?? request.nextUrl.pathname;
   const messages = body.messages ?? [];
   const userMessageCount = body.userMessageCount ?? messages.filter((entry) => entry.role === "user").length + 1;

@@ -5,6 +5,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import {
   BadgeCheck,
+  ArrowBigUp,
   ChevronDown,
   ChevronUp,
   Clock3,
@@ -98,6 +99,10 @@ export function PostCard({
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
               <span className="truncate">
                 {post.city}, {post.state}
+              </span>
+              <span className="flex items-center gap-1">
+                <ArrowBigUp className="size-3" />
+                <span className="font-mono">{post.upvote_count ?? 0}</span>
               </span>
               <span className="font-mono">
                 {tRequest("requiredBy")} {formatDateTime(post.required_by)}

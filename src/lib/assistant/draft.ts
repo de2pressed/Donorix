@@ -6,7 +6,11 @@ import { sanitizeText } from "@/lib/utils/sanitize";
 import { createPostSchema, type CreatePostInput } from "@/lib/validations/post";
 
 import type { AssistantLanguage } from "@/lib/assistant/language";
-import type { ChatbotConversationMessage, HospitalDraftState } from "@/lib/assistant/types";
+import type {
+  ChatbotConversationMessage,
+  HospitalDraftChecklistItem,
+  HospitalDraftState,
+} from "@/lib/assistant/types";
 
 export type HospitalDraftExtraction = HospitalDraftState & {
   reply: string;
@@ -98,6 +102,44 @@ const FIELD_QUESTION_MAP: Record<FieldQuestionKey, { en: string; hi: string }> =
     hi: "Donor search radius कितने km का रखें?",
   },
 };
+
+const FIELD_LABEL_MAP: Record<FieldQuestionKey, { en: string; hi: string }> = {
+  patient_name: { en: "Patient name", hi: "मरीज का नाम" },
+  patient_id: { en: "Patient ID", hi: "मरीज आईडी" },
+  blood_type_needed: { en: "Blood group needed", hi: "आवश्यक रक्त समूह" },
+  units_needed: { en: "Units needed", hi: "आवश्यक यूनिट" },
+  hospital_name: { en: "Hospital name", hi: "अस्पताल का नाम" },
+  hospital_address: { en: "Hospital address", hi: "अस्पताल का पता" },
+  city: { en: "City", hi: "शहर" },
+  state: { en: "State", hi: "राज्य" },
+  contact_name: { en: "Contact person", hi: "संपर्क व्यक्ति" },
+  contact_phone: { en: "Contact phone", hi: "संपर्क फोन" },
+  contact_email: { en: "Contact email", hi: "संपर्क ईमेल" },
+  medical_condition: { en: "Medical reason", hi: "चिकित्सीय कारण" },
+  additional_notes: { en: "Additional notes", hi: "अतिरिक्त नोट्स" },
+  required_by: { en: "Required by", hi: "आवश्यक समय" },
+  is_emergency: { en: "Emergency case", hi: "आपात मामला" },
+  initial_radius_km: { en: "Search radius", hi: "खोज दूरी" },
+};
+
+const DRAFT_FIELD_ORDER: FieldQuestionKey[] = [
+  "patient_name",
+  "patient_id",
+  "blood_type_needed",
+  "units_needed",
+  "medical_condition",
+  "required_by",
+  "contact_name",
+  "contact_phone",
+  "contact_email",
+  "hospital_name",
+  "hospital_address",
+  "city",
+  "state",
+  "additional_notes",
+  "is_emergency",
+  "initial_radius_km",
+];
 
 const BLOOD_TYPE_WORD_MAP: Record<string, BloodType> = {
   "a+": "A+",
@@ -209,6 +251,32 @@ function escapeRegExp(value: string) {
 
 function cleanValue(value: string) {
   return sanitizeText(value).replace(/^[\s\-:=>]+/, "").replace(/[\s,;]+$/, "").trim();
+}
+
+function formatDraftValue(value: unknown, language: AssistantLanguage) {
+  if (value === null || value === undefined || value === "") return "Not provided";
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (typeof value === "number") return String(value);
+
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}T/.test(value)) {
+    const date = new Date(value);
+    if (!Number.isNaN(date.getTime())) {
+      return new Intl.DateTimeFormat(language === "hi" ? "hi-IN" : "en-IN", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      }).format(date);
+    }
+  }
+
+  return String(value);
+}
+
+function sortDraftFields(fields: string[]) {
+  const order = new Map(DRAFT_FIELD_ORDER.map((field, index) => [field, index]));
+  return [...new Set(fields)].sort(
+    (left, right) =>
+      (order.get(left as FieldQuestionKey) ?? 999) - (order.get(right as FieldQuestionKey) ?? 999),
+  );
 }
 
 function normalizeText(value: string) {
@@ -655,7 +723,44 @@ function buildDraftQuestions(missingFields: string[], language: AssistantLanguag
     return FIELD_QUESTION_MAP[key]?.[language === "hi" ? "hi" : "en"] ?? field.replace(/_/g, " ");
   };
 
-  return missingFields.map(mapQuestion);
+  return sortDraftFields(missingFields).map(mapQuestion);
+}
+
+export function buildHospitalDraftFieldChecklist({
+  values,
+  missingFields,
+  language,
+}: {
+  values: Partial<CreatePostInput>;
+  missingFields: string[];
+  language: AssistantLanguage;
+}): HospitalDraftChecklistItem[] {
+  const missingSet = new Set(missingFields);
+  const lang = language === "hi" ? "hi" : "en";
+  const optionalFields = new Set<FieldQuestionKey>([
+    "hospital_name",
+    "hospital_address",
+    "city",
+    "state",
+    "contact_email",
+    "additional_notes",
+    "is_emergency",
+    "initial_radius_km",
+  ]);
+
+  return DRAFT_FIELD_ORDER.map((field) => {
+    const value = formatDraftValue(values[field as keyof CreatePostInput], language);
+    const missing = missingSet.has(field);
+
+    return {
+      field,
+      label: FIELD_LABEL_MAP[field][lang],
+      value,
+      required: !optionalFields.has(field),
+      missing,
+      prompt: missing ? FIELD_QUESTION_MAP[field][lang] : null,
+    };
+  }).filter((item) => item.required || item.missing || item.value !== "Not provided");
 }
 
 function summarizeDraft(values: Partial<CreatePostInput>, missingFields: string[]) {
@@ -724,6 +829,49 @@ function buildHospitalDraftReply({
   return [intro, ...prompts].join("\n");
 }
 
+function buildHospitalDraftReplyNext({
+  language,
+  readyForReview,
+  missingFields,
+  questions,
+}: {
+  language: AssistantLanguage;
+  readyForReview: boolean;
+  missingFields: string[];
+  questions: string[];
+}) {
+  if (readyForReview) {
+    if (language === "hi") {
+      return "Draft तैयार है. Audit summary जाँचें, फिर Confirm post दबाएँ या confirm post लिखकर publish करें.";
+    }
+
+    return "The draft is ready for review. Check the audit summary, then click Confirm post or type confirm post to publish.";
+  }
+
+  const intro =
+    language === "hi"
+      ? "मुझे इस request को तैयार करने के लिए अभी कुछ जानकारी चाहिए:"
+      : "I still need a few details before I can prepare this request:";
+
+  const prompts = questions.slice(0, 1).map((question, index) => `${index + 1}. ${question}`);
+  if (!prompts.length && missingFields.length) {
+    prompts.push(
+      ...sortDraftFields(missingFields)
+        .slice(0, 1)
+        .map((field, index) => `${index + 1}. ${field.replace(/_/g, " ")}`),
+    );
+  }
+
+  const nextLine =
+    language === "hi"
+      ? "ऊपर दिए गए blanks भरें, फिर मैं draft को review mode तक ले जाऊँगा."
+      : "Fill the blanks above, and I’ll take the draft to review mode.";
+
+  return [intro, ...prompts, nextLine].join("\n");
+}
+
+void buildHospitalDraftReply;
+
 export function extractHospitalDraft({
   message,
   language,
@@ -751,6 +899,11 @@ export function extractHospitalDraft({
 
   const readyForReview = validation.success;
   const questions = buildDraftQuestions(missingFields, language);
+  const fieldChecklist = buildHospitalDraftFieldChecklist({
+    values: normalizedDraft,
+    missingFields,
+    language,
+  });
   const summary = summarizeDraft(normalizedDraft, missingFields);
   const auditSummary = summary;
   const capturedFields = Object.entries(normalizedDraft)
@@ -762,7 +915,7 @@ export function extractHospitalDraft({
     })
     .map(([field]) => field);
 
-  const reply = buildHospitalDraftReply({
+  const reply = buildHospitalDraftReplyNext({
     language,
     readyForReview,
     missingFields,
@@ -774,10 +927,12 @@ export function extractHospitalDraft({
     values: normalizedDraft,
     missingFields,
     questions,
+    fieldChecklist,
     readyForReview,
     summary,
     auditSummary,
     capturedFields,
+    nextMissingField: sortDraftFields(missingFields)[0] ?? null,
     reviewMode: readyForReview ? "review" : "collecting",
     nextAction: readyForReview ? "confirm" : "fill_details",
     lastUpdatedAt: new Date().toISOString(),

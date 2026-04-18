@@ -12,6 +12,7 @@ import { ChatMessage } from "@/components/chatbot/chat-message";
 import { LanguageSelector } from "@/components/chatbot/language-selector";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { INDIAN_LANGUAGES } from "@/lib/constants";
 import { useUser } from "@/lib/hooks/use-user";
 import { authenticatedFetch } from "@/lib/supabase/authenticated-fetch";
 import { cn } from "@/lib/utils/cn";
@@ -24,12 +25,21 @@ type HospitalDraftState = {
   values: Partial<CreatePostInput>;
   missingFields: string[];
   questions: string[];
+  fieldChecklist?: Array<{
+    field: string;
+    label: string;
+    value: string;
+    required: boolean;
+    missing: boolean;
+    prompt?: string | null;
+  }>;
   readyForReview: boolean;
   summary: string;
   blockedReason?: string | null;
   reviewMode?: "collecting" | "review" | "blocked";
   auditSummary?: string;
   capturedFields?: string[];
+  nextMissingField?: string | null;
   nextAction?: string | null;
   lastUpdatedAt?: string;
 };
@@ -60,6 +70,14 @@ type ChatbotResponse = {
 
 const LANGUAGE_STORAGE_KEY = "donorix-assistant-language";
 export const ASSISTANT_OPEN_EVENT = "donorix-assistant:open";
+
+function isStoredAssistantLanguage(value: string | null): value is string {
+  return Boolean(value && INDIAN_LANGUAGES.some((language) => language.code === value));
+}
+
+function getLanguageLabel(languageCode: string) {
+  return INDIAN_LANGUAGES.find((language) => language.code === languageCode)?.label ?? languageCode;
+}
 
 function normalize(value: string) {
   return sanitizeText(value).toLowerCase().replace(/\s+/g, " ").trim();
@@ -213,14 +231,16 @@ export function FloatingAssistant() {
     if (!mounted) return;
 
     const storedLanguage = window.sessionStorage.getItem(LANGUAGE_STORAGE_KEY);
-    if (storedLanguage === "en" || storedLanguage === "hi") {
+    if (isStoredAssistantLanguage(storedLanguage)) {
       setLanguage(storedLanguage);
     }
   }, [mounted]);
 
   useEffect(() => {
     if (!mounted) return;
-    window.sessionStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+    if (isStoredAssistantLanguage(language)) {
+      window.sessionStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+    }
   }, [language, mounted]);
 
   useEffect(() => {
@@ -429,7 +449,10 @@ export function FloatingAssistant() {
                     setLanguage(nextLanguage);
                     setMessages((current) => [
                       ...current,
-                      { role: "system", content: tAssistant("languageChanged", { language: nextLanguage }) } as AssistantMessage,
+                      {
+                        role: "system",
+                        content: tAssistant("languageChanged", { language: getLanguageLabel(nextLanguage) }),
+                      } as AssistantMessage,
                     ]);
                   }}
                 />
@@ -502,9 +525,45 @@ export function FloatingAssistant() {
                       </div>
                     ) : null}
 
-                    {capturedFields.length ? (
+                    {draftState.fieldChecklist?.length ? (
                       <div className="space-y-2">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Captured details</p>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                          {tAssistant("draftChecklistTitle")}
+                        </p>
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          {draftState.fieldChecklist.map((field) => (
+                            <div
+                              key={field.field}
+                              className={cn(
+                                "rounded-2xl border px-3 py-2",
+                                field.missing ? "border-warning/30 bg-warning/10" : "border-border bg-muted/20",
+                              )}
+                            >
+                              <div className="flex items-center justify-between gap-2">
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                                  {field.label}
+                                </p>
+                                <span
+                                  className={cn(
+                                    "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em]",
+                                    field.missing ? "bg-warning/20 text-foreground" : "bg-brand-soft text-brand",
+                                  )}
+                                >
+                                  {field.missing ? tAssistant("draftFieldMissing") : tAssistant("draftFieldFilled")}
+                                </span>
+                              </div>
+                              <p className="mt-2 text-sm text-foreground">
+                                {field.missing ? field.prompt ?? tAssistant("draftHold") : field.value}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : capturedFields.length ? (
+                      <div className="space-y-2">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                          {tAssistant("draftCapturedTitle")}
+                        </p>
                         <div className="grid gap-2 sm:grid-cols-2">
                           {capturedFields.map((field) => (
                             <div key={field.field} className="rounded-2xl border border-border bg-muted/20 px-3 py-2">
@@ -516,7 +575,7 @@ export function FloatingAssistant() {
                       </div>
                     ) : null}
 
-                    {draftState.missingFields.length ? (
+                    {draftState.missingFields.length && !draftState.fieldChecklist?.length ? (
                       <div className="space-y-2">
                         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                           {tAssistant("draftMissingLabel")}
@@ -531,7 +590,7 @@ export function FloatingAssistant() {
                       </div>
                     ) : null}
 
-                    {draftState.questions.length ? (
+                    {draftState.questions.length && !draftState.fieldChecklist?.length ? (
                       <div className="space-y-2">
                         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                           {tAssistant("draftQuestionsLabel")}
@@ -557,6 +616,7 @@ export function FloatingAssistant() {
                         <Button className="w-full rounded-2xl" disabled={isSending || chatDisabled} type="button" onClick={() => void confirmDraft()}>
                           Confirm post
                         </Button>
+                        <p className="text-xs text-muted-foreground">{tAssistant("draftReadyHint")}</p>
                         <p className="text-xs text-muted-foreground">Type &quot;confirm post&quot; or click the button to submit.</p>
                       </div>
                     ) : (

@@ -7,6 +7,13 @@ import { ChatMessage } from "@/components/chatbot/chat-message";
 import { LanguageSelector } from "@/components/chatbot/language-selector";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { INDIAN_LANGUAGES } from "@/lib/constants";
+
+const LANGUAGE_STORAGE_KEY = "donorix-assistant-language";
+
+function isStoredAssistantLanguage(value: string | null): value is string {
+  return Boolean(value && INDIAN_LANGUAGES.some((language) => language.code === value));
+}
 
 type ChatEntry = {
   role: "assistant" | "user";
@@ -25,6 +32,19 @@ export function ChatWindow() {
   ]);
   const [value, setValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    const storedLanguage = window.sessionStorage.getItem(LANGUAGE_STORAGE_KEY);
+    if (isStoredAssistantLanguage(storedLanguage)) {
+      setLanguage(storedLanguage);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isStoredAssistantLanguage(language)) {
+      window.sessionStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+    }
+  }, [language]);
 
   useEffect(() => {
     if (!textareaRef.current) {

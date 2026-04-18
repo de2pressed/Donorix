@@ -270,8 +270,8 @@ function buildProductCases() {
       keywords: uniqueKeywords("Donorix", "blood donation platform", "India", "multilingual assistant", "how it works"),
       facts: [
         "Donorix is a blood donation coordination platform for India.",
-        "It helps donors find compatible requests and helps verified hospitals manage blood requests.",
-        "The assistant can answer questions, guide eligible-post discovery, and help with hospital drafts.",
+        "It helps donors find compatible requests, helps verified hospitals manage blood requests, and keeps the handoff between the two sides organized.",
+        "The assistant can answer questions, explain app screens, guide eligible-post discovery, and help hospitals build a complete request draft.",
       ],
       followUps: ["Ask me about donor eligibility, hospital requests, or policies."],
       refusalRules: [],
@@ -377,10 +377,10 @@ function buildProductCases() {
       keywords: uniqueKeywords("create post", "new request", "blood request", "patient post", "hospital account"),
       facts: [
         "Only verified hospital accounts can publish blood requests.",
-        "A request needs patient name, patient ID or case reference, blood group, units needed, hospital details, contact person, contact phone, medical reason, and required-by time.",
-        "The assistant can collect the details step by step and then move to audit and confirm mode.",
+        "The safest request flow is patient identity, case reference, blood group, units needed, medical reason, required-by time, and the hospital contact details that are already linked to the account.",
+        "The assistant should behave like a guided form: capture the missing fields in order, show what is already filled, and move to audit mode only after every required field is present.",
       ],
-      followUps: ["I can start a draft and collect the missing fields in chat."],
+      followUps: ["I can start a draft, show the blanks, and collect the missing fields one by one."],
       refusalRules: ["Do not imply guest or donor accounts can publish hospital requests."],
       personaScope: "hospital",
       priority: 6,
@@ -392,10 +392,10 @@ function buildProductCases() {
       canonicalQuestions: ["Which fields are required in a hospital post?", "What details are missing?"],
       keywords: uniqueKeywords("patient name", "patient id", "blood group", "units needed", "contact phone", "required by"),
       facts: [
-        "The request form validates each section before publishing.",
-        "The assistant should not keep asking for fields that are already filled by the hospital profile or the current draft.",
+        "The request form validates each section before publishing, so the assistant should surface missing values instead of repeating the whole form.",
+        "Already-filled hospital profile details should stay filled and should not be asked again unless they are actually missing from the account.",
       ],
-      followUps: ["I can list exactly which fields are still missing."],
+      followUps: ["I can list exactly which fields are still missing and show them as fill-in-the-blanks."],
       refusalRules: [],
       personaScope: "hospital",
       priority: 6,
@@ -729,7 +729,9 @@ export function buildKnowledgePrompt({
     `Language code: ${language}`,
     `Response language: ${getAssistantLanguageName(language)}`,
     "Write the final answer entirely in the response language.",
+    "If the user's message is in English but the selected language is different, still answer in the selected language.",
     "Answer the user's actual question directly. Do not turn the context into a preset script.",
+    "Prefer a useful answer with specific steps, constraints, or next actions instead of a vague summary.",
     language === "en"
       ? "Strict language rule: respond only in English."
       : `Strict language rule: respond only in ${getAssistantLanguageName(language)}. Do not use English words or transliteration unless they are unavoidable fixed terms.`,
@@ -766,10 +768,13 @@ export function buildKnowledgePrompt({
     "Do not ask for more details unless the answer is genuinely incomplete or ambiguous.",
     "If the user only greets you, greet back briefly and ask what they want to know.",
     "Answer concisely, practically, and entirely in the selected response language.",
+    "Use enough detail to be helpful: explain what to do, what to check, and which page or action is relevant.",
     "Do not mix languages unless you are preserving a proper noun, medical term, or app label.",
     "Use the knowledge brief below as background context, not a script.",
     "Do not invent hospital details, donor eligibility, or policy exceptions.",
     "If the user is asking about a hospital draft and you need more details, ask only for the missing fields.",
+    "When the user wants to create a hospital post, behave like a fill-in-the-blanks form: surface the next missing field first and keep the rest as a checklist.",
+    "If you can answer with a short checklist, use that format for hospital request guidance.",
     "If the request is unsafe, abusive, or asks for fraud, refuse briefly and redirect.",
     header,
     matchBriefs ? `Relevant knowledge:\n${matchBriefs}` : "No specific Donorix topic matched. Answer the user's question directly if it is safe to do so.",
@@ -794,7 +799,7 @@ export function buildKnowledgeFallbackReply(match: KnowledgeMatch, language: Ass
       : `यह ${match.case.canonicalQuestions[0] ?? "इस विषय"} से जुड़ा है।`;
   }
 
-  return match.case.facts.slice(0, 3).join(" ");
+  return match.case.facts.slice(0, 4).join(" ");
 }
 
 export function getKnowledgeIntentLabel(matches: KnowledgeMatch[]) {

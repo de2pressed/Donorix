@@ -35,6 +35,7 @@ const LATIN_WORD_PATTERN = /\b[A-Za-z][A-Za-z'’-]*\b/g;
 const ALLOWED_LATIN_TOKENS = new Set([
   "donorix",
   "ai",
+  "api",
   "a+",
   "a-",
   "b+",
@@ -44,6 +45,24 @@ const ALLOWED_LATIN_TOKENS = new Set([
   "o+",
   "o-",
   "112",
+  "sms",
+  "ui",
+  "openai",
+  "chatgpt",
+  "settings",
+  "profile",
+  "post",
+  "draft",
+  "review",
+  "confirm",
+  "request",
+  "hospital",
+  "donor",
+  "blood",
+  "feed",
+  "leaderboard",
+  "upvote",
+  "upvotes",
 ]);
 
 export function isAssistantLanguage(value: string | undefined | null): value is AssistantLanguage {
@@ -60,14 +79,22 @@ export function detectAssistantLanguage(message: string) {
   return null;
 }
 
-export function resolveAssistantLanguage(preferredLanguage: string | undefined, latestMessage: string): AssistantLanguage {
-  const detected = detectAssistantLanguage(latestMessage);
-  if (detected) {
-    return detected;
+export function resolveAssistantLanguage(
+  selectedLanguage: string | undefined,
+  preferredLanguage: string | undefined,
+  latestMessage: string,
+): AssistantLanguage {
+  if (isAssistantLanguage(selectedLanguage)) {
+    return selectedLanguage;
   }
 
   if (isAssistantLanguage(preferredLanguage)) {
     return preferredLanguage;
+  }
+
+  const detected = detectAssistantLanguage(latestMessage);
+  if (detected) {
+    return detected;
   }
 
   return "en";

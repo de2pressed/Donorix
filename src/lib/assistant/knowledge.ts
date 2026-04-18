@@ -128,6 +128,25 @@ function createCase(params: Omit<AssistantKnowledgeCase, "keywords"> & { keyword
   } satisfies AssistantKnowledgeCase;
 }
 
+function isGreetingMessage(message: string) {
+  const normalized = normalizeMessage(message);
+  if (!normalized) return false;
+
+  return [
+    "hi",
+    "hello",
+    "hey",
+    "yo",
+    "namaste",
+    "namaskar",
+    "good morning",
+    "good afternoon",
+    "good evening",
+    "hello there",
+    "hi there",
+  ].some((greeting) => normalized === greeting || normalized.startsWith(`${greeting} `) || normalized.startsWith(`${greeting}!`) || normalized.startsWith(`${greeting},`));
+}
+
 function caseFromPolicy({
   slug,
   title,
@@ -626,7 +645,8 @@ export const ASSISTANT_KNOWLEDGE_CASE_COUNT = ASSISTANT_KNOWLEDGE_CASES.length;
 function scoreCase(message: string, knowledgeCase: AssistantKnowledgeCase, persona: Persona) {
   const normalizedMessage = normalizeMessage(message);
   const matchedKeywords: string[] = [];
-  let score = knowledgeCase.priority;
+  let score = 0;
+  let matchedQuestion = false;
 
   for (const keyword of knowledgeCase.keywords) {
     const normalizedKeyword = normalizeMessage(keyword);
@@ -641,6 +661,7 @@ function scoreCase(message: string, knowledgeCase: AssistantKnowledgeCase, perso
   for (const canonicalQuestion of knowledgeCase.canonicalQuestions) {
     const normalizedQuestion = normalizeMessage(canonicalQuestion);
     if (normalizedQuestion && normalizedMessage.includes(normalizedQuestion)) {
+      matchedQuestion = true;
       score += 4;
     }
   }
@@ -657,6 +678,15 @@ function scoreCase(message: string, knowledgeCase: AssistantKnowledgeCase, perso
   if (normalizedMessage.length < 4) {
     score -= 1;
   }
+
+  if (!matchedKeywords.length && !matchedQuestion) {
+    return {
+      score: 0,
+      matchedKeywords,
+    };
+  }
+
+  score += knowledgeCase.priority;
 
   return {
     score,
@@ -727,6 +757,7 @@ export function buildKnowledgePrompt({
 
   return [
     "You are Donorix Assistant.",
+    "If the user only greets you, greet back briefly and ask what they want to know.",
     "Answer concisely, practically, and entirely in the selected response language.",
     "Do not mix languages unless you are preserving a proper noun, medical term, or app label.",
     "Use the knowledge brief below as the source of truth.",
@@ -739,6 +770,14 @@ export function buildKnowledgePrompt({
   ]
     .filter(Boolean)
     .join("\n\n");
+}
+
+export function buildGreetingReply(language: AssistantLanguage) {
+  if (language === "hi") {
+    return "नमस्ते। आप Donorix के बारे में क्या जानना चाहेंगे?";
+  }
+
+  return "Hi. What would you like to know about Donorix?";
 }
 
 export function buildKnowledgeFallbackReply(match: KnowledgeMatch, language: AssistantLanguage) {
@@ -756,3 +795,5 @@ export function buildKnowledgeFallbackReply(match: KnowledgeMatch, language: Ass
 export function getKnowledgeIntentLabel(matches: KnowledgeMatch[]) {
   return matches[0]?.case.id ?? null;
 }
+
+export { isGreetingMessage };

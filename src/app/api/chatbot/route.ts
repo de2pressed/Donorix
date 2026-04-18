@@ -26,7 +26,9 @@ import {
   buildKnowledgeFallbackReply,
   buildKnowledgePrompt,
   getKnowledgeIntentLabel,
+  isGreetingMessage,
   matchKnowledgeCases,
+  buildGreetingReply,
 } from "@/lib/assistant/knowledge";
 import { evaluateAssistantSafety } from "@/lib/assistant/safety";
 import type {
@@ -262,14 +264,20 @@ function isEligibilityRequest(message: string) {
 }
 
 function buildGeneralFallbackReply({
+  message,
   language,
   persona,
   matches,
 }: {
+  message: string;
   language: AssistantLanguage;
   persona: Persona;
   matches: ReturnType<typeof matchKnowledgeCases>;
 }) {
+  if (isGreetingMessage(message)) {
+    return buildGreetingReply(language);
+  }
+
   if (matches.length) {
     return buildKnowledgeFallbackReply(matches[0], language);
   }
@@ -700,7 +708,7 @@ export async function POST(request: NextRequest) {
     messages,
   });
 
-  const reply = knowledgeReply ?? buildGeneralFallbackReply({ language, persona, matches: knowledgeMatches });
+  const reply = knowledgeReply ?? buildGeneralFallbackReply({ message: body.message, language, persona, matches: knowledgeMatches });
   const aiActive = Boolean(knowledgeReply);
   const conversationSummary = buildConversationSummary({
     previousSummary: body.conversationSummary ?? null,

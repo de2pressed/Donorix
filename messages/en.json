@@ -17,6 +17,7 @@
     "more": "More",
     "registerHospital": "Register as Hospital",
     "notifications": "Notifications",
+    "contactUs": "Contact Us",
     "policies": "Policies",
     "profile": "Profile",
     "hospitalSettings": "Hospital Settings",
@@ -123,11 +124,11 @@
   },
   "assistant": {
     "title": "Donorix Assistant",
-    "subtitle": "Session-aware help panel",
+    "subtitle": "Fresh help panel",
     "placeholder": "Ask about donation, requests, or policy",
     "send": "Send",
     "languageLabel": "Choose language",
-    "intro": "Ask me about donor eligibility, how Donorix works, or requests you may be able to respond to. I will keep this conversation for the current session.",
+    "intro": "Ask me about donor eligibility, how Donorix works, or requests you may be able to respond to. This chat starts fresh each time you open the site.",
     "loading": "Thinking...",
     "languageChanged": "Language changed to {language}.",
     "fallback": "Donorix helps donors find compatible requests and helps verified hospitals manage blood requests. I can explain how it works, show requests you may be able to respond to, or help with donor eligibility.",
@@ -272,6 +273,7 @@
     "policies": "Policies",
     "termsOfUse": "Terms of Use",
     "privacyPolicy": "Privacy Policy",
+    "contactUs": "Contact Us",
     "contactGrievance": "Contact / Grievance"
   },
   "theme": {

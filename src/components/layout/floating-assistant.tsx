@@ -58,18 +58,8 @@ type ChatbotResponse = {
   intent?: string | null;
 };
 
-const MESSAGE_STORAGE_PREFIX = "donorix-assistant-messages";
-const DRAFT_STORAGE_PREFIX = "donorix-assistant-draft";
-const SUMMARY_STORAGE_PREFIX = "donorix-assistant-summary";
-const DISABLED_STORAGE_PREFIX = "donorix-assistant-disabled";
-const DISABLED_REASON_STORAGE_PREFIX = "donorix-assistant-disabled-reason";
-const SESSION_ID_STORAGE_PREFIX = "donorix-assistant-session";
 const LANGUAGE_STORAGE_KEY = "donorix-assistant-language";
 export const ASSISTANT_OPEN_EVENT = "donorix-assistant:open";
-
-function key(prefix: string, scope: string) {
-  return `${prefix}:${scope}`;
-}
 
 function normalize(value: string) {
   return sanitizeText(value).toLowerCase().replace(/\s+/g, " ").trim();
@@ -167,13 +157,6 @@ export function FloatingAssistant() {
 
   const persona: Persona =
     currentUser?.account_type === "hospital" ? "hospital" : currentUser?.account_type === "donor" ? "donor" : "guest";
-  const scope = currentUser?.id ?? "guest";
-  const messageKey = useMemo(() => key(MESSAGE_STORAGE_PREFIX, scope), [scope]);
-  const draftKey = useMemo(() => key(DRAFT_STORAGE_PREFIX, scope), [scope]);
-  const summaryKey = useMemo(() => key(SUMMARY_STORAGE_PREFIX, scope), [scope]);
-  const disabledKey = useMemo(() => key(DISABLED_STORAGE_PREFIX, scope), [scope]);
-  const disabledReasonKey = useMemo(() => key(DISABLED_REASON_STORAGE_PREFIX, scope), [scope]);
-  const sessionIdKey = useMemo(() => key(SESSION_ID_STORAGE_PREFIX, scope), [scope]);
 
   const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
@@ -189,7 +172,7 @@ export function FloatingAssistant() {
   const [conversationSummary, setConversationSummary] = useState<string | null>(null);
   const [chatDisabled, setChatDisabled] = useState(false);
   const [chatDisabledReason, setChatDisabledReason] = useState<string | null>(null);
-  const [assistantSessionId, setAssistantSessionId] = useState<string | null>(null);
+  const [assistantSessionId] = useState(() => createSessionId());
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   const hidden = useMemo(
@@ -233,72 +216,7 @@ export function FloatingAssistant() {
     if (storedLanguage === "en" || storedLanguage === "hi") {
       setLanguage(storedLanguage);
     }
-
-    const storedSessionId = window.sessionStorage.getItem(sessionIdKey);
-    if (storedSessionId) {
-      setAssistantSessionId(storedSessionId);
-    } else {
-      const nextSessionId = createSessionId();
-      window.sessionStorage.setItem(sessionIdKey, nextSessionId);
-      setAssistantSessionId(nextSessionId);
-    }
-
-    const storedMessages = window.sessionStorage.getItem(messageKey);
-    if (storedMessages) {
-      try {
-        const parsed = JSON.parse(storedMessages) as AssistantMessage[];
-        setMessages(parsed.length ? parsed : [{ role: "assistant", content: tAssistant("intro") }]);
-      } catch {
-        setMessages([{ role: "assistant", content: tAssistant("intro") }]);
-      }
-    }
-
-    const storedDraft = window.sessionStorage.getItem(draftKey);
-    if (storedDraft) {
-      try {
-        setDraftState(JSON.parse(storedDraft) as HospitalDraftState | null);
-      } catch {
-        setDraftState(null);
-      }
-    }
-
-    setConversationSummary(window.sessionStorage.getItem(summaryKey)?.trim() || null);
-    setChatDisabled(window.sessionStorage.getItem(disabledKey) === "true");
-    setChatDisabledReason(window.sessionStorage.getItem(disabledReasonKey)?.trim() || null);
-  }, [disabledKey, disabledReasonKey, draftKey, messageKey, mounted, sessionIdKey, summaryKey, tAssistant]);
-
-  useEffect(() => {
-    if (!mounted) return;
-    window.sessionStorage.setItem(messageKey, JSON.stringify(messages));
-  }, [messageKey, messages, mounted]);
-
-  useEffect(() => {
-    if (!mounted) return;
-    if (draftState) window.sessionStorage.setItem(draftKey, JSON.stringify(draftState));
-    else window.sessionStorage.removeItem(draftKey);
-  }, [draftKey, draftState, mounted]);
-
-  useEffect(() => {
-    if (!mounted) return;
-    if (conversationSummary?.trim()) window.sessionStorage.setItem(summaryKey, conversationSummary.trim());
-    else window.sessionStorage.removeItem(summaryKey);
-  }, [conversationSummary, mounted, summaryKey]);
-
-  useEffect(() => {
-    if (!mounted) return;
-    window.sessionStorage.setItem(disabledKey, chatDisabled ? "true" : "false");
-  }, [chatDisabled, disabledKey, mounted]);
-
-  useEffect(() => {
-    if (!mounted) return;
-    if (chatDisabledReason?.trim()) window.sessionStorage.setItem(disabledReasonKey, chatDisabledReason.trim());
-    else window.sessionStorage.removeItem(disabledReasonKey);
-  }, [chatDisabledReason, disabledReasonKey, mounted]);
-
-  useEffect(() => {
-    if (!mounted || !assistantSessionId) return;
-    window.sessionStorage.setItem(sessionIdKey, assistantSessionId);
-  }, [assistantSessionId, mounted, sessionIdKey]);
+  }, [mounted]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -326,15 +244,23 @@ export function FloatingAssistant() {
     if (persona !== "hospital") setDraftState(null);
   }, [persona]);
 
+  useEffect(() => {
+    setMessages([{ role: "assistant", content: tAssistant("intro") }]);
+    setConversationSummary(null);
+    setChatDisabled(false);
+    setChatDisabledReason(null);
+    setDraftState(null);
+    setEligiblePosts([]);
+    setAiActive(false);
+    setValue("");
+    setIsSending(false);
+  }, [currentUser?.id, tAssistant]);
+
   async function sendMessage(rawMessage: string) {
     const question = rawMessage.trim();
     if (!question || isSending || chatDisabled) return;
 
-    const sessionId = assistantSessionId ?? createSessionId();
-    if (!assistantSessionId) {
-      setAssistantSessionId(sessionId);
-      window.sessionStorage.setItem(sessionIdKey, sessionId);
-    }
+    const sessionId = assistantSessionId;
 
     const nextMessages: AssistantMessage[] = [...messages, { role: "user", content: question }];
     setMessages(nextMessages);

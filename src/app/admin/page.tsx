@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAdminDashboard } from "@/lib/data";
 
@@ -27,6 +29,22 @@ export default async function AdminPage() {
           </Card>
         ))}
       </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>User queries</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground">
+            Review contact requests, send replies, and keep unresolved questions visible until they are handled.
+          </p>
+          <Link
+            className="rounded-full border border-border px-4 py-2 text-sm font-medium transition hover:border-brand/30 hover:bg-brand-soft hover:text-brand"
+            href="/admin/queries"
+          >
+            Open queries
+          </Link>
+        </CardContent>
+      </Card>
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <Card>
           <CardHeader>

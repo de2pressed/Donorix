@@ -17,6 +17,7 @@ export function SiteFooter() {
   ];
 
   const legalLinks = [
+    { href: "/contact", label: "Contact Us" },
     { href: "/policies", label: t("policies") },
     { href: "/policies/terms", label: t("termsOfUse") },
     { href: "/policies/privacy", label: t("privacyPolicy") },

@@ -9,6 +9,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { TableRow } from "@/types/database";
 import type { Notification } from "@/types/notification";
 import type { DonorApplicationWithDonor, FeedPost, Post } from "@/types/post";
+import type { ContactQuery } from "@/types/contact-query";
 import type { HospitalAccount, Profile } from "@/types/user";
 
 type AdminAction = TableRow<"admin_actions">;
@@ -831,6 +832,52 @@ export async function getNotifications(userId?: string) {
     .limit(30);
 
   return (data as Notification[] | null) ?? [];
+}
+
+export async function getUserContactQueries(userId: string) {
+  const supabase = await createServerSupabaseClient();
+  if (!supabase) return [] as ContactQuery[];
+
+  const { data } = await supabase
+    .from("contact_queries")
+    .select(
+      "id, submitted_by, submitted_name, submitted_email, submitted_phone, submitted_account_type, subject, query, reply, status, replied_by, replied_at, created_at, updated_at",
+    )
+    .eq("submitted_by", userId)
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  return (data as ContactQuery[] | null) ?? [];
+}
+
+export async function getAdminContactQueries() {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return [] as ContactQuery[];
+
+  const { data } = await supabase
+    .from("contact_queries")
+    .select(
+      "id, submitted_by, submitted_name, submitted_email, submitted_phone, submitted_account_type, subject, query, reply, status, replied_by, replied_at, created_at, updated_at",
+    )
+    .order("created_at", { ascending: false })
+    .limit(200);
+
+  return (data as ContactQuery[] | null) ?? [];
+}
+
+export async function getAdminContactQueryById(queryId: string) {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return null;
+
+  const { data } = await supabase
+    .from("contact_queries")
+    .select(
+      "id, submitted_by, submitted_name, submitted_email, submitted_phone, submitted_account_type, subject, query, reply, status, replied_by, replied_at, created_at, updated_at",
+    )
+    .eq("id", queryId)
+    .maybeSingle();
+
+  return (data as ContactQuery | null) ?? null;
 }
 
 export async function getRecentDonations(userId: string) {

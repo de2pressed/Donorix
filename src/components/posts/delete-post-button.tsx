@@ -23,10 +23,12 @@ export function DeletePostButton({
   postId,
   patientName,
   status,
+  onDeleted,
 }: {
   postId: string;
   patientName: string;
   status: string;
+  onDeleted?: () => void;
 }) {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
@@ -49,6 +51,7 @@ export function DeletePostButton({
       }
 
       toast.success("Post deleted");
+      onDeleted?.();
       router.refresh();
     } finally {
       setIsDeleting(false);

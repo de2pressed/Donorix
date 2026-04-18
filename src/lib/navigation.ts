@@ -1,6 +1,7 @@
 import {
   Bell,
   Building2,
+  Mail,
   FileText,
   HeartHandshake,
   Home,
@@ -35,6 +36,7 @@ export function getSidebarNav(accountType?: AccountType | null) {
       { href: "/hospital/donors", label: "Donors", icon: Users },
       { href: "/hospital/chats", label: "Chats", icon: MessagesSquare },
       { href: "/notifications", label: "Notifications", icon: Bell },
+      { href: "/contact", label: "Contact Us", icon: Mail },
       { href: "/policies/terms", label: "Policies", icon: FileText },
       { href: "/about", label: "About Us", icon: Info },
     ] satisfies NavItem[];
@@ -46,6 +48,7 @@ export function getSidebarNav(accountType?: AccountType | null) {
     { href: "/donor/chats", label: "Chats", icon: MessagesSquare },
     { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
     { href: "/notifications", label: "Notifications", icon: Bell },
+    { href: "/contact", label: "Contact Us", icon: Mail },
     { href: "/policies/terms", label: "Policies", icon: FileText },
     { href: "/about", label: "About Us", icon: Info },
   ] satisfies NavItem[];
@@ -85,6 +88,7 @@ export function getMoreNav(accountType?: AccountType | null, isAuthenticated = f
       { href: "/hospital/posts", label: "Patient Posts", icon: ClipboardList },
       { href: "/hospital/donors", label: "Donors", icon: Users },
       { href: "/hospital/chats", label: "Chats", icon: MessagesSquare },
+      { href: "/contact", label: "Contact Us", icon: Mail },
       { href: "/policies/terms", label: "Policies", icon: FileText },
       { href: "/about", label: "About Us", icon: Info },
       { href: "/settings", label: "Settings", icon: Settings },
@@ -95,6 +99,7 @@ export function getMoreNav(accountType?: AccountType | null, isAuthenticated = f
     return [
       { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
       { href: "/donor/chats", label: "Chats", icon: MessagesSquare },
+      { href: "/contact", label: "Contact Us", icon: Mail },
       { href: "/policies/terms", label: "Policies", icon: FileText },
       { href: "/about", label: "About Us", icon: Info },
       { href: "/profile", label: "Profile", icon: User2 },

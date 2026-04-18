@@ -59,6 +59,7 @@ export const MAIN_NAV = [
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/posts/new", label: "Request Blood" },
   { href: "/notifications", label: "Notifications" },
+  { href: "/contact", label: "Contact Us" },
   { href: "/policies/terms", label: "Policies" },
 ];
 

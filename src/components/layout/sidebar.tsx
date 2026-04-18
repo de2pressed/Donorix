@@ -30,6 +30,8 @@ function getSidebarLabel(
       return t("chats");
     case "/notifications":
       return t("notifications");
+    case "/contact":
+      return "Contact Us";
     case "/policies/terms":
       return t("policies");
     case "/about":

@@ -44,6 +44,8 @@ export function MobileNav() {
         return tNav("chats");
       case "/notifications":
         return tNav("notifications");
+      case "/contact":
+        return "Contact Us";
       case "/policies/terms":
         return tNav("policies");
       case "/about":

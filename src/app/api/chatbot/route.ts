@@ -177,15 +177,15 @@ function buildLockedResponse({
       : reasonKind === "abuse"
         ? "Harassment or threat behavior was detected."
         : reasonKind === "spam"
-          ? "Repeated spam was detected in this session."
+          ? "Repeated spam or flood behavior was detected."
           : reasonKind === "rate_limit"
             ? "Too many messages were sent too quickly."
-            : "This chat has been disabled for the current session.");
+            : "This chat has been disabled for the current conversation.");
 
   const reply =
     language === "hi"
-      ? `इस session के लिए chat disabled कर दिया गया है. ${reason}`
-      : `This chat has been disabled for the current session. ${reason}`;
+      ? `इस conversation के लिए chat disabled कर दिया गया है. ${reason}`
+      : `This chat has been disabled for the current conversation. ${reason}`;
 
   return {
     language,

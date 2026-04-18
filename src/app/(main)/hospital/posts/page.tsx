@@ -41,7 +41,11 @@ export default async function HospitalPostsPage() {
           noPatientId: "कोई मरीज आईडी नहीं",
           units: "यूनिट्स",
           donorApplicants: "डोनर आवेदक",
-          empty: "अभी कोई रोगी पोस्ट उपलब्ध नहीं है।",
+          emptyActive: "अभी कोई सक्रिय रोगी पोस्ट उपलब्ध नहीं है।",
+          activeSectionTitle: "सक्रिय अनुरोध",
+          deletedSectionTitle: "हटाए गए अनुरोध",
+          deletedSectionHint: "हटाई गई पोस्ट यहीं समीक्षा के लिए दिखेंगी।",
+          emptyDeleted: "अभी कोई हटाई गई पोस्ट नहीं है।",
         }
       : {
           requestLog: "Hospital request log",
@@ -63,7 +67,11 @@ export default async function HospitalPostsPage() {
           noPatientId: "No patient ID",
           units: "units",
           donorApplicants: "donor applicants",
-          empty: "No posts created yet.",
+          emptyActive: "No active posts created yet.",
+          activeSectionTitle: "Active requests",
+          deletedSectionTitle: "Deleted posts",
+          deletedSectionHint: "Deleted posts remain available here for review.",
+          emptyDeleted: "No deleted posts yet.",
         };
 
   return (

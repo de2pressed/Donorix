@@ -8,7 +8,7 @@ export default function ChatPage() {
         </p>
       </div>
       <p className="text-sm text-muted-foreground">
-        Open the floating assistant from any main app page to continue the same session conversation.
+        Open the floating assistant from any main app page to start a fresh help conversation.
       </p>
     </div>
   );

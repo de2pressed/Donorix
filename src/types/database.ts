@@ -288,6 +288,35 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["admin_actions"]["Row"]>;
         Relationships: [];
       };
+      contact_queries: {
+        Row: {
+          id: string;
+          submitted_by: string | null;
+          submitted_name: string;
+          submitted_email: string;
+          submitted_phone: string;
+          submitted_account_type: string;
+          subject: string;
+          query: string;
+          reply: string | null;
+          status: "unresolved" | "solved";
+          replied_by: string | null;
+          replied_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["contact_queries"]["Row"]> & {
+          submitted_name: string;
+          submitted_email: string;
+          submitted_phone: string;
+          submitted_account_type: string;
+          subject: string;
+          query: string;
+          submitted_by: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["contact_queries"]["Row"]>;
+        Relationships: [];
+      };
       sms_log: {
         Row: {
           id: string;

@@ -408,9 +408,9 @@ export function FloatingAssistant() {
                           "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em]",
                           aiActive ? "border-brand/25 bg-brand-soft text-brand" : "border-border bg-muted/40 text-muted-foreground",
                         )}
-                      >
-                        <span className={cn("size-1.5 rounded-full", aiActive ? "bg-brand" : "bg-muted-foreground")} />
-                        {aiActive ? "AI active" : "Fallback"}
+                        >
+                          <span className={cn("size-1.5 rounded-full", aiActive ? "bg-brand" : "bg-muted-foreground")} />
+                        {aiActive ? "AI active" : "Direct"}
                       </span>
                     </div>
                     <p className="text-xs text-muted-foreground">{tAssistant("subtitle")}</p>

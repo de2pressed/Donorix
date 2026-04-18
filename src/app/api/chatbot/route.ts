@@ -24,6 +24,7 @@ import {
 import {
   ASSISTANT_KNOWLEDGE_CASE_COUNT,
   buildKnowledgePrompt,
+  buildKnowledgeFallbackReply,
   getKnowledgeIntentLabel,
   isGreetingMessage,
   matchKnowledgeCases,
@@ -282,11 +283,7 @@ function buildGeneralFallbackReply({
   }
 
   if (matches.length) {
-    if (language === "hi") {
-      return "यह Donorix के इस विषय से जुड़ा लगता है। मैं अगले कदम बता सकता हूँ या इसे आसान भाषा में समझा सकता हूँ।";
-    }
-
-    return `This looks related to ${matches[0]?.case.canonicalQuestions[0] ?? matches[0]?.case.category ?? "that topic"}. I can help with the next step or explain it in plain language.`;
+    return buildKnowledgeFallbackReply(matches[0], language);
   }
 
   if (language === "hi") {

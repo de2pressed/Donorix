@@ -760,6 +760,7 @@ export function buildKnowledgePrompt({
     "You are Donorix Assistant.",
     "Be friendly, cooperative, and conversational.",
     "Answer the user's actual question first. If the user asks something general, answer it normally.",
+    "Do not ask for more details unless the answer is genuinely incomplete or ambiguous.",
     "If the user only greets you, greet back briefly and ask what they want to know.",
     "Answer concisely, practically, and entirely in the selected response language.",
     "Do not mix languages unless you are preserving a proper noun, medical term, or app label.",
@@ -784,15 +785,13 @@ export function buildGreetingReply(language: AssistantLanguage) {
 }
 
 export function buildKnowledgeFallbackReply(match: KnowledgeMatch, language: AssistantLanguage) {
-  const intro =
-    language === "hi"
-      ? `मैं ${match.case.canonicalQuestions[0] ?? "इस विषय"} पर मदद कर सकता हूँ।`
-      : `I can help with ${match.case.canonicalQuestions[0] ?? "this topic"}.`;
+  if (language === "hi") {
+    return match.case.facts[0]
+      ? `यह ${match.case.canonicalQuestions[0] ?? "इस विषय"} से जुड़ा है। ${match.case.facts[0]}`
+      : `यह ${match.case.canonicalQuestions[0] ?? "इस विषय"} से जुड़ा है।`;
+  }
 
-  const facts = match.case.facts.slice(0, 3).map((fact) => `- ${fact}`);
-  const followUp = match.case.followUps[0];
-
-  return [intro, ...facts, followUp ? `Next: ${followUp}` : null].filter(Boolean).join("\n");
+  return match.case.facts.slice(0, 3).join(" ");
 }
 
 export function getKnowledgeIntentLabel(matches: KnowledgeMatch[]) {

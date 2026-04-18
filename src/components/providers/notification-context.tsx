@@ -35,6 +35,34 @@ function mapNotificationToToast(notification: Notification): NotificationToastIt
   };
 }
 
+function showBrowserNotification(notification: Notification) {
+  if (typeof window === "undefined" || !("Notification" in window)) {
+    return;
+  }
+
+  if (window.Notification.permission !== "granted") {
+    return;
+  }
+
+  if (document.visibilityState === "visible" && document.hasFocus()) {
+    return;
+  }
+
+  try {
+    const popup = new window.Notification(notification.title, {
+      body: notification.body,
+      tag: notification.id,
+    });
+
+    popup.onclick = () => {
+      window.focus();
+      popup.close();
+    };
+  } catch {
+    // Native notifications are a best-effort enhancement only.
+  }
+}
+
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const { data: user } = useUser();
   const {
@@ -44,23 +72,61 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   } = useNotifications({ enabled: Boolean(user), userId: user?.id });
   const queryClient = useQueryClient();
   const [toasts, setToasts] = useState<NotificationToastItem[]>([]);
-  const isInitialLoadComplete = useRef(false);
   const toastTimeouts = useRef<Map<string, number>>(new Map());
+  const seenNotificationIds = useRef<Set<string>>(new Set());
+  const previousNotificationIds = useRef<string[]>([]);
+  const initializedNotifications = useRef(false);
   const userId = user?.id;
 
   useEffect(() => {
     if (!userId) {
-      isInitialLoadComplete.current = false;
       toastTimeouts.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
       toastTimeouts.current.clear();
+      seenNotificationIds.current = new Set();
+      previousNotificationIds.current = [];
+      initializedNotifications.current = false;
       setToasts([]);
       return;
     }
 
     if (isSuccess && !isFetching) {
-      isInitialLoadComplete.current = true;
+      const currentIds = notifications.map((notification) => notification.id);
+
+      if (!initializedNotifications.current) {
+        initializedNotifications.current = true;
+        previousNotificationIds.current = currentIds;
+        for (const notification of notifications) {
+          seenNotificationIds.current.add(notification.id);
+        }
+        return;
+      }
+
+      const previousIds = new Set(previousNotificationIds.current);
+      for (const notification of notifications) {
+        if (!previousIds.has(notification.id) && !seenNotificationIds.current.has(notification.id)) {
+          seenNotificationIds.current.add(notification.id);
+          const toastItem = mapNotificationToToast(notification);
+
+          const existingTimeout = toastTimeouts.current.get(notification.id);
+          if (existingTimeout) {
+            window.clearTimeout(existingTimeout);
+          }
+
+          setToasts((current) => [...current.filter((item) => item.id !== notification.id), toastItem]);
+          showBrowserNotification(notification);
+
+          const timeoutId = window.setTimeout(() => {
+            setToasts((current) => current.filter((item) => item.id !== notification.id));
+            toastTimeouts.current.delete(notification.id);
+          }, 5000);
+
+          toastTimeouts.current.set(notification.id, timeoutId);
+        }
+      }
+
+      previousNotificationIds.current = currentIds;
     }
-  }, [isFetching, isSuccess, userId]);
+  }, [isFetching, isSuccess, notifications, userId]);
 
   useEffect(() => {
     if (!userId) {
@@ -86,15 +152,22 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         (payload) => {
           const notification = payload.new as Notification;
           const toastItem = mapNotificationToToast(notification);
+          const wasSeen = seenNotificationIds.current.has(notification.id);
 
           queryClient.setQueryData<Notification[]>(["notifications", userId], (current = []) => [
             notification,
             ...current.filter((item) => item.id !== notification.id),
           ]);
 
-          if (!isInitialLoadComplete.current) {
+          if (wasSeen) {
             return;
           }
+
+          seenNotificationIds.current.add(notification.id);
+          previousNotificationIds.current = [
+            notification.id,
+            ...previousNotificationIds.current.filter((id) => id !== notification.id),
+          ];
 
           const existingTimeout = toastTimeouts.current.get(notification.id);
           if (existingTimeout) {
@@ -102,6 +175,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           }
 
           setToasts((current) => [...current.filter((item) => item.id !== notification.id), toastItem]);
+          showBrowserNotification(notification);
 
           const timeoutId = window.setTimeout(() => {
             setToasts((current) => current.filter((item) => item.id !== notification.id));

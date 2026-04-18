@@ -145,7 +145,7 @@
     "draftMissingLabel": "Missing details",
     "draftQuestionsLabel": "Questions",
     "draftHold": "I need the missing details above before I can publish this request.",
-    "confirmPost": "Create request",
+    "confirmPost": "Confirm post",
     "eligiblePostsTitle": "Compatible posts",
     "publishSuccess": "The request is published. I refreshed your dashboard.",
     "publishSuccessFallback": "The request is published.",
@@ -262,7 +262,7 @@
   "footer": {
     "tagline": "The Modern Indian Blood Donation Platform",
     "sdg": "Aligned with SDG 3: Good Health and Well-being",
-    "copyright": "Copyright 2025 Donorix. All rights reserved.",
+    "copyright": "Copyright 2026 Donorix. All rights reserved.",
     "quickLinks": "Quick Links",
     "legalSupport": "Legal & Support",
     "home": "Home",

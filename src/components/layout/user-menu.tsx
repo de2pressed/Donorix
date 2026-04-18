@@ -97,7 +97,7 @@ export function UserMenu() {
   return (
     <>
       <div className="hidden md:block">
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <button aria-label={tNav("openProfileMenu")} className={avatarButtonClassName} type="button">
               <Avatar className="size-10">

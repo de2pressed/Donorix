@@ -15,16 +15,23 @@ import { Input } from "@/components/ui/input";
 import { useUser } from "@/lib/hooks/use-user";
 import { authenticatedFetch } from "@/lib/supabase/authenticated-fetch";
 import { cn } from "@/lib/utils/cn";
+import { sanitizeText } from "@/lib/utils/sanitize";
+import type { CreatePostInput } from "@/lib/validations/post";
 
 type AssistantMessage = { role: "assistant" | "user" | "system"; content: string };
 type Persona = "guest" | "donor" | "hospital";
 type HospitalDraftState = {
-  values: Record<string, unknown>;
+  values: Partial<CreatePostInput>;
   missingFields: string[];
   questions: string[];
   readyForReview: boolean;
   summary: string;
   blockedReason?: string | null;
+  reviewMode?: "collecting" | "review" | "blocked";
+  auditSummary?: string;
+  capturedFields?: string[];
+  nextAction?: string | null;
+  lastUpdatedAt?: string;
 };
 type EligiblePost = {
   id: string;
@@ -45,32 +52,99 @@ type ChatbotResponse = {
   eligiblePosts?: EligiblePost[];
   draftState?: HospitalDraftState | null;
   reminder?: string | null;
+  chatDisabled?: boolean;
+  chatDisabledReason?: string | null;
+  conversationSummary?: string;
+  intent?: string | null;
 };
 
 const MESSAGE_STORAGE_PREFIX = "donorix-assistant-messages";
 const DRAFT_STORAGE_PREFIX = "donorix-assistant-draft";
+const SUMMARY_STORAGE_PREFIX = "donorix-assistant-summary";
+const DISABLED_STORAGE_PREFIX = "donorix-assistant-disabled";
+const DISABLED_REASON_STORAGE_PREFIX = "donorix-assistant-disabled-reason";
+const SESSION_ID_STORAGE_PREFIX = "donorix-assistant-session";
 const LANGUAGE_STORAGE_KEY = "donorix-assistant-language";
 export const ASSISTANT_OPEN_EVENT = "donorix-assistant:open";
 
-function getStorageKey(prefix: string, scope: string) {
+function key(prefix: string, scope: string) {
   return `${prefix}:${scope}`;
+}
+
+function normalize(value: string) {
+  return sanitizeText(value).toLowerCase().replace(/\s+/g, " ").trim();
 }
 
 function countUserMessages(messages: AssistantMessage[]) {
   return messages.reduce((count, message) => count + (message.role === "user" ? 1 : 0), 0);
 }
 
+function isConfirmDraftMessage(value: string) {
+  const n = normalize(value);
+  return [
+    "confirm post",
+    "confirm request",
+    "confirm this post",
+    "confirm this request",
+    "publish post",
+    "submit post",
+    "submit request",
+    "approve and post",
+    "go ahead",
+    "finalize",
+    "finalise",
+    "confirm",
+    "confirm karo",
+    "post karo",
+  ].some((term) => n === term || n.includes(term));
+}
+
+function humanizeField(field: string) {
+  return field.replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
+}
+
+function formatValue(value: unknown, language: string) {
+  if (value === null || value === undefined || value === "") return "Not provided";
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (typeof value === "number") return String(value);
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}T/.test(value)) {
+    const date = new Date(value);
+    if (!Number.isNaN(date.getTime())) {
+      return new Intl.DateTimeFormat(language === "hi" ? "hi-IN" : "en-IN", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      }).format(date);
+    }
+  }
+  return String(value);
+}
+
+function getCapturedFields(draftState: HospitalDraftState, language: string) {
+  const source = draftState.capturedFields?.length ? draftState.capturedFields : Object.keys(draftState.values ?? {});
+  return source
+    .map((field) => ({
+      field,
+      label: humanizeField(field),
+      value: formatValue(draftState.values?.[field as keyof CreatePostInput], language),
+    }))
+    .filter((entry) => entry.value !== "Not provided");
+}
+
+function createSessionId() {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  return `assistant-${Math.random().toString(36).slice(2)}-${Date.now().toString(36)}`;
+}
+
 function getQuickActions(
   persona: Persona,
   pathname: string,
   tAssistant: (key: string, values?: Record<string, string | number>) => string,
+  draftState: HospitalDraftState | null,
 ) {
   if (persona === "hospital") {
-    return [
-      pathname.startsWith("/posts/new") ? tAssistant("hospitalQuickDraft") : tAssistant("hospitalQuickDraft"),
-      tAssistant("hospitalQuickMissing"),
-      tAssistant("hospitalQuickHow"),
-    ];
+    if (draftState?.readyForReview) return ["Review draft", "Confirm post", "Fill details"];
+    if (draftState) return ["Fill details", "Review draft", tAssistant("hospitalQuickHow")];
+    return [tAssistant("hospitalQuickDraft"), tAssistant("hospitalQuickMissing"), tAssistant("hospitalQuickHow")];
   }
 
   if (persona === "donor") {
@@ -87,29 +161,36 @@ function getQuickActions(
 export function FloatingAssistant() {
   const pathname = usePathname();
   const router = useRouter();
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = Boolean(useReducedMotion());
   const tAssistant = useTranslations("assistant");
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const { data: currentUser } = useUser();
+
+  const persona: Persona =
+    currentUser?.account_type === "hospital" ? "hospital" : currentUser?.account_type === "donor" ? "donor" : "guest";
+  const scope = currentUser?.id ?? "guest";
+  const messageKey = useMemo(() => key(MESSAGE_STORAGE_PREFIX, scope), [scope]);
+  const draftKey = useMemo(() => key(DRAFT_STORAGE_PREFIX, scope), [scope]);
+  const summaryKey = useMemo(() => key(SUMMARY_STORAGE_PREFIX, scope), [scope]);
+  const disabledKey = useMemo(() => key(DISABLED_STORAGE_PREFIX, scope), [scope]);
+  const disabledReasonKey = useMemo(() => key(DISABLED_REASON_STORAGE_PREFIX, scope), [scope]);
+  const sessionIdKey = useMemo(() => key(SESSION_ID_STORAGE_PREFIX, scope), [scope]);
+
   const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
   const [language, setLanguage] = useState("en");
   const [value, setValue] = useState("");
-  const [messages, setMessages] = useState<AssistantMessage[]>([
-    { role: "assistant", content: tAssistant("intro") },
-  ]);
+  const [messages, setMessages] = useState<AssistantMessage[]>([{ role: "assistant", content: tAssistant("intro") }]);
   const [hasUnread, setHasUnread] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [footerVisible, setFooterVisible] = useState(false);
   const [aiActive, setAiActive] = useState(false);
   const [eligiblePosts, setEligiblePosts] = useState<EligiblePost[]>([]);
   const [draftState, setDraftState] = useState<HospitalDraftState | null>(null);
-  const { data: currentUser } = useUser();
-
-  const persona: Persona = currentUser?.account_type === "hospital" ? "hospital" : currentUser?.account_type === "donor" ? "donor" : "guest";
-  const userScope = currentUser?.id ?? "guest";
-  const messageStorageKey = useMemo(() => getStorageKey(MESSAGE_STORAGE_PREFIX, userScope), [userScope]);
-  const draftStorageKey = useMemo(() => getStorageKey(DRAFT_STORAGE_PREFIX, userScope), [userScope]);
-  const quickActions = useMemo(() => getQuickActions(persona, pathname, tAssistant), [persona, pathname, tAssistant]);
+  const [conversationSummary, setConversationSummary] = useState<string | null>(null);
+  const [chatDisabled, setChatDisabled] = useState(false);
+  const [chatDisabledReason, setChatDisabledReason] = useState<string | null>(null);
+  const [assistantSessionId, setAssistantSessionId] = useState<string | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   const hidden = useMemo(
     () =>
@@ -121,92 +202,103 @@ export function FloatingAssistant() {
     [pathname],
   );
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const quickActions = useMemo(
+    () => getQuickActions(persona, pathname, tAssistant, draftState),
+    [persona, pathname, tAssistant, draftState],
+  );
+
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     if (!mounted) return;
-
     const footer = document.getElementById("site-footer");
     if (!footer || typeof IntersectionObserver === "undefined") return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        setFooterVisible(Boolean(entry?.isIntersecting));
-      },
-      {
-        root: null,
-        threshold: 0.12,
-      },
-    );
+    const observer = new IntersectionObserver(([entry]) => setFooterVisible(Boolean(entry?.isIntersecting)), {
+      threshold: 0.12,
+    });
 
     observer.observe(footer);
     return () => observer.disconnect();
   }, [mounted]);
 
   useEffect(() => {
-    if (hidden) {
-      setOpen(false);
-    }
+    if (hidden) setOpen(false);
   }, [hidden]);
 
   useEffect(() => {
     if (!mounted) return;
 
     const storedLanguage = window.sessionStorage.getItem(LANGUAGE_STORAGE_KEY);
-    if (storedLanguage) {
+    if (storedLanguage === "en" || storedLanguage === "hi") {
       setLanguage(storedLanguage);
     }
-  }, [mounted, userScope]);
 
-  useEffect(() => {
-    if (!mounted) return;
-
-    const storedMessages = window.sessionStorage.getItem(messageStorageKey);
-    if (!storedMessages) {
-      setMessages([{ role: "assistant", content: tAssistant("intro") }]);
+    const storedSessionId = window.sessionStorage.getItem(sessionIdKey);
+    if (storedSessionId) {
+      setAssistantSessionId(storedSessionId);
     } else {
+      const nextSessionId = createSessionId();
+      window.sessionStorage.setItem(sessionIdKey, nextSessionId);
+      setAssistantSessionId(nextSessionId);
+    }
+
+    const storedMessages = window.sessionStorage.getItem(messageKey);
+    if (storedMessages) {
       try {
         const parsed = JSON.parse(storedMessages) as AssistantMessage[];
         setMessages(parsed.length ? parsed : [{ role: "assistant", content: tAssistant("intro") }]);
       } catch {
-        window.sessionStorage.removeItem(messageStorageKey);
         setMessages([{ role: "assistant", content: tAssistant("intro") }]);
       }
     }
 
-    const storedDraft = window.sessionStorage.getItem(draftStorageKey);
-    if (!storedDraft) {
-      setDraftState(null);
-      setEligiblePosts([]);
-      return;
+    const storedDraft = window.sessionStorage.getItem(draftKey);
+    if (storedDraft) {
+      try {
+        setDraftState(JSON.parse(storedDraft) as HospitalDraftState | null);
+      } catch {
+        setDraftState(null);
+      }
     }
 
-    try {
-      const parsedDraft = JSON.parse(storedDraft) as HospitalDraftState | null;
-      setDraftState(parsedDraft);
-    } catch {
-      window.sessionStorage.removeItem(draftStorageKey);
-      setDraftState(null);
-    }
-  }, [draftStorageKey, messageStorageKey, mounted, tAssistant]);
+    setConversationSummary(window.sessionStorage.getItem(summaryKey)?.trim() || null);
+    setChatDisabled(window.sessionStorage.getItem(disabledKey) === "true");
+    setChatDisabledReason(window.sessionStorage.getItem(disabledReasonKey)?.trim() || null);
+  }, [disabledKey, disabledReasonKey, draftKey, messageKey, mounted, sessionIdKey, summaryKey, tAssistant]);
 
   useEffect(() => {
     if (!mounted) return;
-    window.sessionStorage.setItem(messageStorageKey, JSON.stringify(messages));
-  }, [messageStorageKey, messages, mounted]);
+    window.sessionStorage.setItem(messageKey, JSON.stringify(messages));
+  }, [messageKey, messages, mounted]);
 
   useEffect(() => {
     if (!mounted) return;
+    if (draftState) window.sessionStorage.setItem(draftKey, JSON.stringify(draftState));
+    else window.sessionStorage.removeItem(draftKey);
+  }, [draftKey, draftState, mounted]);
 
-    if (draftState) {
-      window.sessionStorage.setItem(draftStorageKey, JSON.stringify(draftState));
-    } else {
-      window.sessionStorage.removeItem(draftStorageKey);
-    }
-  }, [draftState, draftStorageKey, mounted]);
+  useEffect(() => {
+    if (!mounted) return;
+    if (conversationSummary?.trim()) window.sessionStorage.setItem(summaryKey, conversationSummary.trim());
+    else window.sessionStorage.removeItem(summaryKey);
+  }, [conversationSummary, mounted, summaryKey]);
+
+  useEffect(() => {
+    if (!mounted) return;
+    window.sessionStorage.setItem(disabledKey, chatDisabled ? "true" : "false");
+  }, [chatDisabled, disabledKey, mounted]);
+
+  useEffect(() => {
+    if (!mounted) return;
+    if (chatDisabledReason?.trim()) window.sessionStorage.setItem(disabledReasonKey, chatDisabledReason.trim());
+    else window.sessionStorage.removeItem(disabledReasonKey);
+  }, [chatDisabledReason, disabledReasonKey, mounted]);
+
+  useEffect(() => {
+    if (!mounted || !assistantSessionId) return;
+    window.sessionStorage.setItem(sessionIdKey, assistantSessionId);
+  }, [assistantSessionId, mounted, sessionIdKey]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -216,37 +308,35 @@ export function FloatingAssistant() {
   useEffect(() => {
     if (!open) return;
     setHasUnread(false);
-    messagesEndRef.current?.scrollIntoView({
-      behavior: reduceMotion ? "auto" : "smooth",
-      block: "end",
-    });
-  }, [messages, open, reduceMotion, draftState, eligiblePosts]);
+    messagesEndRef.current?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "end" });
+  }, [messages, open, reduceMotion, eligiblePosts, draftState, chatDisabled]);
 
   useEffect(() => {
     if (!mounted) return;
-
-    function handleOpen() {
+    const handleOpen = () => {
       setOpen(true);
       setHasUnread(false);
-    }
-
+    };
     window.addEventListener(ASSISTANT_OPEN_EVENT, handleOpen);
     return () => window.removeEventListener(ASSISTANT_OPEN_EVENT, handleOpen);
   }, [mounted]);
 
   useEffect(() => {
     setEligiblePosts([]);
-    if (persona !== "hospital") {
-      setDraftState(null);
-    }
+    if (persona !== "hospital") setDraftState(null);
   }, [persona]);
 
   async function sendMessage(rawMessage: string) {
     const question = rawMessage.trim();
-    if (!question || isSending) return;
+    if (!question || isSending || chatDisabled) return;
 
-    const nextMessages = [...messages, { role: "user", content: question } as AssistantMessage];
-    const nextUserMessageCount = countUserMessages(nextMessages);
+    const sessionId = assistantSessionId ?? createSessionId();
+    if (!assistantSessionId) {
+      setAssistantSessionId(sessionId);
+      window.sessionStorage.setItem(sessionIdKey, sessionId);
+    }
+
+    const nextMessages: AssistantMessage[] = [...messages, { role: "user", content: question }];
     setMessages(nextMessages);
     setValue("");
     setIsSending(true);
@@ -254,85 +344,84 @@ export function FloatingAssistant() {
     try {
       const response = await authenticatedFetch("/api/chatbot", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: question,
           language,
           persona,
           pathname,
-          messages: nextMessages.slice(-8),
+          messages: nextMessages.slice(-12),
           draftState,
-          userMessageCount: nextUserMessageCount,
+          userMessageCount: countUserMessages(nextMessages),
+          assistantSessionId: sessionId,
+          conversationSummary,
         }),
         redirectOnAuthFailure: false,
       });
 
-      const payload = (await response.json().catch(() => null)) as ChatbotResponse | { reply?: string } | null;
-      const reply = response.ok && typeof payload?.reply === "string" && payload.reply.trim()
-        ? payload.reply.trim()
-        : tAssistant("fallback");
-
-      const assistantMessages: AssistantMessage[] = [{ role: "assistant", content: reply }];
-      if (response.ok && payload && "reminder" in payload && typeof payload.reminder === "string" && payload.reminder.trim()) {
-        assistantMessages.push({ role: "system", content: payload.reminder.trim() });
+      const payload = (await response.json().catch(() => null)) as ChatbotResponse | null;
+      const reply =
+        response.ok && typeof payload?.reply === "string" && payload.reply.trim() ? payload.reply.trim() : tAssistant("fallback");
+      const nextAssistantMessages: AssistantMessage[] = [{ role: "assistant", content: reply }];
+      if (response.ok && payload?.reminder?.trim()) {
+        nextAssistantMessages.push({ role: "system", content: payload.reminder.trim() });
       }
+      setMessages((current) => [...current, ...nextAssistantMessages]);
 
-      setMessages((current) => [...current, ...assistantMessages]);
+      if (response.ok && payload) {
+        if ("eligiblePosts" in payload) setEligiblePosts(Array.isArray(payload.eligiblePosts) ? payload.eligiblePosts : []);
+        else if (persona !== "hospital") setEligiblePosts([]);
 
-      if (response.ok && payload && "eligiblePosts" in payload) {
-        setEligiblePosts(Array.isArray(payload.eligiblePosts) ? payload.eligiblePosts : []);
-      } else if (persona !== "hospital") {
-        setEligiblePosts([]);
-      }
+        setAiActive(Boolean(payload.aiActive));
 
-      setAiActive(Boolean(response.ok && payload && typeof payload === "object" && "aiActive" in payload && payload.aiActive));
+        if ("draftState" in payload) setDraftState(payload.draftState ?? null);
+        else if (persona !== "hospital") setDraftState(null);
 
-      if (response.ok && payload && "draftState" in payload) {
-        setDraftState(payload.draftState ?? null);
-      } else if (persona !== "hospital") {
-        setDraftState(null);
+        if (typeof payload.conversationSummary === "string") setConversationSummary(payload.conversationSummary.trim() || null);
+
+        if (typeof payload.chatDisabled === "boolean") {
+          setChatDisabled(payload.chatDisabled);
+          setChatDisabledReason(
+            typeof payload.chatDisabledReason === "string" && payload.chatDisabledReason.trim()
+              ? payload.chatDisabledReason.trim()
+              : null,
+          );
+        }
       }
     } catch {
-      setMessages((current) => [
-        ...current,
-        { role: "assistant", content: tAssistant("fallback") },
-      ]);
+      setMessages((current) => [...current, { role: "assistant", content: tAssistant("fallback") } as AssistantMessage]);
       setAiActive(false);
-      if (persona !== "hospital") {
-        setEligiblePosts([]);
-        setDraftState(null);
-      }
+      if (persona !== "hospital") setDraftState(null);
     } finally {
       setIsSending(false);
       if (!open) setHasUnread(true);
     }
   }
 
-  async function confirmDraft() {
-    if (!draftState?.readyForReview || draftState.blockedReason || isSending) return;
+  async function confirmDraft(triggerMessage?: string) {
+    if (!draftState?.readyForReview || draftState.blockedReason || isSending || chatDisabled) return;
+
+    if (triggerMessage?.trim()) {
+      setMessages((current) => [...current, { role: "user", content: triggerMessage.trim() } as AssistantMessage]);
+    }
 
     setIsSending(true);
+    setValue("");
     try {
       const response = await authenticatedFetch("/api/posts", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(draftState.values),
         redirectOnAuthFailure: false,
       });
-
       const payload = (await response.json().catch(() => null)) as { postId?: string; error?: unknown } | null;
       if (!response.ok) {
-        const errorMessage =
-          typeof payload?.error === "string"
-            ? payload.error
-            : tAssistant("publishFailed");
         setMessages((current) => [
           ...current,
-          { role: "assistant", content: errorMessage },
+          {
+            role: "assistant",
+            content: typeof payload?.error === "string" ? payload.error : tAssistant("publishFailed"),
+          } as AssistantMessage,
         ]);
         return;
       }
@@ -341,27 +430,32 @@ export function FloatingAssistant() {
         ...current,
         {
           role: "assistant",
-          content:
-            payload?.postId
-              ? tAssistant("publishSuccess")
-              : tAssistant("publishSuccessFallback"),
-        },
+          content: payload?.postId ? tAssistant("publishSuccess") : tAssistant("publishSuccessFallback"),
+        } as AssistantMessage,
       ]);
       setDraftState(null);
+      setConversationSummary(null);
       router.refresh();
     } catch {
-      setMessages((current) => [
-        ...current,
-        { role: "assistant", content: tAssistant("publishFailed") },
-      ]);
+      setMessages((current) => [...current, { role: "assistant", content: tAssistant("publishFailed") } as AssistantMessage]);
     } finally {
       setIsSending(false);
+      if (!open) setHasUnread(true);
     }
   }
 
-  if (!mounted || hidden) {
-    return null;
+  async function handleQuickAction(action: string) {
+    if (chatDisabled || isSending) return;
+    if (draftState?.readyForReview && isConfirmDraftMessage(action)) {
+      await confirmDraft(action);
+      return;
+    }
+    await sendMessage(action);
   }
+
+  if (!mounted || hidden) return null;
+
+  const capturedFields = draftState ? getCapturedFields(draftState, language) : [];
 
   return createPortal(
     <>
@@ -386,31 +480,17 @@ export function FloatingAssistant() {
                       <span
                         className={cn(
                           "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em]",
-                          aiActive
-                            ? "border-brand/25 bg-brand-soft text-brand"
-                            : "border-border bg-muted/40 text-muted-foreground",
+                          aiActive ? "border-brand/25 bg-brand-soft text-brand" : "border-border bg-muted/40 text-muted-foreground",
                         )}
                       >
-                        <span
-                          className={cn(
-                            "size-1.5 rounded-full",
-                            aiActive ? "bg-brand shadow-[0_0_0_4px_rgba(179,12,49,0.12)]" : "bg-muted-foreground",
-                          )}
-                        />
+                        <span className={cn("size-1.5 rounded-full", aiActive ? "bg-brand" : "bg-muted-foreground")} />
                         {aiActive ? "AI active" : "Fallback"}
                       </span>
                     </div>
                     <p className="text-xs text-muted-foreground">{tAssistant("subtitle")}</p>
                   </div>
                 </div>
-                <Button
-                  aria-label="Close assistant"
-                  className="size-11"
-                  size="icon"
-                  type="button"
-                  variant="ghost"
-                  onClick={() => setOpen(false)}
-                >
+                <Button aria-label="Close assistant" className="size-11" size="icon" type="button" variant="ghost" onClick={() => setOpen(false)}>
                   <X className="size-4" />
                 </Button>
               </div>
@@ -423,10 +503,7 @@ export function FloatingAssistant() {
                     setLanguage(nextLanguage);
                     setMessages((current) => [
                       ...current,
-                      {
-                        role: "system",
-                        content: tAssistant("languageChanged", { language: nextLanguage }),
-                      },
+                      { role: "system", content: tAssistant("languageChanged", { language: nextLanguage }) } as AssistantMessage,
                     ]);
                   }}
                 />
@@ -437,9 +514,10 @@ export function FloatingAssistant() {
                   <Button
                     key={action}
                     className="h-8 rounded-full border border-border bg-background/80 px-3 text-xs font-medium text-foreground hover:bg-brand-soft"
+                    disabled={chatDisabled || isSending}
                     type="button"
                     variant="outline"
-                    onClick={() => void sendMessage(action)}
+                    onClick={() => void handleQuickAction(action)}
                   >
                     {action}
                   </Button>
@@ -450,11 +528,7 @@ export function FloatingAssistant() {
             <div className="flex min-h-0 flex-1 flex-col bg-muted/30">
               <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-4">
                 {messages.map((message, index) => (
-                  <ChatMessage
-                    key={`${message.role}-${index}`}
-                    content={message.content}
-                    role={message.role}
-                  />
+                  <ChatMessage key={`${message.role}-${index}`} content={message.content} role={message.role} />
                 ))}
 
                 {eligiblePosts.length ? (
@@ -492,6 +566,27 @@ export function FloatingAssistant() {
                     </div>
                     <p className="text-sm text-muted-foreground">{draftState.summary}</p>
 
+                    {draftState.auditSummary ? (
+                      <div className="rounded-2xl border border-border bg-muted/20 p-3">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Audit summary</p>
+                        <p className="text-sm text-foreground">{draftState.auditSummary}</p>
+                      </div>
+                    ) : null}
+
+                    {capturedFields.length ? (
+                      <div className="space-y-2">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Captured details</p>
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          {capturedFields.map((field) => (
+                            <div key={field.field} className="rounded-2xl border border-border bg-muted/20 px-3 py-2">
+                              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{field.label}</p>
+                              <p className="text-sm text-foreground">{field.value}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+
                     {draftState.missingFields.length ? (
                       <div className="space-y-2">
                         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
@@ -499,10 +594,7 @@ export function FloatingAssistant() {
                         </p>
                         <div className="flex flex-wrap gap-2">
                           {draftState.missingFields.map((field) => (
-                            <span
-                              key={field}
-                              className="rounded-full border border-border bg-muted/30 px-3 py-1 text-xs text-muted-foreground"
-                            >
+                            <span key={field} className="rounded-full border border-border bg-muted/30 px-3 py-1 text-xs text-muted-foreground">
                               {field.replace(/_/g, " ")}
                             </span>
                           ))}
@@ -532,17 +624,21 @@ export function FloatingAssistant() {
                     ) : null}
 
                     {draftState.readyForReview && !draftState.blockedReason ? (
-                      <Button
-                        className="w-full rounded-2xl"
-                        disabled={isSending}
-                        type="button"
-                        onClick={() => void confirmDraft()}
-                      >
-                        {tAssistant("confirmPost")}
-                      </Button>
+                      <div className="space-y-2">
+                        <Button className="w-full rounded-2xl" disabled={isSending || chatDisabled} type="button" onClick={() => void confirmDraft()}>
+                          Confirm post
+                        </Button>
+                        <p className="text-xs text-muted-foreground">Type &quot;confirm post&quot; or click the button to submit.</p>
+                      </div>
                     ) : (
                       <p className="text-xs text-muted-foreground">{tAssistant("draftHold")}</p>
                     )}
+                  </div>
+                ) : null}
+
+                {chatDisabled ? (
+                  <div className="rounded-[1.25rem] border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-foreground">
+                    {chatDisabledReason ?? "Chat disabled for the current session."}
                   </div>
                 ) : null}
 
@@ -554,17 +650,24 @@ export function FloatingAssistant() {
                 className="grid shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-t border-border bg-card px-4 py-4 max-[479px]:pb-[calc(env(safe-area-inset-bottom)+1.5rem)]"
                 onSubmit={async (event) => {
                   event.preventDefault();
-                  await sendMessage(value);
+                  const trimmed = value.trim();
+                  if (!trimmed) return;
+                  if (draftState?.readyForReview && isConfirmDraftMessage(trimmed)) {
+                    await confirmDraft(trimmed);
+                    return;
+                  }
+                  await sendMessage(trimmed);
                 }}
               >
                 <Input
                   aria-label={tAssistant("title")}
                   className="min-w-0"
-                  placeholder={tAssistant("placeholder")}
+                  disabled={isSending || chatDisabled}
+                  placeholder={chatDisabled ? "Chat disabled for this session" : tAssistant("placeholder")}
                   value={value}
                   onChange={(event) => setValue(event.target.value)}
                 />
-                <Button className="shrink-0 px-4" disabled={isSending} type="submit">
+                <Button className="shrink-0 px-4" disabled={isSending || chatDisabled} type="submit">
                   {tAssistant("send")}
                 </Button>
               </form>

@@ -8,6 +8,7 @@ import { APP_NAME, GRIEVANCE_EMAIL } from "@/lib/constants";
 
 export function SiteFooter() {
   const t = useTranslations("footer");
+  const copyright = t("copyright").replace(/\b\d{4}\b/, String(new Date().getFullYear()));
   const quickLinks = [
     { href: "/", label: t("home") },
     { href: "/leaderboard", label: t("leaderboard") },
@@ -76,7 +77,7 @@ export function SiteFooter() {
             </div>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-3 pt-6 text-sm text-muted-foreground">
-            <p>{t("copyright")}</p>
+            <p>{copyright}</p>
             <p>{APP_NAME} demo experience</p>
           </div>
         </div>

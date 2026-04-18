@@ -21,6 +21,8 @@ const envSchema = z.object({
   RESEND_API_KEY: z.string().min(1).optional(),
   NOTIFICATION_FROM_EMAIL: z.string().email().optional(),
   DEMO_SETUP_TOKEN: z.string().min(16).optional(),
+  OPENAI_ASSISTANT_MODEL: z.string().min(1).optional(),
+  OPENAI_DRAFT_MODEL: z.string().min(1).optional(),
 });
 
 const rawEnv = {
@@ -48,6 +50,8 @@ const rawEnv = {
   NOTIFICATION_FROM_EMAIL:
     typeof window === "undefined" ? process.env.NOTIFICATION_FROM_EMAIL : undefined,
   DEMO_SETUP_TOKEN: typeof window === "undefined" ? process.env.DEMO_SETUP_TOKEN : undefined,
+  OPENAI_ASSISTANT_MODEL: typeof window === "undefined" ? process.env.OPENAI_ASSISTANT_MODEL : undefined,
+  OPENAI_DRAFT_MODEL: typeof window === "undefined" ? process.env.OPENAI_DRAFT_MODEL : undefined,
 };
 
 const parsed = envSchema.safeParse(rawEnv);

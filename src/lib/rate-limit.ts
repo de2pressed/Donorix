@@ -1,12 +1,26 @@
-import { Ratelimit } from "@upstash/ratelimit";
+import { Ratelimit, type Duration } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 
 import { env, hasUpstashEnv } from "@/lib/env";
 
-let ratelimit: Ratelimit | null = null;
+type RateLimitOptions = {
+  points?: number;
+  duration?: Duration;
+  prefix?: string;
+};
+
+const rateLimiters = new Map<string, Ratelimit>();
 let warnedMissingUpstash = false;
 
-export function getRateLimiter() {
+function getLimiterKey(options: RateLimitOptions) {
+  return JSON.stringify({
+    points: options.points ?? 30,
+    duration: options.duration ?? "1 m",
+    prefix: options.prefix ?? "donorix",
+  });
+}
+
+export function getRateLimiter(options: RateLimitOptions = {}) {
   if (!hasUpstashEnv || !env.UPSTASH_REDIS_REST_URL || !env.UPSTASH_REDIS_REST_TOKEN) {
     if (process.env.NODE_ENV === "development" && !warnedMissingUpstash) {
       warnedMissingUpstash = true;
@@ -15,25 +29,34 @@ export function getRateLimiter() {
     return null;
   }
 
-  if (!ratelimit) {
-    const redis = new Redis({
-      url: env.UPSTASH_REDIS_REST_URL,
-      token: env.UPSTASH_REDIS_REST_TOKEN,
-    });
-
-    ratelimit = new Ratelimit({
-      redis,
-      limiter: Ratelimit.slidingWindow(30, "1 m"),
-      analytics: true,
-      prefix: "donorix",
-    });
+  const cacheKey = getLimiterKey(options);
+  const cached = rateLimiters.get(cacheKey);
+  if (cached) {
+    return cached;
   }
 
-  return ratelimit;
+  const points = options.points ?? 30;
+  const duration = options.duration ?? "1 m";
+  const prefix = options.prefix ?? "donorix";
+
+  const redis = new Redis({
+    url: env.UPSTASH_REDIS_REST_URL,
+    token: env.UPSTASH_REDIS_REST_TOKEN,
+  });
+
+  const limiter = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(points, duration),
+    analytics: true,
+    prefix,
+  });
+
+  rateLimiters.set(cacheKey, limiter);
+  return limiter;
 }
 
-export async function enforceRateLimit(identifier: string) {
-  const limiter = getRateLimiter();
+export async function enforceRateLimit(identifier: string, options: RateLimitOptions = {}) {
+  const limiter = getRateLimiter(options);
   if (!limiter) {
     return { success: true };
   }

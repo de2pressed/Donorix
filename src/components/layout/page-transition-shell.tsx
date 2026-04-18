@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 
 function SearchParamsKey({
   children,
@@ -31,11 +31,17 @@ function SearchParamsKey({
 
 export function PageTransitionShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const reduceMotion = Boolean(useReducedMotion());
   const [progress, setProgress] = useState(0);
   const [loading, setLoading] = useState(false);
   const initialized = useRef(false);
   const failSafeTimeout = useRef<number | null>(null);
+  const pendingRouteKey = useRef<string | null>(null);
+  const routeKey = useMemo(() => {
+    const search = searchParams?.toString();
+    return search ? `${pathname}?${search}` : pathname;
+  }, [pathname, searchParams]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -88,6 +94,7 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
 
       if (currentUrl === nextPath) return;
 
+      pendingRouteKey.current = nextPath;
       setLoading(true);
       setProgress(0);
 
@@ -133,6 +140,12 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
       return;
     }
 
+    if (!loading || pendingRouteKey.current !== routeKey) {
+      return;
+    }
+
+    pendingRouteKey.current = null;
+
     if (failSafeTimeout.current) {
       window.clearTimeout(failSafeTimeout.current);
       failSafeTimeout.current = null;
@@ -143,12 +156,12 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
     const timeoutId = window.setTimeout(() => {
       setLoading(false);
       setProgress(0);
-    }, 220);
+    }, reduceMotion ? 0 : 160);
 
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [pathname]);
+  }, [loading, reduceMotion, routeKey]);
 
   return (
     <>
@@ -186,7 +199,7 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
           <motion.div
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             initial={reduceMotion ? false : { opacity: 0, y: 10, filter: "blur(2px)" }}
-            key={pathname}
+            key={routeKey}
             transition={{ duration: reduceMotion ? 0 : 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
             {children}

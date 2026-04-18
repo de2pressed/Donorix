@@ -1,15 +1,13 @@
 ﻿import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DeletePostButton } from "@/components/posts/delete-post-button";
+import { HospitalPostHistory } from "@/components/posts/hospital-post-history";
 import { getCurrentProfile, getHospitalPosts } from "@/lib/data";
 import { getRequestMessages, translate } from "@/lib/i18n";
 
 export default async function HospitalPostsPage() {
-  const [{ messages }, profile] = await Promise.all([getRequestMessages(), getCurrentProfile()]);
+  const [{ locale, messages }, profile] = await Promise.all([getRequestMessages(), getCurrentProfile()]);
   const t = (key: string) => translate(messages, key);
 
   if (!profile) {
@@ -21,6 +19,52 @@ export default async function HospitalPostsPage() {
   }
 
   const posts = await getHospitalPosts(profile.id);
+  const postHistoryCopy =
+    locale === "hi"
+      ? {
+          requestLog: "अनुरोध लॉग",
+          bulkDeleteHint: "बल्क डिलीट के लिए पोस्ट चुनने हेतु चेकबॉक्स का उपयोग करें।",
+          selectAll: "सभी चुनें",
+          selectedCount: "{count} चुने गए",
+          deleteSelected: "चुने हुए हटाएँ",
+          deleteAll: "सभी पोस्ट हटाएँ",
+          deleteSelectedTitle: "चुनी हुई पोस्ट हटाएँ?",
+          deleteAllTitle: "सभी पोस्ट हटाएँ?",
+          deleteSelectedDescription:
+            "यह आपके अस्पताल इतिहास से {count} चुनी हुई पोस्ट हटाएगा और उन्हें सक्रिय वर्कफ़्लो से हटा देगा।",
+          deleteAllDescription:
+            "यह आपके अस्पताल इतिहास की सभी {count} ऐसी पोस्ट हटाएगा जो पहले से हटाई नहीं गई हैं और उन्हें सक्रिय वर्कफ़्लो से हटा देगा।",
+          deleteAction: "हटाएँ",
+          deleting: "हटाया जा रहा है...",
+          cancel: "रद्द करें",
+          deleteSuccess: "{count} पोस्ट हटाई गईं।",
+          noPatientId: "कोई मरीज आईडी नहीं",
+          units: "यूनिट्स",
+          donorApplicants: "डोनर आवेदक",
+          empty: "अभी कोई रोगी पोस्ट उपलब्ध नहीं है।",
+        }
+      : {
+          requestLog: "Hospital request log",
+          bulkDeleteHint: "Use the checkboxes to select posts for bulk deletion.",
+          selectAll: "Select all",
+          selectedCount: "{count} selected",
+          deleteSelected: "Delete selected",
+          deleteAll: "Delete all posts",
+          deleteSelectedTitle: "Delete selected posts?",
+          deleteAllTitle: "Delete all posts?",
+          deleteSelectedDescription:
+            "This will delete {count} selected post(s) from your hospital history and remove them from active workflows.",
+          deleteAllDescription:
+            "This will delete all {count} post(s) that are not already deleted from your hospital history and remove them from active workflows.",
+          deleteAction: "Delete",
+          deleting: "Deleting...",
+          cancel: "Cancel",
+          deleteSuccess: "{count} post(s) deleted.",
+          noPatientId: "No patient ID",
+          units: "units",
+          donorApplicants: "donor applicants",
+          empty: "No posts created yet.",
+        };
 
   return (
     <div className="space-y-4">
@@ -34,50 +78,7 @@ export default async function HospitalPostsPage() {
         </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("hospitalPosts.requestLog")}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {posts.length ? (
-            posts.map((post) => (
-              <div
-                key={post.id}
-                className="grid gap-3 rounded-[1.25rem] border border-border p-4 md:grid-cols-[1.2fr_1fr_auto] md:items-center"
-              >
-                <div>
-                  <Link className="font-display font-semibold transition-colors hover:text-brand" href={`/posts/${post.id}`}>
-                    {post.patient_name}
-                  </Link>
-                  <p className="font-mono text-sm text-muted-foreground">
-                    {post.patient_id ?? t("hospitalPosts.noPatientId")} - {post.blood_type_needed}
-                  </p>
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  <span className="font-mono">{post.units_needed}</span> {t("hospitalPosts.units")} -{" "}
-                  <span className="font-mono">{post.donor_count ?? 0}</span> {t("hospitalPosts.donorApplicants")}
-                </div>
-                <div className="flex flex-wrap items-center gap-2 md:justify-end">
-                  <Badge
-                    variant={post.status === "fulfilled" ? "success" : post.status === "deleted" ? "warning" : "secondary"}
-                  >
-                    {post.status === "fulfilled"
-                      ? "Fulfilled"
-                      : post.status === "deleted"
-                        ? "Deleted"
-                        : "Not fulfilled"}
-                  </Badge>
-                  <DeletePostButton postId={post.id} patientName={post.patient_name} status={post.status} />
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="rounded-[1.25rem] border border-dashed border-border p-6 text-sm text-muted-foreground">
-              {t("hospitalPosts.empty")}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <HospitalPostHistory copy={postHistoryCopy} posts={posts} />
     </div>
   );
 }

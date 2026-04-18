@@ -36,7 +36,6 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
   const [progress, setProgress] = useState(0);
   const [loading, setLoading] = useState(false);
   const initialized = useRef(false);
-  const failSafeTimeout = useRef<number | null>(null);
   const pendingRouteKey = useRef<string | null>(null);
   const routeKey = useMemo(() => {
     const search = searchParams?.toString();
@@ -97,25 +96,12 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
       pendingRouteKey.current = nextPath;
       setLoading(true);
       setProgress(0);
-
-      if (failSafeTimeout.current) {
-        window.clearTimeout(failSafeTimeout.current);
-      }
-
-      failSafeTimeout.current = window.setTimeout(() => {
-        setProgress(100);
-        setLoading(false);
-        window.setTimeout(() => setProgress(0), 120);
-      }, 500);
     };
 
     document.addEventListener("click", handleClick, true);
 
     return () => {
       document.removeEventListener("click", handleClick, true);
-      if (failSafeTimeout.current) {
-        window.clearTimeout(failSafeTimeout.current);
-      }
     };
   }, []);
 
@@ -146,11 +132,6 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
 
     pendingRouteKey.current = null;
 
-    if (failSafeTimeout.current) {
-      window.clearTimeout(failSafeTimeout.current);
-      failSafeTimeout.current = null;
-    }
-
     setProgress(100);
 
     const timeoutId = window.setTimeout(() => {
@@ -175,9 +156,9 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
             exit={{ opacity: 0 }}
             transition={{ duration: reduceMotion ? 0 : 0.24, ease: "easeOut" }}
           >
-            <div className="absolute inset-0 bg-[linear-gradient(160deg,rgba(5,5,6,0.84)_0%,rgba(16,9,12,0.78)_42%,rgba(3,3,4,0.92)_100%)] backdrop-blur-[30px]" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_78%_52%_at_50%_0%,rgba(179,12,49,0.18)_0%,rgba(179,12,49,0.08)_38%,transparent_72%)]" />
-            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03)_0%,transparent_28%,rgba(0,0,0,0.14)_100%)]" />
+            <div className="absolute inset-0 bg-background/20 backdrop-blur-[10px]" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_78%_52%_at_50%_0%,rgba(179,12,49,0.12)_0%,rgba(179,12,49,0.05)_38%,transparent_72%)]" />
+            <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-background/40 to-transparent" />
           </motion.div>
         ) : null}
       </AnimatePresence>

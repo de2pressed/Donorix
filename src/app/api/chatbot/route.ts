@@ -11,6 +11,7 @@ import type { CreatePostInput } from "@/lib/validations/post";
 import {
   resolveAssistantLanguage,
   getAssistantLanguageName,
+  isAssistantReplyStrictlyInLanguage,
   type AssistantLanguage,
 } from "@/lib/assistant/language";
 import {
@@ -359,7 +360,42 @@ async function getModelReply({
       ],
     });
 
-    return response?.content?.trim() || null;
+    const content = response?.content?.trim();
+    if (!content) {
+      return null;
+    }
+
+    if (isAssistantReplyStrictlyInLanguage(language, content)) {
+      return content;
+    }
+
+    const repaired = await callAssistantOpenAI({
+      models: buildKnowledgeAssistantModels(),
+      maxTokens: 260,
+      temperature: 0,
+      messages: [
+        {
+          role: "system",
+          content: [
+            `Rewrite the assistant reply in strict ${getAssistantLanguageName(language)}.`,
+            "Preserve the meaning.",
+            "Do not use English words or transliteration unless they are unavoidable fixed terms.",
+            "Output only the rewritten reply.",
+          ].join(" "),
+        },
+        {
+          role: "user",
+          content: content,
+        },
+      ],
+    });
+
+    const repairedContent = repaired?.content?.trim();
+    if (repairedContent && isAssistantReplyStrictlyInLanguage(language, repairedContent)) {
+      return repairedContent;
+    }
+
+    return null;
   } catch {
     return null;
   }

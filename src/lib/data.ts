@@ -688,7 +688,7 @@ export async function getHospitalDashboard(profileId: string) {
     };
   }
 
-  const posts = await getHospitalPosts(profileId);
+  const posts = (await getHospitalPosts(profileId)).filter((post) => post.status !== "deleted");
   const postIds = posts.map((post) => post.id);
   const monthStart = startOfMonth(new Date()).toISOString();
 

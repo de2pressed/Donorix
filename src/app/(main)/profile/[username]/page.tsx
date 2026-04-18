@@ -30,9 +30,11 @@ export default async function PublicProfilePage({
       getHospitalAccountByProfileId(profile.id),
       getHospitalPosts(profile.id),
     ]);
-    const recentPosts = [...posts].sort(
+    const recentPosts = [...posts]
+      .filter((post) => post.status !== "deleted")
+      .sort(
       (left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime(),
-    );
+      );
 
     return (
       <div className="space-y-6">

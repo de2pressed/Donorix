@@ -1,3 +1,5 @@
+import { sanitizeText } from "@/lib/utils/sanitize";
+
 export const ASSISTANT_LANGUAGE_NAMES = {
   en: "English",
   hi: "हिन्दी",
@@ -29,6 +31,21 @@ const LANGUAGE_SCRIPT_RULES: Array<{ code: Exclude<AssistantLanguage, "en">; pat
   { code: "ur", pattern: /[\u0600-\u06FF]/ },
 ];
 
+const LATIN_WORD_PATTERN = /\b[A-Za-z][A-Za-z'’-]*\b/g;
+const ALLOWED_LATIN_TOKENS = new Set([
+  "donorix",
+  "ai",
+  "a+",
+  "a-",
+  "b+",
+  "b-",
+  "ab+",
+  "ab-",
+  "o+",
+  "o-",
+  "112",
+]);
+
 export function isAssistantLanguage(value: string | undefined | null): value is AssistantLanguage {
   return Boolean(value && value in ASSISTANT_LANGUAGE_NAMES);
 }
@@ -58,4 +75,28 @@ export function resolveAssistantLanguage(preferredLanguage: string | undefined, 
 
 export function getAssistantLanguageName(language: AssistantLanguage) {
   return ASSISTANT_LANGUAGE_NAMES[language];
+}
+
+export function isAssistantReplyStrictlyInLanguage(language: AssistantLanguage, text: string) {
+  const cleaned = sanitizeText(text).trim();
+  if (!cleaned) {
+    return false;
+  }
+
+  if (language === "en") {
+    return !LANGUAGE_SCRIPT_RULES.some((rule) => rule.pattern.test(cleaned));
+  }
+
+  const rule = LANGUAGE_SCRIPT_RULES.find((entry) => entry.code === language);
+  if (!rule) {
+    return false;
+  }
+
+  if (!rule.pattern.test(cleaned)) {
+    return false;
+  }
+
+  const latinWords = cleaned.match(LATIN_WORD_PATTERN) ?? [];
+  const disallowedLatinWords = latinWords.filter((word) => !ALLOWED_LATIN_TOKENS.has(word.toLowerCase()));
+  return disallowedLatinWords.length === 0;
 }

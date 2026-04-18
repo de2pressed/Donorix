@@ -730,6 +730,9 @@ export function buildKnowledgePrompt({
     `Response language: ${getAssistantLanguageName(language)}`,
     "Write the final answer entirely in the response language.",
     "Answer the user's actual question directly. Do not turn the context into a preset script.",
+    language === "en"
+      ? "Strict language rule: respond only in English."
+      : `Strict language rule: respond only in ${getAssistantLanguageName(language)}. Do not use English words or transliteration unless they are unavoidable fixed terms.`,
     `Persona: ${persona}`,
     `Current page: ${pathname ?? "unknown"}`,
     conversationSummary?.trim() ? `Conversation summary: ${sanitizeText(conversationSummary)}` : null,

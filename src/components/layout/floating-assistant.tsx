@@ -530,31 +530,42 @@ export function FloatingAssistant() {
                         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                           {tAssistant("draftChecklistTitle")}
                         </p>
-                        <div className="grid gap-2 md:grid-cols-2">
+                        <div className="space-y-2">
                           {draftState.fieldChecklist.map((field) => (
                             <div
                               key={field.field}
                               className={cn(
-                                "min-w-0 rounded-2xl border px-3 py-2 overflow-hidden",
+                                "min-w-0 rounded-2xl border px-3 py-3 overflow-hidden",
                                 field.missing ? "border-warning/30 bg-warning/10" : "border-border bg-muted/20",
                               )}
                             >
-                              <div className="flex items-start justify-between gap-2">
-                                <p className="min-w-0 flex-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground break-words">
-                                  {field.label}
-                                </p>
+                              <div className="flex items-start gap-2">
                                 <span
                                   className={cn(
-                                    "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em]",
-                                    field.missing ? "bg-warning/20 text-foreground" : "bg-brand-soft text-brand",
+                                    "mt-1 size-2 shrink-0 rounded-full",
+                                    field.missing ? "bg-warning" : "bg-brand",
                                   )}
-                                >
-                                  {field.missing ? tAssistant("draftFieldMissing") : tAssistant("draftFieldFilled")}
-                                </span>
+                                  aria-hidden="true"
+                                />
+                                <div className="min-w-0 flex-1 space-y-2">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <p className="min-w-0 break-words text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                                      {field.label}
+                                    </p>
+                                    <span
+                                      className={cn(
+                                        "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em]",
+                                        field.missing ? "bg-warning/20 text-foreground" : "bg-brand-soft text-brand",
+                                      )}
+                                    >
+                                      {field.missing ? tAssistant("draftFieldMissing") : tAssistant("draftFieldFilled")}
+                                    </span>
+                                  </div>
+                                  <p className="break-words text-sm leading-relaxed text-foreground whitespace-pre-wrap">
+                                    {field.missing ? field.prompt ?? tAssistant("draftHold") : field.value}
+                                  </p>
+                                </div>
                               </div>
-                              <p className="mt-2 min-w-0 break-words text-sm leading-relaxed text-foreground whitespace-pre-wrap">
-                                {field.missing ? field.prompt ?? tAssistant("draftHold") : field.value}
-                              </p>
                             </div>
                           ))}
                         </div>
@@ -564,13 +575,18 @@ export function FloatingAssistant() {
                         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                           {tAssistant("draftCapturedTitle")}
                         </p>
-                        <div className="grid gap-2 md:grid-cols-2">
+                        <div className="space-y-2">
                           {capturedFields.map((field) => (
-                            <div key={field.field} className="min-w-0 rounded-2xl border border-border bg-muted/20 px-3 py-2 overflow-hidden">
-                              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground break-words">
-                                {field.label}
-                              </p>
-                              <p className="break-words text-sm leading-relaxed text-foreground whitespace-pre-wrap">{field.value}</p>
+                            <div key={field.field} className="min-w-0 rounded-2xl border border-border bg-muted/20 px-3 py-3 overflow-hidden">
+                              <div className="flex items-start gap-2">
+                                <span className="mt-1 size-2 shrink-0 rounded-full bg-brand" aria-hidden="true" />
+                                <div className="min-w-0 flex-1 space-y-1">
+                                  <p className="break-words text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                                    {field.label}
+                                  </p>
+                                  <p className="break-words text-sm leading-relaxed text-foreground whitespace-pre-wrap">{field.value}</p>
+                                </div>
+                              </div>
                             </div>
                           ))}
                         </div>

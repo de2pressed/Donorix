@@ -1,5 +1,7 @@
+"use client";
 /* eslint-disable @next/next/no-html-link-for-pages */
 import { ArrowLeft } from "lucide-react";
+import type { MouseEvent } from "react";
 
 import { cn } from "@/lib/utils/cn";
 
@@ -14,6 +16,22 @@ export function SecondaryPageBackLink({
   label = "Home",
   className,
 }: SecondaryPageBackLinkProps) {
+  function handleClick(event: MouseEvent<HTMLAnchorElement>) {
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    window.location.assign(href);
+  }
+
   return (
     <a
       className={cn(
@@ -21,6 +39,7 @@ export function SecondaryPageBackLink({
         className,
       )}
       href={href}
+      onClick={handleClick}
     >
       <ArrowLeft className="size-4" />
       <span>{label}</span>

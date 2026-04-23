@@ -436,23 +436,30 @@ export async function getAdminUsers() {
   const supabase = getSupabaseAdminClient() ?? (await createServerSupabaseClient());
   if (!supabase) return [] as Profile[];
 
-  const { data } = await supabase
-    .from("profiles")
-    .select(PROFILE_SELECT)
-    .order("created_at", { ascending: false })
-    .limit(200);
+  return withServerTimeout(
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select(PROFILE_SELECT)
+        .order("created_at", { ascending: false })
+        .limit(200);
 
-  return (data as Profile[] | null) ?? [];
+      return (data as Profile[] | null) ?? [];
+    })(),
+    [] as Profile[],
+  );
 }
 
 export async function getAdminPosts() {
   const supabase = getSupabaseAdminClient() ?? (await createServerSupabaseClient());
   if (!supabase) return [] as FeedPost[];
 
-  const { data } = await supabase
-    .from("posts")
-    .select(
-      `
+  return withServerTimeout(
+    (async () => {
+      const { data } = await supabase
+        .from("posts")
+        .select(
+          `
         id, created_by, patient_name, blood_type_needed, units_needed, hospital_name,
         patient_id,
         hospital_address, city, state, latitude, longitude, contact_name, contact_phone,
@@ -460,11 +467,14 @@ export async function getAdminPosts() {
         initial_radius_km, current_radius_km, expires_at, status, priority_score,
         upvote_count, donor_count, approved_donor_id, sms_sent_count, is_legacy, is_demo, created_at, updated_at
       `,
-    )
-    .order("created_at", { ascending: false })
-    .limit(200);
+        )
+        .order("created_at", { ascending: false })
+        .limit(200);
 
-  return (data as FeedPost[] | null) ?? [];
+      return (data as FeedPost[] | null) ?? [];
+    })(),
+    [] as FeedPost[],
+  );
 }
 
 export async function getHospitalAccountByProfileId(profileId: string) {
@@ -975,30 +985,40 @@ export async function getAdminContactQueries() {
   const supabase = getSupabaseAdminClient();
   if (!supabase) return [] as ContactQuery[];
 
-  const { data } = await supabase
-    .from("contact_queries")
-    .select(
-      "id, submitted_by, submitted_name, submitted_email, submitted_phone, submitted_account_type, subject, query, reply, status, replied_by, replied_at, created_at, updated_at",
-    )
-    .order("created_at", { ascending: false })
-    .limit(200);
+  return withServerTimeout(
+    (async () => {
+      const { data } = await supabase
+        .from("contact_queries")
+        .select(
+          "id, submitted_by, submitted_name, submitted_email, submitted_phone, submitted_account_type, subject, query, reply, status, replied_by, replied_at, created_at, updated_at",
+        )
+        .order("created_at", { ascending: false })
+        .limit(200);
 
-  return (data as ContactQuery[] | null) ?? [];
+      return (data as ContactQuery[] | null) ?? [];
+    })(),
+    [] as ContactQuery[],
+  );
 }
 
 export async function getAdminContactQueryById(queryId: string) {
   const supabase = getSupabaseAdminClient();
   if (!supabase) return null;
 
-  const { data } = await supabase
-    .from("contact_queries")
-    .select(
-      "id, submitted_by, submitted_name, submitted_email, submitted_phone, submitted_account_type, subject, query, reply, status, replied_by, replied_at, created_at, updated_at",
-    )
-    .eq("id", queryId)
-    .maybeSingle();
+  return withServerTimeout(
+    (async () => {
+      const { data } = await supabase
+        .from("contact_queries")
+        .select(
+          "id, submitted_by, submitted_name, submitted_email, submitted_phone, submitted_account_type, subject, query, reply, status, replied_by, replied_at, created_at, updated_at",
+        )
+        .eq("id", queryId)
+        .maybeSingle();
 
-  return (data as ContactQuery | null) ?? null;
+      return (data as ContactQuery | null) ?? null;
+    })(),
+    null,
+  );
 }
 
 export async function getRecentDonations(userId: string) {
@@ -1034,68 +1054,79 @@ export async function getAdminUserDetail(userId: string): Promise<AdminUserDetai
     };
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select(PROFILE_SELECT)
-    .eq("id", userId)
-    .maybeSingle();
+  return withServerTimeout(
+    (async () => {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select(PROFILE_SELECT)
+        .eq("id", userId)
+        .maybeSingle();
 
-  const { data: hospitalAccount } = await supabase
-    .from("hospital_accounts")
-    .select(HOSPITAL_ACCOUNT_SELECT)
-    .eq("profile_id", userId)
-    .maybeSingle();
+      const { data: hospitalAccount } = await supabase
+        .from("hospital_accounts")
+        .select(HOSPITAL_ACCOUNT_SELECT)
+        .eq("profile_id", userId)
+        .maybeSingle();
 
-  const { data: posts } = await supabase
-    .from("posts")
-    .select(
-      `
+      const { data: posts } = await supabase
+        .from("posts")
+        .select(
+          `
         id, created_by, patient_name, patient_id, blood_type_needed, units_needed, hospital_name,
         hospital_address, city, state, latitude, longitude, contact_name, contact_phone,
         contact_email, medical_condition, additional_notes, is_emergency, required_by,
         initial_radius_km, current_radius_km, expires_at, status, priority_score,
         upvote_count, donor_count, approved_donor_id, sms_sent_count, is_legacy, is_demo, created_at, updated_at
       `,
-    )
-    .eq("created_by", userId)
-    .order("created_at", { ascending: false })
-    .limit(20);
+        )
+        .eq("created_by", userId)
+        .order("created_at", { ascending: false })
+        .limit(20);
 
-  const { data: applicationRows } = await supabase
-    .from("donor_applications")
-    .select("id, post_id, donor_id, status, eligibility_score, distance_km, note, created_at, updated_at")
-    .eq("donor_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(20);
+      const { data: applicationRows } = await supabase
+        .from("donor_applications")
+        .select("id, post_id, donor_id, status, eligibility_score, distance_km, note, created_at, updated_at")
+        .eq("donor_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(20);
 
-  const applicationPostIds = [...new Set((applicationRows ?? []).map((application) => application.post_id))];
-  const applicationPosts =
-    applicationPostIds.length > 0
-      ? await supabase
-          .from("posts")
-          .select("id, patient_name, patient_id, blood_type_needed, city, status")
-          .in("id", applicationPostIds)
-      : { data: [] };
+      const applicationPostIds = [...new Set((applicationRows ?? []).map((application) => application.post_id))];
+      const applicationPosts =
+        applicationPostIds.length > 0
+          ? await supabase
+              .from("posts")
+              .select("id, patient_name, patient_id, blood_type_needed, city, status")
+              .in("id", applicationPostIds)
+          : { data: [] };
 
-  const postLookup = new Map((applicationPosts.data ?? []).map((post) => [post.id, post]));
+      const postLookup = new Map((applicationPosts.data ?? []).map((post) => [post.id, post]));
 
-  const { data: actions } = await supabase
-    .from("admin_actions")
-    .select("id, admin_id, action, target_type, target_id, reason, metadata, created_at")
-    .eq("target_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(10);
+      const { data: actions } = await supabase
+        .from("admin_actions")
+        .select("id, admin_id, action, target_type, target_id, reason, metadata, created_at")
+        .eq("target_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(10);
 
-  return {
-    profile: (profile as Profile | null) ?? null,
-    hospitalAccount: (hospitalAccount as HospitalAccount | null) ?? null,
-    posts: (posts as Post[] | null) ?? [],
-    applications: ((applicationRows ?? []) as TableRow<"donor_applications">[]).map((application) => ({
-      ...application,
-      post: (postLookup.get(application.post_id) as AdminUserApplication["post"]) ?? null,
-    })),
-    actions: (actions as AdminAction[] | null) ?? [],
-  };
+      return {
+        profile: (profile as Profile | null) ?? null,
+        hospitalAccount: (hospitalAccount as HospitalAccount | null) ?? null,
+        posts: (posts as Post[] | null) ?? [],
+        applications: ((applicationRows ?? []) as TableRow<"donor_applications">[]).map((application) => ({
+          ...application,
+          post: (postLookup.get(application.post_id) as AdminUserApplication["post"]) ?? null,
+        })),
+        actions: (actions as AdminAction[] | null) ?? [],
+      };
+    })(),
+    {
+      profile: null,
+      hospitalAccount: null,
+      posts: [],
+      applications: [],
+      actions: [],
+    },
+  );
 }
 
 export async function getAdminPostDetail(postId: string): Promise<AdminPostDetail> {
@@ -1109,43 +1140,52 @@ export async function getAdminPostDetail(postId: string): Promise<AdminPostDetai
     };
   }
 
-  const { data: post } = await supabase
-    .from("posts")
-    .select(
-      `
+  return withServerTimeout(
+    (async () => {
+      const { data: post } = await supabase
+        .from("posts")
+        .select(
+          `
         id, created_by, patient_name, patient_id, blood_type_needed, units_needed, hospital_name,
         hospital_address, city, state, latitude, longitude, contact_name, contact_phone,
         contact_email, medical_condition, additional_notes, is_emergency, required_by,
         initial_radius_km, current_radius_km, expires_at, status, priority_score,
         upvote_count, donor_count, approved_donor_id, sms_sent_count, is_legacy, is_demo, created_at, updated_at
       `,
-    )
-    .eq("id", postId)
-    .maybeSingle();
+        )
+        .eq("id", postId)
+        .maybeSingle();
 
-  const creatorId = post?.created_by;
-  const { data: creator } = creatorId
-    ? await supabase
-        .from("profiles")
-        .select("id, full_name, username, email")
-        .eq("id", creatorId)
-        .maybeSingle()
-    : { data: null };
+      const creatorId = post?.created_by;
+      const { data: creator } = creatorId
+        ? await supabase
+            .from("profiles")
+            .select("id, full_name, username, email")
+            .eq("id", creatorId)
+            .maybeSingle()
+        : { data: null };
 
-  const applications = await getDonorApplicationsForPost(postId);
+      const applications = await getDonorApplicationsForPost(postId);
 
-  const { data: actions } = await supabase
-    .from("admin_actions")
-    .select("id, admin_id, action, target_type, target_id, reason, metadata, created_at")
-    .eq("target_id", postId)
-    .order("created_at", { ascending: false })
-    .limit(10);
+      const { data: actions } = await supabase
+        .from("admin_actions")
+        .select("id, admin_id, action, target_type, target_id, reason, metadata, created_at")
+        .eq("target_id", postId)
+        .order("created_at", { ascending: false })
+        .limit(10);
 
-  return {
-    post: post ? ({ ...post, creator: (creator as AdminPostRecord["creator"]) ?? null } as AdminPostRecord) : null,
-    applications,
-    actions: (actions as AdminAction[] | null) ?? [],
-  };
+      return {
+        post: post ? ({ ...post, creator: (creator as AdminPostRecord["creator"]) ?? null } as AdminPostRecord) : null,
+        applications,
+        actions: (actions as AdminAction[] | null) ?? [],
+      };
+    })(),
+    {
+      post: null,
+      applications: [],
+      actions: [],
+    },
+  );
 }
 
 export async function getAdminDashboard() {
@@ -1168,38 +1208,56 @@ export async function getAdminDashboard() {
     };
   }
 
-  const [{ count: totalUsers }, { count: activePosts }, { count: donationsToday }, { count: smsSentToday }] =
-    await Promise.all([
-      supabase.from("profiles").select("id", { count: "exact", head: true }),
-      supabase.from("posts").select("id", { count: "exact", head: true }).eq("status", "active"),
-      supabase
-        .from("donations")
-        .select("id", { count: "exact", head: true })
-        .gte("donated_at", subDays(new Date(), 1).toISOString()),
-      supabase
-        .from("sms_log")
-        .select("id", { count: "exact", head: true })
-        .gte("created_at", subDays(new Date(), 1).toISOString()),
-    ]);
+  return withServerTimeout(
+    (async () => {
+      const [{ count: totalUsers }, { count: activePosts }, { count: donationsToday }, { count: smsSentToday }] =
+        await Promise.all([
+          supabase.from("profiles").select("id", { count: "exact", head: true }),
+          supabase.from("posts").select("id", { count: "exact", head: true }).eq("status", "active"),
+          supabase
+            .from("donations")
+            .select("id", { count: "exact", head: true })
+            .gte("donated_at", subDays(new Date(), 1).toISOString()),
+          supabase
+            .from("sms_log")
+            .select("id", { count: "exact", head: true })
+            .gte("created_at", subDays(new Date(), 1).toISOString()),
+        ]);
 
-  const { data: actions } = await supabase
-    .from("admin_actions")
-    .select("id, admin_id, action, target_type, target_id, reason, metadata, created_at")
-    .order("created_at", { ascending: false })
-    .limit(10);
+      const { data: actions } = await supabase
+        .from("admin_actions")
+        .select("id, admin_id, action, target_type, target_id, reason, metadata, created_at")
+        .order("created_at", { ascending: false })
+        .limit(10);
 
-  return {
-    stats: {
-      totalUsers: totalUsers ?? 0,
-      activePosts: activePosts ?? 0,
-      donationsToday: donationsToday ?? 0,
-      smsSentToday: smsSentToday ?? 0,
+      return {
+        stats: {
+          totalUsers: totalUsers ?? 0,
+          activePosts: activePosts ?? 0,
+          donationsToday: donationsToday ?? 0,
+          smsSentToday: smsSentToday ?? 0,
+        },
+        actions: actions ?? [],
+        health: [
+          { label: "Supabase", status: "Connected" },
+          { label: "Admin users", status: adminUserIds.length ? "Seeded" : "Pending seed" },
+          { label: "Realtime", status: "Enabled at table level" },
+        ],
+      };
+    })(),
+    {
+      stats: {
+        totalUsers: 0,
+        activePosts: 0,
+        donationsToday: 0,
+        smsSentToday: 0,
+      },
+      actions: [],
+      health: [
+        { label: "Supabase", status: "Connected" },
+        { label: "Admin users", status: adminUserIds.length ? "Seeded" : "Pending seed" },
+        { label: "Realtime", status: "Enabled at table level" },
+      ],
     },
-    actions: actions ?? [],
-    health: [
-      { label: "Supabase", status: "Connected" },
-      { label: "Admin users", status: adminUserIds.length ? "Seeded" : "Pending seed" },
-      { label: "Realtime", status: "Enabled at table level" },
-    ],
-  };
+  );
 }

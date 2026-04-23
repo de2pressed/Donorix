@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -32,6 +33,7 @@ function SearchParamsKey({
 export function PageTransitionShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const reduceMotion = Boolean(useReducedMotion());
   const [progress, setProgress] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -98,10 +100,12 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
       const nextUrl = new URL(link.href, window.location.href);
       if (nextUrl.origin !== window.location.origin) return;
 
-      const currentUrl = `${window.location.pathname}${window.location.search}`;
-      const nextPath = `${nextUrl.pathname}${nextUrl.search}`;
+      const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+      const nextPath = `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`;
 
       if (currentUrl === nextPath) return;
+
+      event.preventDefault();
 
       if (loadingTimeoutRef.current !== null) {
         window.clearTimeout(loadingTimeoutRef.current);
@@ -115,6 +119,10 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
         setLoading(false);
         setProgress(0);
       }, reduceMotion ? 120 : 1100);
+
+      window.setTimeout(() => {
+        router.push(nextPath);
+      }, 0);
     };
 
     document.addEventListener("click", handleClick, true);
@@ -122,7 +130,7 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
     return () => {
       document.removeEventListener("click", handleClick, true);
     };
-  }, [reduceMotion]);
+  }, [reduceMotion, router]);
 
   useEffect(() => {
     if (!loading) return;

@@ -10,11 +10,11 @@ import { getRequestMessages, translate } from "@/lib/i18n";
 import { formatDistance } from "@/lib/utils/format";
 
 export default async function HomePage() {
-  const [{ messages }, currentProfile] = await Promise.all([
+  const [{ messages }, currentProfile, publicPosts] = await Promise.all([
     getRequestMessages(),
     getCurrentProfile(),
+    getFeedPosts(),
   ]);
-  const posts = await getFeedPosts(currentProfile?.id);
   const t = (key: string) => translate(messages, key);
 
   if (currentProfile?.account_type === "hospital") {
@@ -259,7 +259,7 @@ export default async function HomePage() {
             </p>
           </div>
         </div>
-        <PostFeed isAuthenticated={Boolean(currentProfile)} posts={posts} />
+        <PostFeed isAuthenticated={Boolean(currentProfile)} posts={publicPosts} />
       </section>
     </div>
   );

@@ -8,6 +8,18 @@ import { createSupabaseTimeoutFetch } from "@/lib/supabase/timeout-fetch";
 
 const SUPABASE_DB_TIMEOUT_MS = 4000;
 const SUPABASE_FETCH_TIMEOUT_MS = 5000;
+const SUPABASE_AUTH_COOKIE_FRAGMENT = "-auth-token";
+
+export async function hasSupabaseAuthCookies() {
+  if (!hasSupabaseEnv) {
+    return false;
+  }
+
+  const cookieStore = await cookies();
+  return cookieStore
+    .getAll()
+    .some((cookie) => cookie.name.startsWith("sb-") && cookie.name.includes(SUPABASE_AUTH_COOKIE_FRAGMENT));
+}
 
 export async function createServerSupabaseClient() {
   if (!hasSupabaseEnv || !env.NEXT_PUBLIC_SUPABASE_URL || !env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {

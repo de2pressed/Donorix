@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { startOfMonth, subDays } from "date-fns";
 
 import { adminUserIds } from "@/lib/env";
@@ -5,7 +6,7 @@ import { HOSPITAL_ACCOUNT_SELECT, PROFILE_SELECT } from "@/lib/http";
 import { estimateDistanceKm } from "@/lib/utils/distance";
 import { sortPostsByPriority } from "@/lib/utils/priority-score";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createServerSupabaseClient, hasSupabaseAuthCookies } from "@/lib/supabase/server";
 import type { TableRow } from "@/types/database";
 import type { Notification } from "@/types/notification";
 import type { DonorApplicationWithDonor, FeedPost, Post } from "@/types/post";
@@ -189,7 +190,11 @@ async function getChatParticipantMap(supabase: ServerSupabaseClient, profileIds:
   return new Map(((data ?? []) as ChatParticipantSummary[]).map((participant) => [participant.id, participant]));
 }
 
-export async function getCurrentProfile() {
+export const getCurrentProfile = cache(async () => {
+  if (!(await hasSupabaseAuthCookies())) {
+    return null;
+  }
+
   const supabase = await createServerSupabaseClient();
   if (!supabase) return null;
 
@@ -211,7 +216,7 @@ export async function getCurrentProfile() {
     })(),
     null,
   );
-}
+});
 
 export async function getFeedPosts(userId?: string) {
   const supabase = await createServerSupabaseClient();

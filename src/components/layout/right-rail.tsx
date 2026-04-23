@@ -14,9 +14,13 @@ import { POLICY_NAV } from "@/lib/constants";
 import { getRequestMessages, translate } from "@/lib/i18n";
 
 export async function RightRail() {
-  const [{ messages }, currentProfile] = await Promise.all([getRequestMessages(), getCurrentProfile()]);
+  const [{ messages }, currentProfile, leaderboard] = await Promise.all([
+    getRequestMessages(),
+    getCurrentProfile(),
+    getLeaderboard(),
+  ]);
   const t = (key: string) => translate(messages, key);
-  const leaders = currentProfile?.account_type === "hospital" ? [] : (await getLeaderboard()).slice(0, 5);
+  const leaders = currentProfile?.account_type === "hospital" ? [] : leaderboard.slice(0, 5);
   const hospitalDashboard =
     currentProfile?.account_type === "hospital" ? await getHospitalDashboard(currentProfile.id) : null;
 

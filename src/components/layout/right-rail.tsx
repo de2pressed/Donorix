@@ -1,4 +1,3 @@
-import Link from "next/link";
 import {
   ClipboardList,
   FileText,
@@ -33,7 +32,7 @@ export async function RightRail() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
-              <Link
+              <a
                 className="block rounded-[1.25rem] border border-border px-4 py-3 transition hover:border-brand/30 hover:bg-brand-soft/60"
                 href="/hospital/posts"
               >
@@ -41,8 +40,8 @@ export async function RightRail() {
                 <p className="mt-1 font-mono text-2xl font-semibold">
                   {hospitalDashboard?.stats.activeRequests ?? 0}
                 </p>
-              </Link>
-              <Link
+              </a>
+              <a
                 className="block rounded-[1.25rem] border border-border px-4 py-3 transition hover:border-brand/30 hover:bg-brand-soft/60"
                 href="/hospital/donors"
               >
@@ -50,8 +49,8 @@ export async function RightRail() {
                 <p className="mt-1 font-mono text-2xl font-semibold">
                   {hospitalDashboard?.stats.pendingApplications ?? 0}
                 </p>
-              </Link>
-              <Link
+              </a>
+              <a
                 className="block rounded-[1.25rem] border border-border px-4 py-3 transition hover:border-brand/30 hover:bg-brand-soft/60"
                 href="/hospital/posts"
               >
@@ -59,7 +58,7 @@ export async function RightRail() {
                 <p className="mt-1 font-mono text-2xl font-semibold">
                   {hospitalDashboard?.stats.fulfilledThisMonth ?? 0}
                 </p>
-              </Link>
+              </a>
             </CardContent>
           </InteractivePanel>
         ) : (
@@ -78,12 +77,12 @@ export async function RightRail() {
                     className="flex items-center justify-between gap-3 rounded-[1.25rem] border border-border px-4 py-3"
                   >
                     <div className="min-w-0">
-                      <Link
+                      <a
                         className="truncate font-medium transition-colors hover:text-brand"
                         href={`/profile/${leader.username}`}
                       >
                         {leader.full_name}
-                      </Link>
+                      </a>
                       <p className="truncate text-sm text-muted-foreground">
                         <span className="font-mono">#{index + 1}</span> @{leader.username}
                       </p>
@@ -118,12 +117,12 @@ export async function RightRail() {
             {currentProfile?.account_type === "hospital" ? (
               <>
                 <p>{t("rightRail.hospitalGuideBody")}</p>
-                <Link
+                <a
                   className="inline-flex items-center gap-2 text-brand hover:text-brand/80"
                   href="/hospital/donors"
                 >
                   {t("rightRail.reviewDonorApplicants")}
-                </Link>
+                </a>
               </>
             ) : (
               <p>{t("rightRail.aboutDonorixBody")}</p>
@@ -154,13 +153,13 @@ export async function RightRail() {
           </CardHeader>
           <CardContent className="space-y-2">
             {POLICY_NAV.slice(0, 5).map((item) => (
-              <Link
+              <a
                 key={item.href}
                 href={item.href}
                 className="block rounded-2xl px-4 py-3 text-sm text-muted-foreground transition hover:bg-brand-soft hover:text-brand"
               >
                 {item.label}
-              </Link>
+              </a>
             ))}
           </CardContent>
         </InteractivePanel>

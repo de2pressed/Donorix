@@ -1,7 +1,6 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { useRouter } from "next/navigation";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -33,12 +32,10 @@ function SearchParamsKey({
 export function PageTransitionShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const router = useRouter();
   const reduceMotion = Boolean(useReducedMotion());
   const [progress, setProgress] = useState(0);
   const [loading, setLoading] = useState(false);
   const loadingTimeoutRef = useRef<number | null>(null);
-  const fallbackNavigationTimeoutRef = useRef<number | null>(null);
   const lastRouteKeyRef = useRef<string>("");
   const routeKey = useMemo(() => {
     const search = searchParams?.toString();
@@ -49,11 +46,6 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
     if (loadingTimeoutRef.current !== null) {
       window.clearTimeout(loadingTimeoutRef.current);
       loadingTimeoutRef.current = null;
-    }
-
-    if (fallbackNavigationTimeoutRef.current !== null) {
-      window.clearTimeout(fallbackNavigationTimeoutRef.current);
-      fallbackNavigationTimeoutRef.current = null;
     }
 
     setLoading(false);
@@ -111,14 +103,8 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
 
       if (currentUrl === nextPath) return;
 
-      event.preventDefault();
-
       if (loadingTimeoutRef.current !== null) {
         window.clearTimeout(loadingTimeoutRef.current);
-      }
-
-      if (fallbackNavigationTimeoutRef.current !== null) {
-        window.clearTimeout(fallbackNavigationTimeoutRef.current);
       }
 
       setLoading(true);
@@ -128,20 +114,7 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
         loadingTimeoutRef.current = null;
         setLoading(false);
         setProgress(0);
-      }, reduceMotion ? 120 : 1600);
-
-      window.setTimeout(() => {
-        router.push(nextPath);
-      }, 0);
-
-      const startUrl = currentUrl;
-      fallbackNavigationTimeoutRef.current = window.setTimeout(() => {
-        fallbackNavigationTimeoutRef.current = null;
-        const currentNow = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-        if (currentNow === startUrl) {
-          window.location.assign(nextUrl.href);
-        }
-      }, reduceMotion ? 200 : 1200);
+      }, reduceMotion ? 120 : 1400);
     };
 
     document.addEventListener("click", handleClick, true);
@@ -149,7 +122,7 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
     return () => {
       document.removeEventListener("click", handleClick, true);
     };
-  }, [reduceMotion, router]);
+  }, [reduceMotion]);
 
   useEffect(() => {
     if (!loading) return;
@@ -181,10 +154,6 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
     return () => {
       if (loadingTimeoutRef.current !== null) {
         window.clearTimeout(loadingTimeoutRef.current);
-      }
-
-      if (fallbackNavigationTimeoutRef.current !== null) {
-        window.clearTimeout(fallbackNavigationTimeoutRef.current);
       }
     };
   }, []);

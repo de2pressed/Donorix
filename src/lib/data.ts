@@ -14,6 +14,7 @@ import type { HospitalAccount, Profile } from "@/types/user";
 
 type AdminAction = TableRow<"admin_actions">;
 type ServerSupabaseClient = Awaited<ReturnType<typeof createServerSupabaseClient>>;
+const SERVER_DATA_TIMEOUT_MS = 4000;
 type CreatorSummary = Pick<Profile, "id" | "full_name" | "username" | "city" | "state" | "karma">;
 type ChatParticipantSummary = Pick<
   Profile,
@@ -23,6 +24,36 @@ type ChatMessageRecord = TableRow<"chat_messages"> & {
   sender: ChatParticipantSummary | null;
   recipient: ChatParticipantSummary | null;
 };
+
+function withServerTimeout<T>(task: Promise<T>, fallback: T, timeoutMs = SERVER_DATA_TIMEOUT_MS) {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  const timeoutPromise = new Promise<T>((resolve) => {
+    timeoutId = setTimeout(() => resolve(fallback), timeoutMs);
+  });
+
+  return Promise.race([
+    task.then(
+      (value) => {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+        return value;
+      },
+      () => {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+        return fallback;
+      },
+    ),
+    timeoutPromise,
+  ]).finally(() => {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  });
+}
 
 export type AdminUserApplication = TableRow<"donor_applications"> & {
   post: Pick<Post, "id" | "patient_name" | "patient_id" | "blood_type_needed" | "city" | "status"> | null;
@@ -162,29 +193,36 @@ export async function getCurrentProfile() {
   const supabase = await createServerSupabaseClient();
   if (!supabase) return null;
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  return withServerTimeout(
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-  if (!user) return null;
+      if (!user) return null;
 
-  const { data } = await supabase
-    .from("profiles")
-    .select(PROFILE_SELECT)
-    .eq("id", user.id)
-    .single();
+      const { data } = await supabase
+        .from("profiles")
+        .select(PROFILE_SELECT)
+        .eq("id", user.id)
+        .single();
 
-  return (data as Profile | null) ?? null;
+      return (data as Profile | null) ?? null;
+    })(),
+    null,
+  );
 }
 
 export async function getFeedPosts(userId?: string) {
   const supabase = await createServerSupabaseClient();
   if (!supabase) return [] as FeedPost[];
 
-  const { data } = await supabase
-    .from("posts")
-    .select(
-      `
+  return withServerTimeout(
+    (async () => {
+      const { data } = await supabase
+        .from("posts")
+        .select(
+          `
         id, created_by, patient_name, blood_type_needed, units_needed, hospital_name,
         patient_id,
         hospital_address, city, state, latitude, longitude, contact_name, contact_phone,
@@ -192,53 +230,56 @@ export async function getFeedPosts(userId?: string) {
         initial_radius_km, current_radius_km, expires_at, status, priority_score,
         upvote_count, donor_count, approved_donor_id, sms_sent_count, is_legacy, is_demo, created_at, updated_at
       `,
-    )
-    .in("status", ["active", "fulfilled"])
-    .order("created_at", { ascending: false })
-    .limit(20);
+        )
+        .in("status", ["active", "fulfilled"])
+        .order("created_at", { ascending: false })
+        .limit(20);
 
-  const posts = (data as FeedPost[] | null) ?? [];
-  const postIds = posts.map((post) => post.id);
-  const creatorMap = await getCreatorMap(supabase, posts.map((post) => post.created_by));
-  const countClient = supabase;
-  let donorCountMap = new Map<string, number>();
+      const posts = (data as FeedPost[] | null) ?? [];
+      const postIds = posts.map((post) => post.id);
+      const creatorMap = await getCreatorMap(supabase, posts.map((post) => post.created_by));
+      const countClient = supabase;
+      let donorCountMap = new Map<string, number>();
 
-  if (postIds.length && countClient) {
-    const { data: applicationRows } = await countClient
-      .from("donor_applications")
-      .select("post_id")
-      .in("status", ["pending", "approved"])
-      .in("post_id", postIds);
+      if (postIds.length && countClient) {
+        const { data: applicationRows } = await countClient
+          .from("donor_applications")
+          .select("post_id")
+          .in("status", ["pending", "approved"])
+          .in("post_id", postIds);
 
-    donorCountMap = new Map();
-    for (const row of applicationRows ?? []) {
-      donorCountMap.set(row.post_id, (donorCountMap.get(row.post_id) ?? 0) + 1);
-    }
-  }
+        donorCountMap = new Map();
+        for (const row of applicationRows ?? []) {
+          donorCountMap.set(row.post_id, (donorCountMap.get(row.post_id) ?? 0) + 1);
+        }
+      }
 
-  const postsWithCounts = posts.map((post) => ({
-    ...post,
-    donor_count: donorCountMap.get(post.id) ?? post.donor_count ?? 0,
-    creator: creatorMap.get(post.created_by) ?? null,
-  }));
+      const postsWithCounts = posts.map((post) => ({
+        ...post,
+        donor_count: donorCountMap.get(post.id) ?? post.donor_count ?? 0,
+        creator: creatorMap.get(post.created_by) ?? null,
+      }));
 
-  if (!userId || !postsWithCounts.length) {
-    return sortPostsByPriority(postsWithCounts);
-  }
+      if (!userId || !postsWithCounts.length) {
+        return sortPostsByPriority(postsWithCounts);
+      }
 
-  const { data: votes } = await supabase
-    .from("upvotes")
-    .select("post_id")
-    .eq("user_id", userId)
-    .in("post_id", postIds);
+      const { data: votes } = await supabase
+        .from("upvotes")
+        .select("post_id")
+        .eq("user_id", userId)
+        .in("post_id", postIds);
 
-  const votedSet = new Set((votes ?? []).map((vote) => vote.post_id));
+      const votedSet = new Set((votes ?? []).map((vote) => vote.post_id));
 
-  return sortPostsByPriority(
-    postsWithCounts.map((post) => ({
-      ...post,
-      has_voted: votedSet.has(post.id),
-    })),
+      return sortPostsByPriority(
+        postsWithCounts.map((post) => ({
+          ...post,
+          has_voted: votedSet.has(post.id),
+        })),
+      );
+    })(),
+    [] as FeedPost[],
   );
 }
 
@@ -356,17 +397,22 @@ export async function getLeaderboard() {
   const supabase = await createServerSupabaseClient();
   if (!supabase) return [] as Profile[];
 
-  const { data } = await supabase
-    .from("profiles")
-    .select(PROFILE_SELECT)
-    .eq("status", "active")
-    .eq("account_type", "donor")
-    .eq("is_discoverable", true)
-    .eq("hide_from_leaderboard", false)
-    .order("karma", { ascending: false })
-    .limit(100);
+  return withServerTimeout(
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select(PROFILE_SELECT)
+        .eq("status", "active")
+        .eq("account_type", "donor")
+        .eq("is_discoverable", true)
+        .eq("hide_from_leaderboard", false)
+        .order("karma", { ascending: false })
+        .limit(100);
 
-  return (data as Profile[] | null) ?? [];
+      return (data as Profile[] | null) ?? [];
+    })(),
+    [] as Profile[],
+  );
 }
 
 export async function getAdminUsers() {
@@ -408,56 +454,66 @@ export async function getHospitalAccountByProfileId(profileId: string) {
   const supabase = await createServerSupabaseClient();
   if (!supabase) return null;
 
-  const { data } = await supabase
-    .from("hospital_accounts")
-    .select(HOSPITAL_ACCOUNT_SELECT)
-    .eq("profile_id", profileId)
-    .maybeSingle();
+  return withServerTimeout(
+    (async () => {
+      const { data } = await supabase
+        .from("hospital_accounts")
+        .select(HOSPITAL_ACCOUNT_SELECT)
+        .eq("profile_id", profileId)
+        .maybeSingle();
 
-  return (data as HospitalAccount | null) ?? null;
+      return (data as HospitalAccount | null) ?? null;
+    })(),
+    null,
+  );
 }
 
 export async function getHospitalPosts(profileId: string, sortBy: "patient_name" | "patient_id" = "patient_name") {
   const supabase = await createServerSupabaseClient();
   if (!supabase) return [] as Post[];
 
-  const { data } = await supabase
-    .from("posts")
-    .select(
-      `
+  return withServerTimeout(
+    (async () => {
+      const { data } = await supabase
+        .from("posts")
+        .select(
+          `
         id, created_by, patient_name, patient_id, blood_type_needed, units_needed, hospital_name,
         hospital_address, city, state, latitude, longitude, contact_name, contact_phone,
         contact_email, medical_condition, additional_notes, is_emergency, required_by,
         initial_radius_km, current_radius_km, expires_at, status, priority_score,
         upvote_count, donor_count, approved_donor_id, sms_sent_count, is_legacy, is_demo, created_at, updated_at
       `,
-    )
-    .eq("created_by", profileId)
-    .order(sortBy, { ascending: true })
-    .order("created_at", { ascending: false });
+        )
+        .eq("created_by", profileId)
+        .order(sortBy, { ascending: true })
+        .order("created_at", { ascending: false });
 
-  const posts = (data as Post[] | null) ?? [];
-  const postIds = posts.map((post) => post.id);
-  const countClient = supabase;
-  let donorCountMap = new Map<string, number>();
+      const posts = (data as Post[] | null) ?? [];
+      const postIds = posts.map((post) => post.id);
+      const countClient = supabase;
+      let donorCountMap = new Map<string, number>();
 
-  if (postIds.length && countClient) {
-    const { data: applicationRows } = await countClient
-      .from("donor_applications")
-      .select("post_id")
-      .in("status", ["pending", "approved"])
-      .in("post_id", postIds);
+      if (postIds.length && countClient) {
+        const { data: applicationRows } = await countClient
+          .from("donor_applications")
+          .select("post_id")
+          .in("status", ["pending", "approved"])
+          .in("post_id", postIds);
 
-    donorCountMap = new Map();
-    for (const row of applicationRows ?? []) {
-      donorCountMap.set(row.post_id, (donorCountMap.get(row.post_id) ?? 0) + 1);
-    }
-  }
+        donorCountMap = new Map();
+        for (const row of applicationRows ?? []) {
+          donorCountMap.set(row.post_id, (donorCountMap.get(row.post_id) ?? 0) + 1);
+        }
+      }
 
-  return posts.map((post) => ({
-    ...post,
-    donor_count: donorCountMap.get(post.id) ?? post.donor_count ?? 0,
-  }));
+      return posts.map((post) => ({
+        ...post,
+        donor_count: donorCountMap.get(post.id) ?? post.donor_count ?? 0,
+      }));
+    })(),
+    [] as Post[],
+  );
 }
 
 export async function getHospitalChats(profileId: string) {
@@ -688,78 +744,91 @@ export async function getHospitalDashboard(profileId: string) {
     };
   }
 
-  const posts = (await getHospitalPosts(profileId)).filter((post) => post.status !== "deleted");
-  const postIds = posts.map((post) => post.id);
-  const monthStart = startOfMonth(new Date()).toISOString();
+  return withServerTimeout(
+    (async () => {
+      const posts = (await getHospitalPosts(profileId)).filter((post) => post.status !== "deleted");
+      const postIds = posts.map((post) => post.id);
+      const monthStart = startOfMonth(new Date()).toISOString();
 
-  const pendingApplicationsPromise = postIds.length
-    ? supabase
-        .from("donor_applications")
+      const pendingApplicationsPromise = postIds.length
+        ? supabase
+            .from("donor_applications")
+            .select("id", { count: "exact", head: true })
+            .in("post_id", postIds)
+            .eq("status", "pending")
+        : Promise.resolve({ count: 0 } as { count: number | null });
+
+      const fulfilledThisMonthPromise = supabase
+        .from("posts")
         .select("id", { count: "exact", head: true })
-        .in("post_id", postIds)
-        .eq("status", "pending")
-    : Promise.resolve({ count: 0 } as { count: number | null });
+        .eq("created_by", profileId)
+        .eq("status", "fulfilled")
+        .gte("updated_at", monthStart);
 
-  const fulfilledThisMonthPromise = supabase
-    .from("posts")
-    .select("id", { count: "exact", head: true })
-    .eq("created_by", profileId)
-    .eq("status", "fulfilled")
-    .gte("updated_at", monthStart);
+      const donorApplicationsPromise = postIds.length
+        ? supabase
+            .from("donor_applications")
+            .select("id, post_id, donor_id, status, eligibility_score, distance_km, note, created_at, updated_at")
+            .in("post_id", postIds)
+            .order("created_at", { ascending: false })
+            .limit(20)
+        : Promise.resolve({ data: [] } as { data: [] });
 
-  const donorApplicationsPromise = postIds.length
-    ? supabase
-        .from("donor_applications")
-        .select("id, post_id, donor_id, status, eligibility_score, distance_km, note, created_at, updated_at")
-        .in("post_id", postIds)
-        .order("created_at", { ascending: false })
-        .limit(20)
-    : Promise.resolve({ data: [] } as { data: [] });
+      const [{ count: pendingApplications }, { count: fulfilledThisMonth }, { data: donorApplications }] =
+        await Promise.all([pendingApplicationsPromise, fulfilledThisMonthPromise, donorApplicationsPromise]);
 
-  const [{ count: pendingApplications }, { count: fulfilledThisMonth }, { data: donorApplications }] =
-    await Promise.all([pendingApplicationsPromise, fulfilledThisMonthPromise, donorApplicationsPromise]);
+      const donorIds = [...new Set((donorApplications ?? []).map((application) => application.donor_id))];
+      const donorLookup =
+        donorIds.length > 0
+          ? await supabase
+              .from("profiles")
+              .select("id, full_name, username, blood_type, total_donations, karma, is_verified, city, state")
+              .in("id", donorIds)
+          : { data: [] };
 
-  const donorIds = [...new Set((donorApplications ?? []).map((application) => application.donor_id))];
-  const donorLookup =
-    donorIds.length > 0
-      ? await supabase
-          .from("profiles")
-          .select("id, full_name, username, blood_type, total_donations, karma, is_verified, city, state")
-          .in("id", donorIds)
-      : { data: [] };
+      const donorMap = new Map((donorLookup.data ?? []).map((donor) => [donor.id, donor]));
+      const postMap = new Map(posts.map((post) => [post.id, post]));
 
-  const donorMap = new Map((donorLookup.data ?? []).map((donor) => [donor.id, donor]));
-  const postMap = new Map(posts.map((post) => [post.id, post]));
-
-  return {
-    stats: {
-      activeRequests: posts.filter((post) => post.status === "active").length,
-      pendingApplications: pendingApplications ?? 0,
-      fulfilledThisMonth: fulfilledThisMonth ?? 0,
+      return {
+        stats: {
+          activeRequests: posts.filter((post) => post.status === "active").length,
+          pendingApplications: pendingApplications ?? 0,
+          fulfilledThisMonth: fulfilledThisMonth ?? 0,
+        },
+        posts,
+        applicants: (donorApplications ?? []).map((application) => ({
+          ...application,
+          distance_km:
+            application.distance_km ??
+            estimateDistanceKm(
+              donorMap.get(application.donor_id)?.city,
+              donorMap.get(application.donor_id)?.state,
+              postMap.get(application.post_id)?.city,
+              postMap.get(application.post_id)?.state,
+            ),
+          donor: donorMap.get(application.donor_id) ?? null,
+          post: postMap.get(application.post_id)
+            ? {
+                id: postMap.get(application.post_id)!.id,
+                patient_name: postMap.get(application.post_id)!.patient_name,
+                patient_id: postMap.get(application.post_id)!.patient_id,
+                blood_type_needed: postMap.get(application.post_id)!.blood_type_needed,
+                status: postMap.get(application.post_id)!.status,
+              }
+            : null,
+        })) as HospitalApplicationSummary[],
+      };
+    })(),
+    {
+      stats: {
+        activeRequests: 0,
+        pendingApplications: 0,
+        fulfilledThisMonth: 0,
+      },
+      posts: [] as Post[],
+      applicants: [] as HospitalApplicationSummary[],
     },
-    posts,
-    applicants: (donorApplications ?? []).map((application) => ({
-      ...application,
-      distance_km:
-        application.distance_km ??
-        estimateDistanceKm(
-          donorMap.get(application.donor_id)?.city,
-          donorMap.get(application.donor_id)?.state,
-          postMap.get(application.post_id)?.city,
-          postMap.get(application.post_id)?.state,
-        ),
-      donor: donorMap.get(application.donor_id) ?? null,
-      post: postMap.get(application.post_id)
-        ? {
-            id: postMap.get(application.post_id)!.id,
-            patient_name: postMap.get(application.post_id)!.patient_name,
-            patient_id: postMap.get(application.post_id)!.patient_id,
-            blood_type_needed: postMap.get(application.post_id)!.blood_type_needed,
-            status: postMap.get(application.post_id)!.status,
-          }
-        : null,
-    })) as HospitalApplicationSummary[],
-  };
+  );
 }
 
 export async function getHospitalPendingApplications(profileId: string) {
@@ -824,14 +893,19 @@ export async function getNotifications(userId?: string) {
   const supabase = await createServerSupabaseClient();
   if (!supabase || !userId) return [] as Notification[];
 
-  const { data } = await supabase
-    .from("notifications")
-    .select("id, user_id, type, title, body, data, post_id, read_at, sms_sent, created_at")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(30);
+  return withServerTimeout(
+    (async () => {
+      const { data } = await supabase
+        .from("notifications")
+        .select("id, user_id, type, title, body, data, post_id, read_at, sms_sent, created_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(30);
 
-  return (data as Notification[] | null) ?? [];
+      return (data as Notification[] | null) ?? [];
+    })(),
+    [] as Notification[],
+  );
 }
 
 export async function getUserContactQueries(userId: string) {

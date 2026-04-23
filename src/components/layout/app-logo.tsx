@@ -2,7 +2,7 @@
 
 import { HeartHandshake } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { APP_NAME } from "@/lib/constants";
 import { cn } from "@/lib/utils/cn";
@@ -17,63 +17,10 @@ type AppLogoProps = {
   compact?: boolean;
 };
 
-const logoCandidates = [
-  "/logo/custom-logo.webp",
-  "/logo/custom-logo.png",
-  "/logo/logo.webp",
-  "/logo/logo.png",
-  "/logo/Logo.webp",
-  "/logo/Logo.png",
-  "/logo/donorix-logo.webp",
-  "/logo/donorix-logo.png",
-  "/logo/Donorix-logo.webp",
-  "/logo/Donorix-logo.png",
-];
-
-let cachedLogoSrc: string | null | "unresolved" = "unresolved";
+const LOGO_SRC = "/logo/logo.png";
 
 function LogoMark({ compact = false }: { compact?: boolean }) {
-  const [resolvedSrc, setResolvedSrc] = useState<string | null>(() => {
-    if (cachedLogoSrc !== "unresolved") return cachedLogoSrc;
-    return null;
-  });
-
-  useEffect(() => {
-    if (cachedLogoSrc !== "unresolved") {
-      setResolvedSrc(cachedLogoSrc);
-      return;
-    }
-
-    let cancelled = false;
-
-    async function resolveLogo() {
-      for (const src of logoCandidates) {
-        const ok = await new Promise<boolean>((resolve) => {
-          const img = new Image();
-          img.onload = () => resolve(true);
-          img.onerror = () => resolve(false);
-          img.src = src;
-        });
-
-        if (cancelled) return;
-        if (ok) {
-          cachedLogoSrc = src;
-          setResolvedSrc(src);
-          return;
-        }
-      }
-
-      if (!cancelled) {
-        cachedLogoSrc = null;
-        setResolvedSrc(null);
-      }
-    }
-
-    void resolveLogo();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const [hasError, setHasError] = useState(false);
 
   return (
     <span
@@ -82,16 +29,15 @@ function LogoMark({ compact = false }: { compact?: boolean }) {
         compact ? "size-10" : "size-11",
       )}
     >
-      {resolvedSrc ? (
+      {!hasError ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={resolvedSrc}
+          src={LOGO_SRC}
           alt={`${APP_NAME} logo`}
           className={cn("h-full w-full object-contain", compact ? "p-1.5" : "p-2")}
           draggable={false}
           onError={() => {
-            cachedLogoSrc = null;
-            setResolvedSrc(null);
+            setHasError(true);
           }}
         />
       ) : (

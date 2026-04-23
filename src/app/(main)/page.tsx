@@ -1,4 +1,4 @@
-import Link from "next/link";
+/* eslint-disable @next/next/no-html-link-for-pages */
 import { ArrowRight, ClipboardList, ShieldCheck, Sparkles, Users, Zap } from "lucide-react";
 
 import { PostFeed } from "@/components/posts/post-feed";
@@ -39,13 +39,13 @@ export default async function HomePage() {
               </div>
               <div className="flex flex-wrap gap-3">
                 <Button asChild size="lg">
-                  <Link href="/posts/new">
+                  <a href="/posts/new">
                     {t("home.newRequest")}
                     <ArrowRight className="size-4" />
-                  </Link>
+                  </a>
                 </Button>
                 <Button asChild size="lg" variant="outline">
-                  <Link href="/hospital/posts">{t("home.viewPatientPosts")}</Link>
+                  <a href="/hospital/posts">{t("home.viewPatientPosts")}</a>
                 </Button>
               </div>
             </div>
@@ -99,7 +99,7 @@ export default async function HomePage() {
                 </p>
               </div>
               <Button asChild size="sm" variant="outline">
-                <Link href="/hospital/posts">{t("home.seeAll")}</Link>
+                <a href="/hospital/posts">{t("home.seeAll")}</a>
               </Button>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -108,9 +108,9 @@ export default async function HomePage() {
                   <div key={post.id} className="rounded-[1.25rem] border border-border p-4">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <Link className="font-display font-bold transition-colors hover:text-brand" href={`/posts/${post.id}`}>
+                        <a className="font-display font-bold transition-colors hover:text-brand" href={`/posts/${post.id}`}>
                           {post.patient_name}
-                        </Link>
+                        </a>
                         <p className="font-mono text-sm text-muted-foreground">
                           {post.patient_id ?? t("home.noPatientId")} • {post.blood_type_needed}
                         </p>
@@ -141,7 +141,7 @@ export default async function HomePage() {
                 </p>
               </div>
               <Button asChild size="sm" variant="outline">
-                <Link href="/hospital/donors">{t("home.openDonors")}</Link>
+                <a href="/hospital/donors">{t("home.openDonors")}</a>
               </Button>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -151,12 +151,12 @@ export default async function HomePage() {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         {application.donor?.username ? (
-                          <Link
+                          <a
                             className="font-display font-semibold transition-colors hover:text-brand"
                             href={`/profile/${application.donor.username}`}
                           >
                             {application.donor.full_name ?? application.donor.username}
-                          </Link>
+                          </a>
                         ) : (
                           <p className="font-medium">{application.donor?.full_name ?? "Donor"}</p>
                         )}
@@ -204,14 +204,14 @@ export default async function HomePage() {
             </div>
             <div className="flex flex-wrap gap-3">
               <Button asChild size="lg">
-                <Link href="/find">
+                <a href="/find">
                   {t("nav.find")}
                   <ArrowRight className="size-4" />
-                </Link>
+                </a>
               </Button>
               {!currentProfile && (
                 <Button asChild size="lg" variant="outline">
-                  <Link href="/signup?account=hospital">{t("nav.registerHospital")}</Link>
+                  <a href="/signup?account=hospital">{t("nav.registerHospital")}</a>
                 </Button>
               )}
             </div>

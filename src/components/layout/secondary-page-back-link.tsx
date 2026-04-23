@@ -1,4 +1,4 @@
-import Link from "next/link";
+/* eslint-disable @next/next/no-html-link-for-pages */
 import { ArrowLeft } from "lucide-react";
 
 import { cn } from "@/lib/utils/cn";
@@ -15,7 +15,7 @@ export function SecondaryPageBackLink({
   className,
 }: SecondaryPageBackLinkProps) {
   return (
-    <Link
+    <a
       className={cn(
         "inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition hover:text-brand",
         className,
@@ -24,6 +24,6 @@ export function SecondaryPageBackLink({
     >
       <ArrowLeft className="size-4" />
       <span>{label}</span>
-    </Link>
+    </a>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
+/* eslint-disable @next/next/no-html-link-for-pages */
 
-import Link from "next/link";
 import { createContext, useContext, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -45,10 +45,10 @@ export function AuthPromptProvider({ children }: { children: React.ReactNode }) 
               Continue Browsing
             </Button>
             <Button asChild variant="secondary">
-              <Link href="/login">Login</Link>
+              <a href="/login">Login</a>
             </Button>
             <Button asChild>
-              <Link href="/signup">Sign Up</Link>
+              <a href="/signup">Sign Up</a>
             </Button>
           </DialogFooter>
         </DialogContent>

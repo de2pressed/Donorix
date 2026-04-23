@@ -1,7 +1,7 @@
 "use client";
+/* eslint-disable @next/next/no-html-link-for-pages */
 
 import { HeartHandshake } from "lucide-react";
-import Link from "next/link";
 import { useState } from "react";
 
 import { APP_NAME } from "@/lib/constants";
@@ -59,7 +59,7 @@ export function AppLogo({
   compact = false,
 }: AppLogoProps) {
   return (
-    <Link className={cn("inline-flex min-w-0 items-center gap-3", wrapTagline && "items-start", className)} href={href}>
+    <a className={cn("inline-flex min-w-0 items-center gap-3", wrapTagline && "items-start", className)} href={href}>
       <LogoMark compact={compact} />
       <div className="min-w-0">
         <p
@@ -81,6 +81,6 @@ export function AppLogo({
           </p>
         ) : null}
       </div>
-    </Link>
+    </a>
   );
 }

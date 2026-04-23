@@ -1,9 +1,8 @@
 "use client";
+/* eslint-disable @next/next/no-html-link-for-pages */
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
-import { useRouter } from "next/navigation";
 import type { Ref } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -146,7 +145,6 @@ function ToggleCard({
 }
 
 export function SignupForm() {
-  const router = useRouter();
   const [step, setStep] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -220,7 +218,7 @@ export function SignupForm() {
     }
 
     toast.success("Account created. Verify your email to continue.");
-    router.push("/login");
+    window.location.assign("/login");
   });
 
   const errors = form.formState.errors;
@@ -612,9 +610,9 @@ export function SignupForm() {
           </div>
           <p className="text-center text-sm text-muted-foreground">
             Already have an account?{" "}
-            <Link className="font-medium text-brand hover:text-brand/80" href="/login">
+            <a className="font-medium text-brand hover:text-brand/80" href="/login">
               Log in
-            </Link>
+            </a>
           </p>
         </form>
       </CardContent>

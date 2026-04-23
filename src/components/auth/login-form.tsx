@@ -1,9 +1,9 @@
 "use client";
+/* eslint-disable @next/next/no-html-link-for-pages */
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -30,7 +30,6 @@ type PendingLogin = {
 };
 
 export function LoginForm({ accountType = "donor" }: { accountType?: "donor" | "hospital" }) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [demoLoading, setDemoLoading] = useState<"donor" | "hospital" | null>(null);
@@ -93,8 +92,7 @@ export function LoginForm({ accountType = "donor" }: { accountType?: "donor" | "
       }
 
       toast.success(attempt.successMessage);
-      router.refresh();
-      router.replace(
+      window.location.replace(
         getRedirectDestination(
           attempt.useRedirectParam
             ? profile.account_type === "hospital"
@@ -125,8 +123,7 @@ export function LoginForm({ accountType = "donor" }: { accountType?: "donor" | "
     }
 
     toast.success(attempt.successMessage);
-    router.refresh();
-    router.replace(
+    window.location.replace(
       getRedirectDestination(
         attempt.useRedirectParam
           ? fallbackAccountType === "hospital"
@@ -240,9 +237,9 @@ export function LoginForm({ accountType = "donor" }: { accountType?: "donor" | "
               <label className="text-sm font-medium" htmlFor="login-password">
                 Password
               </label>
-              <Link className="text-sm text-brand hover:text-brand/80" href="/forgot-password">
+              <a className="text-sm text-brand hover:text-brand/80" href="/forgot-password">
                 Forgot password?
-              </Link>
+              </a>
             </div>
             <div className="relative">
               <Input

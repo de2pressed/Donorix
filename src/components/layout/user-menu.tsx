@@ -1,8 +1,8 @@
 "use client";
+/* eslint-disable @next/next/no-html-link-for-pages */
 
 import Link from "next/link";
 import { Building2, LogOut, MessageCircleMore, Settings, Shield, User2 } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -39,7 +39,6 @@ function getInitials(name?: string | null) {
 }
 
 export function UserMenu() {
-  const router = useRouter();
   const tNav = useTranslations("nav");
   const [mobileOpen, setMobileOpen] = useState(false);
   const { data: user, isLoading } = useUser();
@@ -62,8 +61,7 @@ export function UserMenu() {
     }
 
     toast.success("Logged out");
-    router.replace("/");
-    router.refresh();
+    window.location.replace("/");
   }
 
   const avatarButtonClassName =
@@ -81,10 +79,10 @@ export function UserMenu() {
     return (
       <div className="flex items-center gap-2">
         <Button asChild size="sm" variant="ghost">
-          <Link href="/login">{tNav("login")}</Link>
+          <a href="/login">{tNav("login")}</a>
         </Button>
         <Button asChild size="sm">
-          <Link href="/signup">{tNav("signup")}</Link>
+          <a href="/signup">{tNav("signup")}</a>
         </Button>
       </div>
     );

@@ -52,6 +52,9 @@ const bootstrapScript = `
       window.requestAnimationFrame(function() {
         document.documentElement.classList.add('donorix-booting');
       });
+      window.setTimeout(function() {
+        document.documentElement.classList.remove('donorix-booting');
+      }, 1600);
     }
   } catch (error) {}
 `;

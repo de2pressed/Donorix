@@ -1,7 +1,7 @@
 "use client";
+/* eslint-disable @next/next/no-html-link-for-pages */
 
 import * as Sentry from "@sentry/nextjs";
-import Link from "next/link";
 import { useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -35,7 +35,7 @@ export function RouteErrorState({
             Try again
           </Button>
           <Button asChild type="button" variant="outline">
-            <Link href="/">Go home</Link>
+            <a href="/">Go home</a>
           </Button>
         </div>
       </div>

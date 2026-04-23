@@ -1,6 +1,6 @@
 "use client";
+/* eslint-disable @next/next/no-html-link-for-pages */
 
-import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -59,7 +59,7 @@ export default function ForgotPasswordPage() {
               We sent a password reset link to your email if the account exists.
             </div>
             <Button asChild className="w-full" variant="outline">
-              <Link href="/login">Back to login</Link>
+              <a href="/login">Back to login</a>
             </Button>
           </div>
         ) : (

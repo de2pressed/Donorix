@@ -1,5 +1,4 @@
-import Link from "next/link";
-
+/* eslint-disable @next/next/no-html-link-for-pages */
 import { Button } from "@/components/ui/button";
 
 export default function NotFound() {
@@ -11,7 +10,7 @@ export default function NotFound() {
         The resource may have expired, been removed, or never existed. Return to the live request feed to continue.
       </p>
       <Button asChild>
-        <Link href="/">Back to home</Link>
+        <a href="/">Back to home</a>
       </Button>
     </div>
   );

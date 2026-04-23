@@ -1,7 +1,7 @@
 "use client";
+/* eslint-disable @next/next/no-html-link-for-pages */
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -490,9 +490,9 @@ export function HospitalSignupForm() {
           </div>
           <p className="text-center text-sm text-muted-foreground">
             Already have an account?{" "}
-            <Link className="font-medium text-brand hover:text-brand/80" href="/login?account=hospital">
+            <a className="font-medium text-brand hover:text-brand/80" href="/login?account=hospital">
               Log in
-            </Link>
+            </a>
           </p>
         </form>
       </CardContent>

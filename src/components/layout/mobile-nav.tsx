@@ -1,10 +1,10 @@
 "use client";
+/* eslint-disable @next/next/no-html-link-for-pages */
 
 import Link from "next/link";
 import { LogOut } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,6 @@ import { cn } from "@/lib/utils/cn";
 
 export function MobileNav() {
   const pathname = usePathname();
-  const router = useRouter();
   const { data: user } = useUser();
   const notifContext = useNotificationsContextSafe();
   const tNav = useTranslations("nav");
@@ -77,8 +76,7 @@ export function MobileNav() {
     const supabase = getSupabaseBrowserClient();
     if (!supabase) return;
     await supabase.auth.signOut();
-    router.replace("/");
-    router.refresh();
+    window.location.replace("/");
   }
 
   return (
@@ -97,23 +95,38 @@ export function MobileNav() {
               <span className="block w-full truncate">{item.label}</span>
             </button>
           ) : (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex flex-1 min-w-0 flex-col items-center justify-center gap-1 rounded-2xl px-1 py-2 text-center text-[10px] font-medium leading-tight text-muted-foreground transition hover:text-brand max-[380px]:text-[9px]",
-                (item.href === "/" ? pathname === "/" : pathname === item.href || pathname.startsWith(`${item.href}/`)) &&
-                  "bg-brand-soft text-brand",
-              )}
-              onClick={() => {
-                if (item.href === "/notifications") {
-                  void notifContext?.markAllRead();
-                }
-              }}
-            >
-              <Icon className="size-4" />
-              <span className="block w-full truncate">{item.label}</span>
-            </Link>
+            user ? (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex flex-1 min-w-0 flex-col items-center justify-center gap-1 rounded-2xl px-1 py-2 text-center text-[10px] font-medium leading-tight text-muted-foreground transition hover:text-brand max-[380px]:text-[9px]",
+                  (item.href === "/" ? pathname === "/" : pathname === item.href || pathname.startsWith(`${item.href}/`)) &&
+                    "bg-brand-soft text-brand",
+                )}
+                onClick={() => {
+                  if (item.href === "/notifications") {
+                    void notifContext?.markAllRead();
+                  }
+                }}
+              >
+                <Icon className="size-4" />
+                <span className="block w-full truncate">{item.label}</span>
+              </Link>
+            ) : (
+              <a
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex flex-1 min-w-0 flex-col items-center justify-center gap-1 rounded-2xl px-1 py-2 text-center text-[10px] font-medium leading-tight text-muted-foreground transition hover:text-brand max-[380px]:text-[9px]",
+                  (item.href === "/" ? pathname === "/" : pathname === item.href || pathname.startsWith(`${item.href}/`)) &&
+                    "bg-brand-soft text-brand",
+                )}
+              >
+                <Icon className="size-4" />
+                <span className="block w-full truncate">{item.label}</span>
+              </a>
+            )
           );
         })}
       </nav>
@@ -142,15 +155,27 @@ export function MobileNav() {
               </Button>
             ) : null}
             {moreItems.map((item) => (
-              <Link
-                key={item.href}
-                className="flex items-center gap-3 rounded-2xl border border-border px-4 py-3 text-sm font-medium text-foreground transition hover:bg-brand-soft"
-                href={item.href}
-                onClick={() => setMoreOpen(false)}
-              >
-                <item.icon className="size-4" />
-                {getLabel(item.href)}
-              </Link>
+              user ? (
+                <Link
+                  key={item.href}
+                  className="flex items-center gap-3 rounded-2xl border border-border px-4 py-3 text-sm font-medium text-foreground transition hover:bg-brand-soft"
+                  href={item.href}
+                  onClick={() => setMoreOpen(false)}
+                >
+                  <item.icon className="size-4" />
+                  {getLabel(item.href)}
+                </Link>
+              ) : (
+                <a
+                  key={item.href}
+                  className="flex items-center gap-3 rounded-2xl border border-border px-4 py-3 text-sm font-medium text-foreground transition hover:bg-brand-soft"
+                  href={item.href}
+                  onClick={() => setMoreOpen(false)}
+                >
+                  <item.icon className="size-4" />
+                  {getLabel(item.href)}
+                </a>
+              )
             ))}
           </div>
         </DialogContent>

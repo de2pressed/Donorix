@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -10,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export default function ResetPasswordPage() {
-  const router = useRouter();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,8 +40,7 @@ export default function ResetPasswordPage() {
       }
 
       toast.success("Password updated.");
-      router.replace("/login?reset=success");
-      router.refresh();
+      window.location.replace("/login?reset=success");
     } finally {
       setIsSubmitting(false);
     }

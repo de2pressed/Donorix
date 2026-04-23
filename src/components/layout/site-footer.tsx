@@ -1,6 +1,6 @@
 "use client";
+/* eslint-disable @next/next/no-html-link-for-pages */
 
-import Link from "next/link";
 import { useTranslations } from "next-intl";
 
 import { AppLogo } from "@/components/layout/app-logo";
@@ -46,13 +46,13 @@ export function SiteFooter() {
               <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-brand">{t("quickLinks")}</h2>
               <nav className="grid gap-2 text-sm">
                 {quickLinks.map((link) => (
-                  <Link
+                  <a
                     key={link.href}
                     className="rounded-xl px-2 py-1 text-muted-foreground transition hover:bg-brand-soft hover:text-brand"
                     href={link.href}
                   >
                     {link.label}
-                  </Link>
+                  </a>
                 ))}
               </nav>
             </div>
@@ -60,13 +60,13 @@ export function SiteFooter() {
               <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-brand">{t("legalSupport")}</h2>
               <div className="grid gap-2 text-sm">
                 {legalLinks.map((link) => (
-                  <Link
+                  <a
                     key={link.href}
                     className="rounded-xl px-2 py-1 text-muted-foreground transition hover:bg-brand-soft hover:text-brand"
                     href={link.href}
                   >
                     {link.label}
-                  </Link>
+                  </a>
                 ))}
                 <a
                   className="rounded-xl px-2 py-1 text-muted-foreground transition hover:bg-brand-soft hover:text-brand"

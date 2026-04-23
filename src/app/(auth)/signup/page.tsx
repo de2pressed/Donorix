@@ -1,4 +1,4 @@
-import Link from "next/link";
+/* eslint-disable @next/next/no-html-link-for-pages */
 import { Building2, HeartHandshake } from "lucide-react";
 
 import { HospitalSignupForm } from "@/components/auth/hospital-signup-form";
@@ -16,7 +16,7 @@ export default async function SignupPage({
   return (
     <div className="w-full space-y-6">
       <div className="mx-auto grid max-w-4xl gap-3 md:grid-cols-2">
-        <Link
+        <a
           className={cn(
             "rounded-[1.75rem] border p-5 text-left transition",
             account === "donor"
@@ -34,8 +34,8 @@ export default async function SignupPage({
               <p className="mt-1 text-sm text-muted-foreground">Register to donate blood and save lives</p>
             </div>
           </div>
-        </Link>
-        <Link
+        </a>
+        <a
           className={cn(
             "rounded-[1.75rem] border p-5 text-left transition",
             account === "hospital"
@@ -53,7 +53,7 @@ export default async function SignupPage({
               <p className="mt-1 text-sm text-muted-foreground">Post blood requests for your patients</p>
             </div>
           </div>
-        </Link>
+        </a>
       </div>
 
       <div className="flex justify-center">{account === "hospital" ? <HospitalSignupForm /> : <SignupForm />}</div>

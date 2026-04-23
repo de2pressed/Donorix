@@ -1,6 +1,6 @@
 "use client";
+/* eslint-disable @next/next/no-html-link-for-pages */
 
-import Link from "next/link";
 import { Component, type ErrorInfo, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -34,11 +34,11 @@ export class UserMenuErrorBoundary extends Component<
     if (this.state.hasError) {
       return this.props.isAuthenticated ? (
         <Button asChild size="sm" variant="outline">
-          <Link href="/settings">Profile unavailable</Link>
+          <a href="/settings">Profile unavailable</a>
         </Button>
       ) : (
         <Button asChild size="sm" variant="ghost">
-          <Link href="/login">Login</Link>
+          <a href="/login">Login</a>
         </Button>
       );
     }

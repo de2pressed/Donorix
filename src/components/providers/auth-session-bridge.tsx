@@ -56,7 +56,6 @@ export function AuthSessionBridge() {
           queryClient.setQueryData(["current-user"], null);
           queryClient.setQueryData(["notifications"], []);
           await syncSession(null).catch(() => undefined);
-          router.refresh();
           return;
         }
 

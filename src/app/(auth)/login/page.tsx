@@ -1,5 +1,5 @@
+/* eslint-disable @next/next/no-html-link-for-pages */
 import { Suspense } from "react";
-import Link from "next/link";
 import { Building2, HeartHandshake } from "lucide-react";
 
 import { LoginForm } from "@/components/auth/login-form";
@@ -22,7 +22,7 @@ export default async function LoginPage({
         </div>
       ) : null}
       <div className="mx-auto grid max-w-4xl gap-3 md:grid-cols-2">
-        <Link
+        <a
           className={cn(
             "rounded-[1.75rem] border p-5 text-left transition",
             account === "donor"
@@ -42,8 +42,8 @@ export default async function LoginPage({
               </p>
             </div>
           </div>
-        </Link>
-        <Link
+        </a>
+        <a
           className={cn(
             "rounded-[1.75rem] border p-5 text-left transition",
             account === "hospital"
@@ -63,7 +63,7 @@ export default async function LoginPage({
               </p>
             </div>
           </div>
-        </Link>
+        </a>
       </div>
 
       <div className="flex justify-center">
@@ -77,9 +77,9 @@ export default async function LoginPage({
       </div>
       <p className="text-center text-sm text-muted-foreground">
         New to Donorix?{" "}
-        <Link className="font-medium text-brand" href="/signup">
+        <a className="font-medium text-brand" href="/signup">
           Create an account
-        </Link>
+        </a>
       </p>
     </div>
   );

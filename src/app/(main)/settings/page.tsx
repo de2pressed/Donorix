@@ -284,8 +284,7 @@ export default function SettingsPage() {
         payload?.message ??
           "Your account has been scheduled for deletion. Your data will be permanently removed within 30 days.",
       );
-      router.replace("/");
-      router.refresh();
+      window.location.replace("/");
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -314,8 +313,7 @@ export default function SettingsPage() {
       }
 
       toast.success("Logged out");
-      router.replace("/");
-      router.refresh();
+      window.location.replace("/");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Unable to log out.");
     } finally {

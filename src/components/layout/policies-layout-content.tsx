@@ -1,6 +1,6 @@
 "use client";
+/* eslint-disable @next/next/no-html-link-for-pages */
 
-import Link from "next/link";
 import { Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
 
@@ -49,7 +49,7 @@ export function PoliciesLayoutContent({ children }: { children: React.ReactNode 
               </DialogHeader>
               <nav className="min-h-0 flex-1 space-y-2 overflow-y-auto pb-2 pr-1">
                 {POLICY_NAV.map((item) => (
-                  <Link
+                  <a
                     key={item.href}
                     href={item.href}
                     className={cn(
@@ -58,7 +58,7 @@ export function PoliciesLayoutContent({ children }: { children: React.ReactNode 
                     )}
                   >
                     {item.label}
-                  </Link>
+                  </a>
                 ))}
               </nav>
             </DialogContent>
@@ -76,7 +76,7 @@ export function PoliciesLayoutContent({ children }: { children: React.ReactNode 
           </div>
           <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto pr-1">
             {POLICY_NAV.map((item) => (
-              <Link
+              <a
                 key={item.href}
                 href={item.href}
                 className={cn(
@@ -85,7 +85,7 @@ export function PoliciesLayoutContent({ children }: { children: React.ReactNode 
                 )}
               >
                 {item.label}
-              </Link>
+              </a>
             ))}
           </nav>
         </aside>

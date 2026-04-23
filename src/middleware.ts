@@ -8,7 +8,7 @@ const adminPrefixes = ["/admin"];
 const authPrefixes = ["/login", "/signup"];
 
 export async function middleware(request: NextRequest) {
-  const { response, user } = await updateSession(request);
+  const { response, user, authTimedOut } = await updateSession(request);
   const pathname = request.nextUrl.pathname;
   const search = request.nextUrl.search;
 
@@ -20,17 +20,17 @@ export async function middleware(request: NextRequest) {
   const isAdminRoute = adminPrefixes.some((prefix) => pathname.startsWith(prefix));
   const isAuthRoute = authPrefixes.some((prefix) => pathname.startsWith(prefix));
 
-  if ((isProtected || isAdminRoute) && !user) {
+  if (!authTimedOut && (isProtected || isAdminRoute) && !user) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", `${pathname}${search}`);
     return NextResponse.redirect(loginUrl);
   }
 
-  if (pathname.startsWith("/hospital") && user?.user_metadata?.account_type !== "hospital") {
+  if (!authTimedOut && pathname.startsWith("/hospital") && user?.user_metadata?.account_type !== "hospital") {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
-  if (isAuthRoute && user) {
+  if (!authTimedOut && isAuthRoute && user) {
     const redirectTo = request.nextUrl.searchParams.get("redirect");
     const destination =
       redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//") ? redirectTo : "/";

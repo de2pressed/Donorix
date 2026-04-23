@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 function SearchParamsKey({
   children,
@@ -35,12 +35,22 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
   const reduceMotion = Boolean(useReducedMotion());
   const [progress, setProgress] = useState(0);
   const [loading, setLoading] = useState(false);
-  const initialized = useRef(false);
-  const pendingRouteKey = useRef<string | null>(null);
+  const loadingTimeoutRef = useRef<number | null>(null);
+  const lastRouteKeyRef = useRef<string>("");
   const routeKey = useMemo(() => {
     const search = searchParams?.toString();
     return search ? `${pathname}?${search}` : pathname;
   }, [pathname, searchParams]);
+
+  const clearLoadingState = useCallback(() => {
+    if (loadingTimeoutRef.current !== null) {
+      window.clearTimeout(loadingTimeoutRef.current);
+      loadingTimeoutRef.current = null;
+    }
+
+    setLoading(false);
+    setProgress(0);
+  }, []);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -93,9 +103,18 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
 
       if (currentUrl === nextPath) return;
 
-      pendingRouteKey.current = nextPath;
+      if (loadingTimeoutRef.current !== null) {
+        window.clearTimeout(loadingTimeoutRef.current);
+      }
+
       setLoading(true);
       setProgress(0);
+
+      loadingTimeoutRef.current = window.setTimeout(() => {
+        loadingTimeoutRef.current = null;
+        setLoading(false);
+        setProgress(0);
+      }, reduceMotion ? 120 : 1100);
     };
 
     document.addEventListener("click", handleClick, true);
@@ -103,7 +122,7 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
     return () => {
       document.removeEventListener("click", handleClick, true);
     };
-  }, []);
+  }, [reduceMotion]);
 
   useEffect(() => {
     if (!loading) return;
@@ -121,28 +140,23 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
   }, [loading]);
 
   useEffect(() => {
-    if (!initialized.current) {
-      initialized.current = true;
+    const previousRouteKey = lastRouteKeyRef.current;
+    lastRouteKeyRef.current = routeKey;
+
+    if (!loading || previousRouteKey === routeKey) {
       return;
     }
 
-    if (!loading || pendingRouteKey.current !== routeKey) {
-      return;
-    }
+    clearLoadingState();
+  }, [clearLoadingState, loading, routeKey]);
 
-    pendingRouteKey.current = null;
-
-    setProgress(100);
-
-    const timeoutId = window.setTimeout(() => {
-      setLoading(false);
-      setProgress(0);
-    }, reduceMotion ? 0 : 160);
-
+  useEffect(() => {
     return () => {
-      window.clearTimeout(timeoutId);
+      if (loadingTimeoutRef.current !== null) {
+        window.clearTimeout(loadingTimeoutRef.current);
+      }
     };
-  }, [loading, reduceMotion, routeKey]);
+  }, []);
 
   return (
     <>
@@ -150,7 +164,7 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
         {loading ? (
           <motion.div
             aria-hidden="true"
-            className="pointer-events-none fixed inset-0 z-[90] overflow-hidden"
+            className="pointer-events-auto fixed inset-0 z-[10000] cursor-progress overflow-hidden"
             initial={reduceMotion ? { opacity: 0.96 } : { opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -163,7 +177,7 @@ export function PageTransitionShell({ children }: { children: React.ReactNode })
         ) : null}
       </AnimatePresence>
 
-      <div className="pointer-events-none fixed inset-x-0 top-0 z-[95] h-1">
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-[10001] h-1">
         <motion.div
           animate={{ opacity: progress > 0 ? 1 : 0, scaleX: progress / 100 }}
           className="h-full origin-left bg-brand shadow-[0_0_18px_rgba(179,12,49,0.45)]"

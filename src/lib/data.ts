@@ -292,10 +292,12 @@ export async function getPostById(postId: string, userId?: string) {
   const supabase = await createServerSupabaseClient();
   if (!supabase) return null;
 
-  const { data } = await supabase
-    .from("posts")
-    .select(
-      `
+  return withServerTimeout(
+    (async () => {
+      const { data } = await supabase
+        .from("posts")
+        .select(
+          `
         id, created_by, patient_name, blood_type_needed, units_needed, hospital_name,
         patient_id,
         hospital_address, city, state, latitude, longitude, contact_name, contact_phone,
@@ -303,99 +305,109 @@ export async function getPostById(postId: string, userId?: string) {
         initial_radius_km, current_radius_km, expires_at, status, priority_score,
         upvote_count, donor_count, approved_donor_id, sms_sent_count, is_legacy, is_demo, created_at, updated_at
       `,
-    )
-    .eq("id", postId)
-    .single();
+        )
+        .eq("id", postId)
+        .single();
 
-  const post = (data as FeedPost | null) ?? null;
+      const post = (data as FeedPost | null) ?? null;
 
-  const creatorMap = await getCreatorMap(supabase, post ? [post.created_by] : []);
-  const postWithCreator = post
-    ? {
-        ...post,
-        creator: creatorMap.get(post.created_by) ?? null,
+      const creatorMap = await getCreatorMap(supabase, post ? [post.created_by] : []);
+      const postWithCreator = post
+        ? {
+            ...post,
+            creator: creatorMap.get(post.created_by) ?? null,
+          }
+        : null;
+
+      if (!postWithCreator || !userId) {
+        return postWithCreator;
       }
-    : null;
 
-  if (!postWithCreator || !userId) {
-    return postWithCreator;
-  }
+      const { data: vote } = await supabase
+        .from("upvotes")
+        .select("post_id")
+        .eq("user_id", userId)
+        .eq("post_id", postId)
+        .maybeSingle();
 
-  const { data: vote } = await supabase
-    .from("upvotes")
-    .select("post_id")
-    .eq("user_id", userId)
-    .eq("post_id", postId)
-    .maybeSingle();
-
-  return {
-    ...postWithCreator,
-    has_voted: Boolean(vote),
-  };
+      return {
+        ...postWithCreator,
+        has_voted: Boolean(vote),
+      };
+    })(),
+    null,
+  );
 }
 
 export async function getDonorApplicationsForPost(postId: string) {
   const supabase = getSupabaseAdminClient() ?? (await createServerSupabaseClient());
   if (!supabase) return [] as DonorApplicationWithDonor[];
 
-  const { data: post } = await supabase
-    .from("posts")
-    .select("id, city, state")
-    .eq("id", postId)
-    .maybeSingle();
+  return withServerTimeout(
+    (async () => {
+      const { data: post } = await supabase
+        .from("posts")
+        .select("id, city, state")
+        .eq("id", postId)
+        .maybeSingle();
 
-  const { data: applications, error } = await supabase
-    .from("donor_applications")
-    .select("id, post_id, donor_id, status, eligibility_score, distance_km, note, created_at, updated_at")
-    .eq("post_id", postId)
-    .order("eligibility_score", { ascending: false })
-    .order("created_at", { ascending: false });
+      const { data: applications, error } = await supabase
+        .from("donor_applications")
+        .select("id, post_id, donor_id, status, eligibility_score, distance_km, note, created_at, updated_at")
+        .eq("post_id", postId)
+        .order("eligibility_score", { ascending: false })
+        .order("created_at", { ascending: false });
 
-  if (error) {
-    return [] as DonorApplicationWithDonor[];
-  }
+      if (error) {
+        return [] as DonorApplicationWithDonor[];
+      }
 
-  const donorIds = [...new Set((applications ?? []).map((application) => application.donor_id))];
-  const donorLookup =
-    donorIds.length > 0
-      ? await supabase
-          .from("profiles")
-          .select("id, full_name, username, blood_type, total_donations, karma, is_verified, city, state")
-          .in("id", donorIds)
-      : { data: [] };
+      const donorIds = [...new Set((applications ?? []).map((application) => application.donor_id))];
+      const donorLookup =
+        donorIds.length > 0
+          ? await supabase
+              .from("profiles")
+              .select("id, full_name, username, blood_type, total_donations, karma, is_verified, city, state")
+              .in("id", donorIds)
+          : { data: [] };
 
-  const donorMap = new Map(
-    ((donorLookup.data ?? []) as DonorSummary[]).map((donor) => [
-      donor.id,
-      donor,
-    ]),
+      const donorMap = new Map(
+        ((donorLookup.data ?? []) as DonorSummary[]).map((donor) => [donor.id, donor]),
+      );
+
+      return ((applications ?? []) as TableRow<"donor_applications">[]).map((application) => ({
+        ...application,
+        distance_km:
+          application.distance_km ??
+          estimateDistanceKm(
+            donorMap.get(application.donor_id)?.city,
+            donorMap.get(application.donor_id)?.state,
+            post?.city,
+            post?.state,
+          ),
+        donor: donorMap.get(application.donor_id) ?? null,
+      }));
+    })(),
+    [] as DonorApplicationWithDonor[],
   );
-
-  return ((applications ?? []) as TableRow<"donor_applications">[]).map((application) => ({
-    ...application,
-    distance_km:
-      application.distance_km ??
-      estimateDistanceKm(
-        donorMap.get(application.donor_id)?.city,
-        donorMap.get(application.donor_id)?.state,
-        post?.city,
-        post?.state,
-      ),
-    donor: donorMap.get(application.donor_id) ?? null,
-  }));
 }
 
 export async function getProfileByUsername(username: string) {
   const supabase = await createServerSupabaseClient();
   if (!supabase) return null;
 
-  const { data } = await supabase
-    .from("profiles")
-    .select(PROFILE_SELECT)
-    .eq("username", username)
-    .single();
+  return withServerTimeout(
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select(PROFILE_SELECT)
+        .eq("username", username)
+        .single();
 
-  return (data as Profile | null) ?? null;
+      return (data as Profile | null) ?? null;
+    })(),
+    null,
+  );
 }
 
 export async function getLeaderboard() {
@@ -525,213 +537,233 @@ export async function getHospitalChats(profileId: string) {
   const supabase = getSupabaseAdminClient() ?? (await createServerSupabaseClient());
   if (!supabase) return [] as HospitalChatSummary[];
 
-  const { data: posts } = await supabase
-    .from("posts")
-    .select(
-      `
+  return withServerTimeout(
+    (async () => {
+      const { data: posts } = await supabase
+        .from("posts")
+        .select(
+          `
         id, created_by, patient_name, patient_id, blood_type_needed, hospital_name,
         hospital_address, city, state, status, approved_donor_id, created_at, updated_at
       `,
-    )
-    .eq("created_by", profileId)
-    .neq("status", "deleted")
-    .order("updated_at", { ascending: false })
-    .order("created_at", { ascending: false });
+        )
+        .eq("created_by", profileId)
+        .neq("status", "deleted")
+        .order("updated_at", { ascending: false })
+        .order("created_at", { ascending: false });
 
-  const approvedPosts = ((posts ?? []) as HospitalChatSummary["post"][]).filter((post) =>
-    Boolean(post.approved_donor_id),
+      const approvedPosts = ((posts ?? []) as HospitalChatSummary["post"][]).filter((post) =>
+        Boolean(post.approved_donor_id),
+      );
+
+      if (!approvedPosts.length) {
+        return [] as HospitalChatSummary[];
+      }
+
+      const postIds = approvedPosts.map((post) => post.id);
+      const donorIds = [...new Set(approvedPosts.map((post) => post.approved_donor_id).filter(Boolean))] as string[];
+
+      const [{ data: messages }, donorMap] = await Promise.all([
+        supabase
+          .from("chat_messages")
+          .select("id, post_id, sender_id, recipient_id, message, created_at")
+          .in("post_id", postIds)
+          .order("created_at", { ascending: false }),
+        getChatParticipantMap(supabase, donorIds),
+      ]);
+
+      const messageRows = (messages ?? []) as TableRow<"chat_messages">[];
+      const participantIds = [...new Set(messageRows.flatMap((message) => [message.sender_id, message.recipient_id]))];
+      const participantMap = await getChatParticipantMap(supabase, participantIds);
+      const messagesByPost = new Map<string, ChatMessageRecord[]>();
+
+      for (const message of messageRows) {
+        const enriched: ChatMessageRecord = {
+          ...message,
+          sender: participantMap.get(message.sender_id) ?? null,
+          recipient: participantMap.get(message.recipient_id) ?? null,
+        };
+
+        const list = messagesByPost.get(message.post_id) ?? [];
+        list.unshift(enriched);
+        messagesByPost.set(message.post_id, list);
+      }
+
+      return approvedPosts
+        .map((post) => {
+          const messagesForPost = messagesByPost.get(post.id) ?? [];
+
+          return {
+            post,
+            donor: donorMap.get(post.approved_donor_id ?? "") ?? null,
+            lastMessage: messagesForPost[messagesForPost.length - 1] ?? null,
+            messageCount: messagesForPost.length,
+          } satisfies HospitalChatSummary;
+        })
+        .sort((left, right) => {
+          const leftTime = new Date(left.lastMessage?.created_at ?? left.post.updated_at).getTime();
+          const rightTime = new Date(right.lastMessage?.created_at ?? right.post.updated_at).getTime();
+          return rightTime - leftTime;
+        });
+    })(),
+    [] as HospitalChatSummary[],
   );
-
-  if (!approvedPosts.length) {
-    return [] as HospitalChatSummary[];
-  }
-
-  const postIds = approvedPosts.map((post) => post.id);
-  const donorIds = [...new Set(approvedPosts.map((post) => post.approved_donor_id).filter(Boolean))] as string[];
-
-  const [{ data: messages }, donorMap] = await Promise.all([
-    supabase
-      .from("chat_messages")
-      .select("id, post_id, sender_id, recipient_id, message, created_at")
-      .in("post_id", postIds)
-      .order("created_at", { ascending: false }),
-    getChatParticipantMap(supabase, donorIds),
-  ]);
-
-  const messageRows = (messages ?? []) as TableRow<"chat_messages">[];
-  const participantIds = [...new Set(messageRows.flatMap((message) => [message.sender_id, message.recipient_id]))];
-  const participantMap = await getChatParticipantMap(supabase, participantIds);
-  const messagesByPost = new Map<string, ChatMessageRecord[]>();
-
-  for (const message of messageRows) {
-    const enriched: ChatMessageRecord = {
-      ...message,
-      sender: participantMap.get(message.sender_id) ?? null,
-      recipient: participantMap.get(message.recipient_id) ?? null,
-    };
-
-    const list = messagesByPost.get(message.post_id) ?? [];
-    list.unshift(enriched);
-    messagesByPost.set(message.post_id, list);
-  }
-
-  return approvedPosts
-    .map((post) => {
-      const messagesForPost = messagesByPost.get(post.id) ?? [];
-
-      return {
-        post,
-        donor: donorMap.get(post.approved_donor_id ?? "") ?? null,
-        lastMessage: messagesForPost[messagesForPost.length - 1] ?? null,
-        messageCount: messagesForPost.length,
-      } satisfies HospitalChatSummary;
-    })
-    .sort((left, right) => {
-      const leftTime = new Date(left.lastMessage?.created_at ?? left.post.updated_at).getTime();
-      const rightTime = new Date(right.lastMessage?.created_at ?? right.post.updated_at).getTime();
-      return rightTime - leftTime;
-    });
 }
 
 export async function getDonorChats(profileId: string) {
   const supabase = getSupabaseAdminClient() ?? (await createServerSupabaseClient());
   if (!supabase) return [] as DonorChatSummary[];
 
-  const { data: posts } = await supabase
-    .from("posts")
-    .select(
-      `
+  return withServerTimeout(
+    (async () => {
+      const { data: posts } = await supabase
+        .from("posts")
+        .select(
+          `
         id, created_by, patient_name, patient_id, blood_type_needed, hospital_name,
         hospital_address, city, state, status, approved_donor_id, created_at, updated_at
       `,
-    )
-    .eq("approved_donor_id", profileId)
-    .neq("status", "deleted")
-    .order("updated_at", { ascending: false })
-    .order("created_at", { ascending: false });
+        )
+        .eq("approved_donor_id", profileId)
+        .neq("status", "deleted")
+        .order("updated_at", { ascending: false })
+        .order("created_at", { ascending: false });
 
-  const approvedPosts = ((posts ?? []) as DonorChatSummary["post"][]).filter((post) =>
-    Boolean(post.created_by),
+      const approvedPosts = ((posts ?? []) as DonorChatSummary["post"][]).filter((post) =>
+        Boolean(post.created_by),
+      );
+
+      if (!approvedPosts.length) {
+        return [] as DonorChatSummary[];
+      }
+
+      const postIds = approvedPosts.map((post) => post.id);
+      const hospitalIds = [...new Set(approvedPosts.map((post) => post.created_by).filter(Boolean))] as string[];
+
+      const [{ data: messages }, hospitalMap] = await Promise.all([
+        supabase
+          .from("chat_messages")
+          .select("id, post_id, sender_id, recipient_id, message, created_at")
+          .in("post_id", postIds)
+          .order("created_at", { ascending: false }),
+        getChatParticipantMap(supabase, hospitalIds),
+      ]);
+
+      const messageRows = (messages ?? []) as TableRow<"chat_messages">[];
+      const participantIds = [...new Set(messageRows.flatMap((message) => [message.sender_id, message.recipient_id]))];
+      const participantMap = await getChatParticipantMap(supabase, participantIds);
+      const messagesByPost = new Map<string, ChatMessageRecord[]>();
+
+      for (const message of messageRows) {
+        const enriched: ChatMessageRecord = {
+          ...message,
+          sender: participantMap.get(message.sender_id) ?? null,
+          recipient: participantMap.get(message.recipient_id) ?? null,
+        };
+
+        const list = messagesByPost.get(message.post_id) ?? [];
+        list.unshift(enriched);
+        messagesByPost.set(message.post_id, list);
+      }
+
+      return approvedPosts
+        .map((post) => {
+          const messagesForPost = messagesByPost.get(post.id) ?? [];
+          return {
+            post,
+            hospital: hospitalMap.get(post.created_by) ?? null,
+            lastMessage: messagesForPost[messagesForPost.length - 1] ?? null,
+            messageCount: messagesForPost.length,
+          } satisfies DonorChatSummary;
+        })
+        .sort((left, right) => {
+          const leftTime = new Date(left.lastMessage?.created_at ?? left.post.updated_at).getTime();
+          const rightTime = new Date(right.lastMessage?.created_at ?? right.post.updated_at).getTime();
+          return rightTime - leftTime;
+        });
+    })(),
+    [] as DonorChatSummary[],
   );
-
-  if (!approvedPosts.length) {
-    return [] as DonorChatSummary[];
-  }
-
-  const postIds = approvedPosts.map((post) => post.id);
-  const hospitalIds = [...new Set(approvedPosts.map((post) => post.created_by).filter(Boolean))] as string[];
-
-  const [{ data: messages }, hospitalMap] = await Promise.all([
-    supabase
-      .from("chat_messages")
-      .select("id, post_id, sender_id, recipient_id, message, created_at")
-      .in("post_id", postIds)
-      .order("created_at", { ascending: false }),
-    getChatParticipantMap(supabase, hospitalIds),
-  ]);
-
-  const messageRows = (messages ?? []) as TableRow<"chat_messages">[];
-  const participantIds = [...new Set(messageRows.flatMap((message) => [message.sender_id, message.recipient_id]))];
-  const participantMap = await getChatParticipantMap(supabase, participantIds);
-  const messagesByPost = new Map<string, ChatMessageRecord[]>();
-
-  for (const message of messageRows) {
-    const enriched: ChatMessageRecord = {
-      ...message,
-      sender: participantMap.get(message.sender_id) ?? null,
-      recipient: participantMap.get(message.recipient_id) ?? null,
-    };
-
-    const list = messagesByPost.get(message.post_id) ?? [];
-    list.unshift(enriched);
-    messagesByPost.set(message.post_id, list);
-  }
-
-  return approvedPosts
-    .map((post) => {
-      const messagesForPost = messagesByPost.get(post.id) ?? [];
-      return {
-        post,
-        hospital: hospitalMap.get(post.created_by) ?? null,
-        lastMessage: messagesForPost[messagesForPost.length - 1] ?? null,
-        messageCount: messagesForPost.length,
-      } satisfies DonorChatSummary;
-    })
-    .sort((left, right) => {
-      const leftTime = new Date(left.lastMessage?.created_at ?? left.post.updated_at).getTime();
-      const rightTime = new Date(right.lastMessage?.created_at ?? right.post.updated_at).getTime();
-      return rightTime - leftTime;
-    });
 }
 
 export async function getHospitalChatThread(postId: string, viewer?: Pick<Profile, "id" | "is_admin"> | null) {
   const supabase = getSupabaseAdminClient() ?? (await createServerSupabaseClient());
   if (!supabase) return null;
 
-  const { data: post } = await supabase
-    .from("posts")
-    .select(
-      `
+  return withServerTimeout(
+    (async () => {
+      const { data: post } = await supabase
+        .from("posts")
+        .select(
+          `
         id, created_by, patient_name, patient_id, blood_type_needed, units_needed, hospital_name,
         hospital_address, city, state, contact_name, contact_phone, contact_email, medical_condition,
         additional_notes, is_emergency, required_by, initial_radius_km, current_radius_km, expires_at,
         status, approved_donor_id, created_at, updated_at
       `,
-    )
-    .eq("id", postId)
-    .maybeSingle();
+        )
+        .eq("id", postId)
+        .maybeSingle();
 
-  const threadPost = (post as HospitalChatThread["post"] | null) ?? null;
+      const threadPost = (post as HospitalChatThread["post"] | null) ?? null;
 
-  if (!threadPost?.approved_donor_id) {
-    return null;
-  }
+      if (!threadPost?.approved_donor_id) {
+        return null;
+      }
 
-  if (
-    viewer &&
-    !viewer.is_admin &&
-    viewer.id !== threadPost.created_by &&
-    viewer.id !== threadPost.approved_donor_id
-  ) {
-    return null;
-  }
+      if (
+        viewer &&
+        !viewer.is_admin &&
+        viewer.id !== threadPost.created_by &&
+        viewer.id !== threadPost.approved_donor_id
+      ) {
+        return null;
+      }
 
-  const [hospitalAccountResult, messageResult] = await Promise.all([
-    supabase
-      .from("hospital_accounts")
-      .select(HOSPITAL_ACCOUNT_SELECT)
-      .eq("profile_id", threadPost.created_by)
-      .maybeSingle(),
-    supabase
-      .from("chat_messages")
-      .select("id, post_id, sender_id, recipient_id, message, created_at")
-      .eq("post_id", postId)
-      .order("created_at", { ascending: true }),
-  ]);
+      const [hospitalAccountResult, messageResult] = await Promise.all([
+        supabase
+          .from("hospital_accounts")
+          .select(HOSPITAL_ACCOUNT_SELECT)
+          .eq("profile_id", threadPost.created_by)
+          .maybeSingle(),
+        supabase
+          .from("chat_messages")
+          .select("id, post_id, sender_id, recipient_id, message, created_at")
+          .eq("post_id", postId)
+          .order("created_at", { ascending: true }),
+      ]);
 
-  const donorId = threadPost.approved_donor_id;
-  const donorMap = await getChatParticipantMap(supabase, [donorId]);
+      const donorId = threadPost.approved_donor_id;
+      const donorMap = await getChatParticipantMap(supabase, [donorId]);
 
-  const messageRows = (messageResult.data ?? []) as TableRow<"chat_messages">[];
-  const participantIds = [
-    ...new Set(
-      messageRows.flatMap((message) => [message.sender_id, message.recipient_id, threadPost.created_by, threadPost.approved_donor_id]),
-    ),
-  ].filter(Boolean) as string[];
-  const participantMap = await getChatParticipantMap(supabase, participantIds);
+      const messageRows = (messageResult.data ?? []) as TableRow<"chat_messages">[];
+      const participantIds = [
+        ...new Set(
+          messageRows.flatMap((message) => [
+            message.sender_id,
+            message.recipient_id,
+            threadPost.created_by,
+            threadPost.approved_donor_id,
+          ]),
+        ),
+      ].filter(Boolean) as string[];
+      const participantMap = await getChatParticipantMap(supabase, participantIds);
 
-  const messages = messageRows.map((message) => ({
-    ...message,
-    sender: participantMap.get(message.sender_id) ?? null,
-    recipient: participantMap.get(message.recipient_id) ?? null,
-  }));
+      const messages = messageRows.map((message) => ({
+        ...message,
+        sender: participantMap.get(message.sender_id) ?? null,
+        recipient: participantMap.get(message.recipient_id) ?? null,
+      }));
 
-  return {
-    post: threadPost,
-    donor: donorMap.get(donorId) ?? null,
-    hospitalAccount: (hospitalAccountResult.data as HospitalAccount | null) ?? null,
-    messages,
-  } satisfies HospitalChatThread;
+      return {
+        post: threadPost,
+        donor: donorMap.get(donorId) ?? null,
+        hospitalAccount: (hospitalAccountResult.data as HospitalAccount | null) ?? null,
+        messages,
+      } satisfies HospitalChatThread;
+    })(),
+    null,
+  );
 }
 
 export async function getHospitalDashboard(profileId: string) {
@@ -840,58 +872,63 @@ export async function getHospitalPendingApplications(profileId: string) {
   const supabase = await createServerSupabaseClient();
   if (!supabase) return [] as HospitalApplicationSummary[];
 
-  const posts = await getHospitalPosts(profileId);
-  const postIds = posts.map((post) => post.id);
+  return withServerTimeout(
+    (async () => {
+      const posts = await getHospitalPosts(profileId);
+      const postIds = posts.map((post) => post.id);
 
-  if (!postIds.length) {
-    return [] as HospitalApplicationSummary[];
-  }
+      if (!postIds.length) {
+        return [] as HospitalApplicationSummary[];
+      }
 
-  const { data: applications, error } = await supabase
-    .from("donor_applications")
-    .select("id, post_id, donor_id, status, eligibility_score, distance_km, note, created_at, updated_at")
-    .in("post_id", postIds)
-    .eq("status", "pending")
-    .order("created_at", { ascending: false })
-    .limit(100);
+      const { data: applications, error } = await supabase
+        .from("donor_applications")
+        .select("id, post_id, donor_id, status, eligibility_score, distance_km, note, created_at, updated_at")
+        .in("post_id", postIds)
+        .eq("status", "pending")
+        .order("created_at", { ascending: false })
+        .limit(100);
 
-  if (error) {
-    return [] as HospitalApplicationSummary[];
-  }
+      if (error) {
+        return [] as HospitalApplicationSummary[];
+      }
 
-  const donorIds = [...new Set((applications ?? []).map((application) => application.donor_id))];
-  const donorLookup =
-    donorIds.length > 0
-      ? await supabase
-          .from("profiles")
-          .select("id, full_name, username, blood_type, total_donations, karma, is_verified, city, state")
-          .in("id", donorIds)
-      : { data: [] };
+      const donorIds = [...new Set((applications ?? []).map((application) => application.donor_id))];
+      const donorLookup =
+        donorIds.length > 0
+          ? await supabase
+              .from("profiles")
+              .select("id, full_name, username, blood_type, total_donations, karma, is_verified, city, state")
+              .in("id", donorIds)
+          : { data: [] };
 
-  const donorMap = new Map((donorLookup.data ?? []).map((donor) => [donor.id, donor]));
-  const postMap = new Map(posts.map((post) => [post.id, post]));
+      const donorMap = new Map((donorLookup.data ?? []).map((donor) => [donor.id, donor]));
+      const postMap = new Map(posts.map((post) => [post.id, post]));
 
-  return ((applications ?? []) as TableRow<"donor_applications">[]).map((application) => ({
-    ...application,
-    distance_km:
-      application.distance_km ??
-      estimateDistanceKm(
-        donorMap.get(application.donor_id)?.city,
-        donorMap.get(application.donor_id)?.state,
-        postMap.get(application.post_id)?.city,
-        postMap.get(application.post_id)?.state,
-      ),
-    donor: donorMap.get(application.donor_id) ?? null,
-    post: postMap.get(application.post_id)
-      ? {
-          id: postMap.get(application.post_id)!.id,
-          patient_name: postMap.get(application.post_id)!.patient_name,
-          patient_id: postMap.get(application.post_id)!.patient_id,
-          blood_type_needed: postMap.get(application.post_id)!.blood_type_needed,
-          status: postMap.get(application.post_id)!.status,
-        }
-      : null,
-  })) as HospitalApplicationSummary[];
+      return ((applications ?? []) as TableRow<"donor_applications">[]).map((application) => ({
+        ...application,
+        distance_km:
+          application.distance_km ??
+          estimateDistanceKm(
+            donorMap.get(application.donor_id)?.city,
+            donorMap.get(application.donor_id)?.state,
+            postMap.get(application.post_id)?.city,
+            postMap.get(application.post_id)?.state,
+          ),
+        donor: donorMap.get(application.donor_id) ?? null,
+        post: postMap.get(application.post_id)
+          ? {
+              id: postMap.get(application.post_id)!.id,
+              patient_name: postMap.get(application.post_id)!.patient_name,
+              patient_id: postMap.get(application.post_id)!.patient_id,
+              blood_type_needed: postMap.get(application.post_id)!.blood_type_needed,
+              status: postMap.get(application.post_id)!.status,
+            }
+          : null,
+      })) as HospitalApplicationSummary[];
+    })(),
+    [] as HospitalApplicationSummary[],
+  );
 }
 
 export async function getNotifications(userId?: string) {
@@ -917,16 +954,21 @@ export async function getUserContactQueries(userId: string) {
   const supabase = await createServerSupabaseClient();
   if (!supabase) return [] as ContactQuery[];
 
-  const { data } = await supabase
-    .from("contact_queries")
-    .select(
-      "id, submitted_by, submitted_name, submitted_email, submitted_phone, submitted_account_type, subject, query, reply, status, replied_by, replied_at, created_at, updated_at",
-    )
-    .eq("submitted_by", userId)
-    .order("created_at", { ascending: false })
-    .limit(20);
+  return withServerTimeout(
+    (async () => {
+      const { data } = await supabase
+        .from("contact_queries")
+        .select(
+          "id, submitted_by, submitted_name, submitted_email, submitted_phone, submitted_account_type, subject, query, reply, status, replied_by, replied_at, created_at, updated_at",
+        )
+        .eq("submitted_by", userId)
+        .order("created_at", { ascending: false })
+        .limit(20);
 
-  return (data as ContactQuery[] | null) ?? [];
+      return (data as ContactQuery[] | null) ?? [];
+    })(),
+    [] as ContactQuery[],
+  );
 }
 
 export async function getAdminContactQueries() {
@@ -963,15 +1005,20 @@ export async function getRecentDonations(userId: string) {
   const supabase = await createServerSupabaseClient();
   if (!supabase) return [];
 
-  const { data } = await supabase
-    .from("donations")
-    .select("id, donor_id, recipient_id, post_id, donated_at, units, hospital_name, city, created_at")
-    .eq("donor_id", userId)
-    .gte("donated_at", subDays(new Date(), 365).toISOString())
-    .order("donated_at", { ascending: false })
-    .limit(10);
+  return withServerTimeout(
+    (async () => {
+      const { data } = await supabase
+        .from("donations")
+        .select("id, donor_id, recipient_id, post_id, donated_at, units, hospital_name, city, created_at")
+        .eq("donor_id", userId)
+        .gte("donated_at", subDays(new Date(), 365).toISOString())
+        .order("donated_at", { ascending: false })
+        .limit(10);
 
-  return data ?? [];
+      return (data as TableRow<"donations">[] | null) ?? [];
+    })(),
+    [] as TableRow<"donations">[],
+  );
 }
 
 export async function getAdminUserDetail(userId: string): Promise<AdminUserDetail> {

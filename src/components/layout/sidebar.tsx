@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-html-link-for-pages */
 
 import Link from "next/link";
 import { Building2, Settings } from "lucide-react";
@@ -85,51 +86,83 @@ export function Sidebar() {
             const showUnreadBadge = item.href === "/notifications" && unreadCount > 0;
 
             return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "relative flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-muted-foreground transition hover:bg-brand-soft hover:text-brand",
-                active && "bg-brand-soft text-brand",
-              )}
-              onClick={() => {
-                if (item.href === "/notifications") {
-                  void notifContext?.markAllRead();
-                }
-              }}
-            >
-                <Icon className="size-4" />
-                {item.label}
-                {showUnreadBadge ? (
-                  <span className="ml-auto flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white shadow-[0_0_6px_rgba(220,38,38,0.5)]">
-                    {unreadCount > 99 ? "99+" : unreadCount}
-                  </span>
-                ) : null}
-              </Link>
+              user ? (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "relative flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-muted-foreground transition hover:bg-brand-soft hover:text-brand",
+                    active && "bg-brand-soft text-brand",
+                  )}
+                  onClick={() => {
+                    if (item.href === "/notifications") {
+                      void notifContext?.markAllRead();
+                    }
+                  }}
+                >
+                  <Icon className="size-4" />
+                  {item.label}
+                  {showUnreadBadge ? (
+                    <span className="ml-auto flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white shadow-[0_0_6px_rgba(220,38,38,0.5)]">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                  ) : null}
+                </Link>
+              ) : (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "relative flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-muted-foreground transition hover:bg-brand-soft hover:text-brand",
+                    active && "bg-brand-soft text-brand",
+                  )}
+                >
+                  <Icon className="size-4" />
+                  {item.label}
+                  {showUnreadBadge ? (
+                    <span className="ml-auto flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold leading-none text-white shadow-[0_0_6px_rgba(220,38,38,0.5)]">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                  ) : null}
+                </a>
+              )
             );
           })}
         </nav>
       </div>
       <div className="space-y-4">
         {showRegisterHospital ? (
-          <Link
+          <a
             className="flex items-center gap-3 rounded-2xl border border-brand/20 bg-brand-soft/60 px-4 py-3 text-sm font-medium text-brand transition hover:border-brand/40 hover:bg-brand-soft"
             href="/signup?account=hospital"
           >
             <Building2 className="size-4" />
             {tNav("registerHospital")}
-          </Link>
+          </a>
         ) : null}
-        <Link
-          className={cn(
-            "flex items-center gap-3 rounded-2xl border border-border bg-card/70 px-4 py-3 text-sm font-medium text-muted-foreground transition hover:border-brand/30 hover:bg-brand-soft hover:text-brand",
-            pathname.startsWith("/settings") && "border-brand/30 bg-brand-soft text-brand",
-          )}
-          href="/settings"
-        >
-          <Settings className="size-4" />
-          {tNav("settings")}
-        </Link>
+        {user ? (
+          <Link
+            className={cn(
+              "flex items-center gap-3 rounded-2xl border border-border bg-card/70 px-4 py-3 text-sm font-medium text-muted-foreground transition hover:border-brand/30 hover:bg-brand-soft hover:text-brand",
+              pathname.startsWith("/settings") && "border-brand/30 bg-brand-soft text-brand",
+            )}
+            href="/settings"
+          >
+            <Settings className="size-4" />
+            {tNav("settings")}
+          </Link>
+        ) : (
+          <a
+            className={cn(
+              "flex items-center gap-3 rounded-2xl border border-border bg-card/70 px-4 py-3 text-sm font-medium text-muted-foreground transition hover:border-brand/30 hover:bg-brand-soft hover:text-brand",
+              pathname.startsWith("/settings") && "border-brand/30 bg-brand-soft text-brand",
+            )}
+            href="/settings"
+          >
+            <Settings className="size-4" />
+            {tNav("settings")}
+          </a>
+        )}
         <div className="rounded-[1.5rem] border border-border bg-card p-4 shadow-soft">
           <p className="text-sm font-medium">
             {user?.account_type === "hospital"

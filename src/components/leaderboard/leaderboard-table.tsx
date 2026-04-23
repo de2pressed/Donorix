@@ -1,6 +1,6 @@
 "use client";
+/* eslint-disable @next/next/no-html-link-for-pages */
 
-import Link from "next/link";
 import { motion } from "framer-motion";
 import { Trophy } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -130,14 +130,14 @@ export function LeaderboardTable({ leaders }: { leaders: Profile[] }) {
                   </div>
 
                   <div className="min-w-0">
-                    <Link
+                    <a
                       className="block min-w-0 transition-colors group-hover:text-brand"
                       href={`/profile/${leader.username}`}
                     >
                       <p className="truncate font-display text-base font-semibold leading-tight sm:text-lg">
                         {fullName}
                       </p>
-                    </Link>
+                    </a>
                     <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground sm:text-sm">
                       <span className="truncate">@{leader.username}</span>
                       {location ? <span className="text-border/80">•</span> : null}

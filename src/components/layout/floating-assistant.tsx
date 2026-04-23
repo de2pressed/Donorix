@@ -1,6 +1,6 @@
 "use client";
+/* eslint-disable @next/next/no-html-link-for-pages */
 
-import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Bot, MessageCircleMore, Sparkles, X } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -491,7 +491,7 @@ export function FloatingAssistant() {
                     </div>
                     <div className="space-y-2">
                       {eligiblePosts.map((post) => (
-                        <Link
+                        <a
                           key={post.id}
                           className="block rounded-2xl border border-border bg-muted/20 px-3 py-2 transition hover:border-brand/40 hover:bg-brand-soft/30"
                           href={post.link}
@@ -504,7 +504,7 @@ export function FloatingAssistant() {
                             {post.blood_type_needed} - {post.units_needed} unit{post.units_needed === 1 ? "" : "s"}
                             {post.required_by ? ` - ${post.required_by}` : ""}
                           </p>
-                        </Link>
+                        </a>
                       ))}
                     </div>
                   </div>

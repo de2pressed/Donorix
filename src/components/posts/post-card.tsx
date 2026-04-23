@@ -1,8 +1,7 @@
 "use client";
+/* eslint-disable @next/next/no-html-link-for-pages */
 
-import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { useRouter } from "next/navigation";
 import {
   BadgeCheck,
   ArrowBigUp,
@@ -39,7 +38,6 @@ export function PostCard({
   mode?: "feed" | "detail";
 }) {
   const reduceMotion = useReducedMotion();
-  const router = useRouter();
   const tRequest = useTranslations("request");
   const isDetailView = mode === "detail";
   const [expanded, setExpanded] = useState(isDetailView);
@@ -55,7 +53,7 @@ export function PostCard({
       return;
     }
 
-    router.push(`/posts/${post.id}`);
+    window.location.assign(`/posts/${post.id}`);
   }
 
   return (
@@ -177,13 +175,13 @@ export function PostCard({
                     </div>
 
                     <div className="min-w-0">
-                      <Link
+                      <a
                         className="font-display block truncate text-2xl font-bold hover:text-brand"
                         href={`/posts/${post.id}`}
                         onClick={(event) => event.stopPropagation()}
                       >
                         {post.patient_name}
-                      </Link>
+                      </a>
                       <p className="mt-2 truncate font-mono text-sm text-muted-foreground">
                         {post.patient_id ? `${post.patient_id} - ` : ""}
                         {tRequest("requestedBy")} {post.contact_name} |{" "}
@@ -207,13 +205,13 @@ export function PostCard({
                       {tRequest("hospital")}
                     </div>
                     {post.creator?.username ? (
-                      <Link
+                      <a
                         className="mt-2 block truncate text-sm text-muted-foreground transition hover:text-brand"
                         href={`/profile/${post.creator.username}`}
                         onClick={(event) => event.stopPropagation()}
                       >
                         {post.hospital_name}
-                      </Link>
+                      </a>
                     ) : (
                       <p className="mt-2 truncate text-sm text-muted-foreground">{post.hospital_name}</p>
                     )}
